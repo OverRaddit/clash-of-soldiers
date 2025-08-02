@@ -10,7 +10,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'https://clash-of-soldiers.vercel.app',
-      'https://*.vercel.app'
+      /^https:\/\/.*\.vercel\.app$/
     ],
     credentials: true,
   });

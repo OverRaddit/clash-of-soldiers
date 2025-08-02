@@ -75,7 +75,7 @@ dist
 
 # Gatsby files
 .cache/
-public
+# public (주석 처리 - React의 public 폴더는 필요함)
 
 # Storybook build outputs
 .out
