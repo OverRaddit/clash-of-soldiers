@@ -1,0 +1,187 @@
+/* ToyBattleMap 컨테이너 */
+.toy-battle-map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  max-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* background-image: url('./map-background.png'), url('/map-background.png'), url('../../../public/map-background.png'); */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #f8f9fa; /* 이미지 로드 실패시 fallback */
+  border: 3px solid #333;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* SVG 맵 */
+.toy-battle-map {
+  width: 100%;
+  height: 100%;
+  background: transparent; /* 배경 이미지가 보이도록 투명하게 */
+}
+
+/* 연결선 스타일 */
+.edges line {
+  transition: stroke 0.2s ease;
+  opacity: 0.8;
+}
+
+.edges line:hover {
+  stroke: #495057;
+  stroke-width: 4;
+  opacity: 1;
+}
+
+/* 정점 스타일 */
+.vertex {
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
+  stroke-width: 0.4;
+  fill-opacity: 0.7; /* 70% 투명도로 배경이 보이도록 */
+}
+
+.vertex.clickable:hover {
+  filter: drop-shadow(0 0 8px rgba(0, 123, 255, 0.9));
+}
+
+.vertex:hover {
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.7));
+}
+
+/* 정점 라벨 */
+.vertex-label {
+  pointer-events: none;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9),
+    0 0 3px rgba(255, 255, 255, 0.8);
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+}
+
+/* 병정 정보 텍스트 */
+.soldier-info {
+  pointer-events: none;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9),
+    0 0 3px rgba(255, 255, 255, 0.8);
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+}
+
+.soldier-details {
+  pointer-events: none;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9),
+    0 0 3px rgba(255, 255, 255, 0.8);
+  font-family: 'Arial', sans-serif;
+}
+
+.stack-count {
+  pointer-events: none;
+  font-family: 'Arial', sans-serif;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+.power-stat {
+  pointer-events: none;
+  font-family: 'Arial', sans-serif;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .toy-battle-map-container {
+    min-height: 350px;
+    max-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .toy-battle-map-container {
+    min-height: 300px;
+    max-height: 400px;
+  }
+
+  /* 모바일에서 텍스트 크기 조정 */
+  .vertex-label {
+    font-size: 16px;
+  }
+
+  .soldier-info {
+    font-size: 12px;
+  }
+
+  .soldier-details {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toy-battle-map-container {
+    min-height: 250px;
+    max-height: 350px;
+  }
+
+  .vertex-label {
+    font-size: 14px;
+  }
+
+  .soldier-info {
+    font-size: 10px;
+  }
+
+  .soldier-details {
+    font-size: 8px;
+  }
+}
+
+/* 애니메이션 효과 */
+@keyframes vertex-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes giant-target-glow {
+  0% {
+    filter: drop-shadow(0 0 3px rgba(46, 213, 115, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(46, 213, 115, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 3px rgba(46, 213, 115, 0.5));
+  }
+}
+
+.vertex.selected {
+  animation: vertex-pulse 1s infinite;
+  fill: #007bff !important;
+}
+
+.vertex.giant-target-available {
+  animation: giant-target-glow 1.5s infinite;
+  stroke: #2ed573 !important;
+  stroke-width: 3 !important;
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .vertex,
+  .edges line {
+    transition: none;
+  }
+
+  .vertex.selected,
+  .vertex.giant-target-available {
+    animation: none;
+  }
+}
