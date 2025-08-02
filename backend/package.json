@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
+    "start:prod": "npm run build && npm run start",
     "start:dev": "nodemon --exec ts-node src/main.ts",
     "start:debug": "nest start --debug --watch",
     "start:debug:brk": "nodemon --exec ts-node --inspect-brk=0.0.0.0:9229 src/main.ts",

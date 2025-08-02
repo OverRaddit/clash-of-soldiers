@@ -5,7 +5,8 @@ class SocketService {
 
   connect(): Socket {
     if (!this.socket) {
-      this.socket = io('http://localhost:3001/game', {
+      const serverUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      this.socket = io(`${serverUrl}/game`, {
         withCredentials: true, // CORS 설정을 위해 필요
       });
     }
