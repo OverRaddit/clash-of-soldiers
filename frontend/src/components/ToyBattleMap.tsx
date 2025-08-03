@@ -2,12 +2,6 @@ import React, { useEffect } from 'react';
 import './ToyBattleMap.css';
 
 // Vertex 정보 정의
-// interface Vertex {
-//   id: string;
-//   x: string;
-//   y: string;
-//   type: number; // 1: base, 2: special, 3: gray
-// }
 interface Vertex {
   id: string;
   x: number;
@@ -16,52 +10,29 @@ interface Vertex {
 }
 
 // 정점 데이터 (토이배틀_기본맵구조.md 기준)
-// const vertices: Vertex[] = [
-//   // 플레이어 거점 (type 1)
-//   { id: 'X', x: '5%', y: '50%', type: 1 },
-//   { id: 'Y', x: '95%', y: '50%', type: 1 },
-
-//   // 회색지대 (type 3)
-//   { id: 'X1', x: '15%', y: '15%', type: 3 },
-//   { id: 'X2', x: '15%', y: '85%', type: 3 },
-//   { id: 'X3', x: '85%', y: '15%', type: 3 },
-//   { id: 'X4', x: '85%', y: '85%', type: 3 },
-//   { id: 'Y1', x: '30%', y: '30%', type: 3 },
-//   { id: 'Y2', x: '30%', y: '70%', type: 3 },
-//   { id: 'Y3', x: '70%', y: '30%', type: 3 },
-//   { id: 'Y4', x: '70%', y: '70%', type: 3 },
-//   { id: 'M1', x: '50%', y: '20%', type: 3 },
-//   { id: 'M2', x: '50%', y: '50%', type: 3 },
-//   { id: 'M3', x: '50%', y: '80%', type: 3 },
-
-//   // 특수 지대 (type 2)
-//   { id: 'S1', x: '25%', y: '10%', type: 2 },
-//   { id: 'S2', x: '25%', y: '90%', type: 2 },
-//   { id: 'S3', x: '75%', y: '10%', type: 2 },
-//   { id: 'S4', x: '75%', y: '90%', type: 2 },
-// ];
 const vertices: Vertex[] = [
-  { id: 'X', x: 60, y: 384, type: 1 },
-  { id: 'Y', x: 1040, y: 384, type: 1 },
+  // 90도 반시계방향 회전: new_x = 768 - old_y, new_y = old_x
+  { id: 'X', x: 384, y: 60, type: 1 },
+  { id: 'Y', x: 384, y: 1040, type: 1 },
 
-  // 회색 지대 (원본 이미지 픽셀 좌표 기반)
-  { id: 'X1', x: 60, y: 140, type: 3 },
-  { id: 'X2', x: 60, y: 640, type: 3 },
-  { id: 'X3', x: 1020, y: 120, type: 3 },
-  { id: 'X4', x: 1020, y: 620, type: 3 },
-  { id: 'Y1', x: 230, y: 300, type: 3 },
-  { id: 'Y2', x: 230, y: 480, type: 3 },
-  { id: 'Y3', x: 860, y: 290, type: 3 },
-  { id: 'Y4', x: 860, y: 480, type: 3 },
-  { id: 'M1', x: 545, y: 150, type: 3 },
-  { id: 'M2', x: 545, y: 384, type: 3 },
-  { id: 'M3', x: 545, y: 610, type: 3 },
+  // 회색 지대 (90도 반시계방향 회전된 좌표)
+  { id: 'X1', x: 628, y: 60, type: 3 },
+  { id: 'X2', x: 128, y: 60, type: 3 },
+  { id: 'X3', x: 648, y: 1020, type: 3 },
+  { id: 'X4', x: 148, y: 1020, type: 3 },
+  { id: 'Y1', x: 468, y: 230, type: 3 },
+  { id: 'Y2', x: 288, y: 230, type: 3 },
+  { id: 'Y3', x: 478, y: 860, type: 3 },
+  { id: 'Y4', x: 288, y: 860, type: 3 },
+  { id: 'M1', x: 618, y: 545, type: 3 },
+  { id: 'M2', x: 384, y: 545, type: 3 },
+  { id: 'M3', x: 158, y: 545, type: 3 },
 
   // 특수 지대
-  { id: 'S1', x: 320, y: 90, type: 2 },
-  { id: 'S2', x: 320, y: 680, type: 2 },
-  { id: 'S3', x: 800, y: 90, type: 2 },
-  { id: 'S4', x: 800, y: 680, type: 2 },
+  { id: 'S1', x: 678, y: 320, type: 2 },
+  { id: 'S2', x: 88, y: 320, type: 2 },
+  { id: 'S3', x: 678, y: 800, type: 2 },
+  { id: 'S4', x: 88, y: 800, type: 2 },
 ];
 
 // 연결선 데이터 (토이배틀_기본맵구조.md 기준)
@@ -116,7 +87,6 @@ export default function ToyBattleMap({
   isGiantSelectionMode = false,
   availableTargets = [],
 }: ToyBattleMapProps) {
-  
   // 게임 상태 변경 시 디버깅 로그
   useEffect(() => {
     if (gameState) {
@@ -166,7 +136,7 @@ export default function ToyBattleMap({
       style={{ backgroundImage: 'url(/map-background.png)' }}
     >
       <svg
-        viewBox='0 0 1090 768' // 원본 맵 비율
+        viewBox='0 0 768 1090' // 90도 반시계방향 회전된 맵 비율
         className='toy-battle-map'
         preserveAspectRatio='xMidYMid meet'
       >
@@ -213,18 +183,22 @@ export default function ToyBattleMap({
                   stroke='#333'
                   strokeWidth='0.3'
                   className={`vertex ${
-                    (selectedSoldierIndex !== null && isMyTurn) || 
-                    (isGiantSelectionMode && availableTargets.includes(vertex.id)) 
-                      ? 'clickable' : ''
+                    (selectedSoldierIndex !== null && isMyTurn) ||
+                    (isGiantSelectionMode &&
+                      availableTargets.includes(vertex.id))
+                      ? 'clickable'
+                      : ''
                   } ${
                     isGiantSelectionMode && availableTargets.includes(vertex.id)
-                      ? 'giant-target-available' : ''
+                      ? 'giant-target-available'
+                      : ''
                   }`}
                   onClick={() => onVertexClick && onVertexClick(vertex.id)}
                   style={{
                     cursor:
-                      (selectedSoldierIndex !== null && isMyTurn) || 
-                      (isGiantSelectionMode && availableTargets.includes(vertex.id))
+                      (selectedSoldierIndex !== null && isMyTurn) ||
+                      (isGiantSelectionMode &&
+                        availableTargets.includes(vertex.id))
                         ? 'pointer'
                         : 'default',
                   }}
@@ -252,13 +226,17 @@ export default function ToyBattleMap({
                       cx={vertex.x}
                       cy={vertex.y}
                       r='40'
-                      fill={topSoldier.playerColor === 'red' ? '#ffe0e0' : '#e0f0ff'}
-                      stroke={topSoldier.playerColor === 'red' ? '#c92a2a' : '#1864ab'}
+                      fill={
+                        topSoldier.playerColor === 'red' ? '#ffe0e0' : '#e0f0ff'
+                      }
+                      stroke={
+                        topSoldier.playerColor === 'red' ? '#c92a2a' : '#1864ab'
+                      }
                       strokeWidth='2'
                       opacity='0.6'
                       style={{ pointerEvents: 'none' }}
                     />
-                    
+
                     {/* 병정 이미지 */}
                     {topSoldier.type > 0 && (
                       <g>
@@ -278,7 +256,7 @@ export default function ToyBattleMap({
                         />
                       </g>
                     )}
-                    
+
                     {/* 거점(type 0)인 경우 텍스트 표시 */}
                     {topSoldier.type === 0 && (
                       <text
@@ -287,13 +265,17 @@ export default function ToyBattleMap({
                         textAnchor='middle'
                         fontSize='14'
                         fontWeight='bold'
-                        fill={topSoldier.playerColor === 'red' ? '#c92a2a' : '#1864ab'}
+                        fill={
+                          topSoldier.playerColor === 'red'
+                            ? '#c92a2a'
+                            : '#1864ab'
+                        }
                         className='soldier-info'
                       >
                         거점
                       </text>
                     )}
-                    
+
                     {/* 병정 번호/힘 스탯 정보 */}
                     {topSoldier.type > 0 && (
                       <g>
@@ -315,7 +297,9 @@ export default function ToyBattleMap({
                           fill='#fff'
                           className='power-stat'
                         >
-                          {topSoldier.type === 8 ? '🃏' : `⚔️${topSoldier.type}`}
+                          {topSoldier.type === 8
+                            ? '🃏'
+                            : `⚔️${topSoldier.type}`}
                         </text>
                       </g>
                     )}
