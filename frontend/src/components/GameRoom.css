@@ -49,7 +49,7 @@
   font-size: 16px;
   text-align: center;
   border: 2px solid #28a745;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   animation: messageSlideIn 0.3s ease-out;
 }
 
@@ -144,7 +144,8 @@
   gap: 10px;
 }
 
-.ready-btn, .start-game-btn {
+.ready-btn,
+.start-game-btn {
   flex: 1;
   padding: 10px 20px;
   border: none;
@@ -328,7 +329,6 @@
 .player-hand-mobile {
   display: flex;
   gap: 6px;
-  justify-content: center;
   overflow-x: auto;
   padding: 4px 0;
 }
@@ -389,7 +389,7 @@
   border-radius: 8px;
   margin-bottom: 15px;
   border: 2px solid #dee2e6;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .player-name-display {
@@ -406,12 +406,16 @@
 }
 
 @keyframes flagWave {
-  from { transform: rotate(-5deg); }
-  to { transform: rotate(5deg); }
+  from {
+    transform: rotate(-5deg);
+  }
+  to {
+    transform: rotate(5deg);
+  }
 }
 
 .player-name-colored {
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .medals-display {
@@ -425,7 +429,7 @@
   padding: 6px 12px;
   border-radius: 20px;
   border: 2px solid #ffc107;
-  box-shadow: 0 2px 4px rgba(255,193,7,0.3);
+  box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
 }
 
 /* 플레이어 패널 */
@@ -596,27 +600,28 @@
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .game-room {
     padding: 15px;
   }
 }
 
 @media (max-width: 768px) {
-  .game-room, .game-room-waiting {
+  .game-room,
+  .game-room-waiting {
     padding: 10px;
   }
-  
+
   .game-room-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
-  
+
   .room-actions {
     flex-direction: column;
   }
-  
+
   .soldier-card {
     width: 38px;
     height: 50px;
@@ -630,7 +635,7 @@
   .empty-slot-text {
     font-size: 6px;
   }
-  
+
   .player-actions {
     flex-direction: column;
   }
@@ -762,32 +767,41 @@
 
 /* 애니메이션 정의 */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(-50px) scale(0.8);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
 @keyframes bounce {
-  from { transform: translateY(0px); }
-  to { transform: translateY(-10px); }
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes glow {
-  from { 
+  from {
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
   }
-  to { 
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.3);
+  to {
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.8),
+      0 0 40px rgba(255, 215, 0, 0.3);
   }
 }
 
@@ -807,15 +821,15 @@
   .game-end-content {
     padding: 30px 20px;
   }
-  
+
   .game-end-icon {
     font-size: 60px;
   }
-  
+
   .game-end-title {
     font-size: 36px;
   }
-  
+
   .game-end-message {
     font-size: 16px;
   }
