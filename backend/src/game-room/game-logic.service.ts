@@ -12,13 +12,19 @@ export class GameLogicService {
   initializeGame(playerIds: string[], playerNames: string[]): GameState {
     const gameState = new GameState();
 
+    // 플레이어 순서 랜덤 셔플
+    const shuffledPlayerIds = [...playerIds];
+    const shuffledPlayerNames = [...playerNames];
+    this.shufflePlayers(shuffledPlayerIds, shuffledPlayerNames);
+
     // 플레이어 색상 할당 (첫 번째 플레이어: red, 두 번째: blue)
     const colors: PlayerColor[] = ['red', 'blue'];
 
-    playerIds.forEach((id, index) => {
+    shuffledPlayerIds.forEach((id, index) => {
+      const playerName = shuffledPlayerNames[index];
       const player: Player = {
         id,
-        name: playerNames[index],
+        name: playerName,
         color: colors[index],
         isHost: index === 0,
         deck: this.createPlayerDeck(),
@@ -54,7 +60,7 @@ export class GameLogicService {
       }
     });
 
-    gameState.currentTurn = playerIds[0]; // 첫 번째 플레이어부터 시작
+    gameState.currentTurn = shuffledPlayerIds[0]; // 랜덤 셔플된 첫 번째 플레이어부터 시작
     gameState.gameStatus = 'playing';
 
     return gameState;
@@ -106,6 +112,16 @@ export class GameLogicService {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  // 플레이어 순서 랜덤 셔플 (ID와 이름을 함께 섞기)
+  private shufflePlayers(playerIds: string[], playerNames: string[]): void {
+    for (let i = playerIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      // ID와 이름을 함께 교환
+      [playerIds[i], playerIds[j]] = [playerIds[j], playerIds[i]];
+      [playerNames[i], playerNames[j]] = [playerNames[j], playerNames[i]];
     }
   }
 
