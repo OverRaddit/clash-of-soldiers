@@ -24,6 +24,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
   const [selectedSoldierIndex, setSelectedSoldierIndex] = useState<
     number | null
   >(null);
+  const [selectedSoldierForInfo, setSelectedSoldierForInfo] = useState<
+    number | null
+  >(null);
   const [gameEnded, setGameEnded] = useState<boolean>(false);
   const [gameWinner, setGameWinner] = useState<string | null>(null);
 
@@ -85,6 +88,22 @@ const GameRoom: React.FC<GameRoomProps> = ({
       8: '꽉스',
     };
     return names[type] || `병정 ${type}`;
+  };
+
+  // 병정 효과 설명 가져오기
+  const getSoldierEffect = (type: number): string => {
+    const effects: Record<number, string> = {
+      0: '거점 병정입니다. 특별한 효과는 없습니다.',
+      1: '즉시 병정 2개를 공급처에서 뽑아 받침대에 놓습니다. 단, 받침대의 병정 수가 8개를 초과할 수 없습니다.',
+      2: '병정을 한 개 더 배치할 수 있는 기회를 줍니다. 추가로 배치한 병정의 효과도 즉시 발동됩니다.',
+      3: '배치 시, 인접한 칸 중 하나에 있는 상대 병정을 제거할 수 있습니다 (맨 위 병정만 가능).',
+      4: '본부와 연결되지 않은 거점에도 병정을 배치할 수 있습니다. 단, 상대 본부에는 불가합니다.',
+      5: '배치 시, 상대 받침대에서 무작위 병정 1개를 제거(버림 더미로 이동)합니다.',
+      6: '병정 1개를 공급처에서 뽑아 받침대에 추가합니다. 받침대 최대 수(8개)를 초과할 수 없습니다.',
+      7: '효과는 없지만 힘이 매우 강력합니다. 배치 우위에 유리합니다.',
+      8: '조커병정으로, 배치 우위를 무시합니다. 번호(힘)에 상관없이 배치할 수 있지만 다른 병정들도 꽉스위에 배치할 수 있습니다.',
+    };
+    return effects[type] || `병정 ${type}번의 효과입니다.`;
   };
 
   // 정점 소유자 확인
@@ -332,7 +351,14 @@ const GameRoom: React.FC<GameRoomProps> = ({
                 return (
                   <div
                     key={index}
-                    onClick={() => !isEmpty && canPlaceSoldier && setSelectedSoldierIndex(index)}
+                    onClick={() => {
+                      if (!isEmpty) {
+                        if (canPlaceSoldier) {
+                          setSelectedSoldierIndex(index);
+                        }
+                        setSelectedSoldierForInfo(index);
+                      }
+                    }}
                     className={`soldier-card-mobile ${
                       isEmpty ? 'empty-slot' : 
                       selectedSoldierIndex === index ? 'selected' : ''
@@ -378,6 +404,29 @@ const GameRoom: React.FC<GameRoomProps> = ({
                   </div>
                 );
               })}
+            </div>
+
+            {/* 병정 효과 설명 섹션 */}
+            <div className="soldier-info-panel">
+              {selectedSoldierForInfo !== null && currentGamePlayer?.stand[selectedSoldierForInfo] ? (
+                <div className="soldier-description">
+                  <div className="soldier-title">
+                    <span className="soldier-icon">
+                      {currentGamePlayer.stand[selectedSoldierForInfo].type === 8 ? '🃏' : `⚔️${currentGamePlayer.stand[selectedSoldierForInfo].type}`}
+                    </span>
+                    <span className="soldier-name">
+                      {getSoldierName(currentGamePlayer.stand[selectedSoldierForInfo].type)}
+                    </span>
+                  </div>
+                  <div className="soldier-effect">
+                    {getSoldierEffect(currentGamePlayer.stand[selectedSoldierForInfo].type)}
+                  </div>
+                </div>
+              ) : (
+                <div className="soldier-placeholder">
+                  카드를 클릭하면 병정의 효과를 확인할 수 있습니다.
+                </div>
+              )}
             </div>
           </div>
         </div>

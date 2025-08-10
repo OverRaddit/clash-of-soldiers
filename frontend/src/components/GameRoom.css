@@ -835,10 +835,92 @@
   }
 }
 
+/* 병정 효과 설명 패널 */
+.soldier-info-panel {
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 80px;
+  transition: all 0.3s ease;
+}
+
+.soldier-description {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.soldier-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #495057;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.soldier-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 20px;
+  background-color: #2f3542;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.soldier-name {
+  color: #343a40;
+  font-size: 15px;
+}
+
+.soldier-effect {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #6c757d;
+  background-color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.soldier-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  color: #6c757d;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* 받침대 카드 호버 효과 개선 */
+.soldier-card-mobile:not(.disabled):hover {
+  border-color: #007bff;
+  background-color: #e3f2fd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
 /* 접근성 개선 */
 @media (prefers-reduced-motion: reduce) {
   .game-end-overlay *,
-  .confetti {
+  .confetti,
+  .soldier-info-panel,
+  .soldier-card-mobile {
     animation: none !important;
+    transition: none !important;
   }
 }
