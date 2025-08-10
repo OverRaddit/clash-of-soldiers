@@ -50,17 +50,25 @@ export class GameState {
   turnCount: number = 0;
   gameStatus: 'waiting' | 'playing' | 'finished' = 'waiting';
   winner?: string;
-  
+
   // 스냅샷 시스템
   turnStartSnapshot?: any; // 턴 시작 시점의 상태
-  
+
   // 대기 중인 액션
   pendingAction?: PendingAction;
 
   // 승점 시스템
   medalZones: MedalZone[] = [
-    { vertices: ['X', 'X1', 'X2', 'Y1', 'Y2'], points: 3, claimed: false },
-    { vertices: ['Y', 'X3', 'X4', 'Y3', 'Y4'], points: 3, claimed: false },
+    {
+      vertices: ['X', 'X1', 'X2', 'Y1', 'Y2', 'M2'],
+      points: 3,
+      claimed: false,
+    },
+    {
+      vertices: ['Y', 'X3', 'X4', 'Y3', 'Y4', 'M2'],
+      points: 3,
+      claimed: false,
+    },
     { vertices: ['M1', 'M2', 'Y1', 'Y3'], points: 2, claimed: false },
     { vertices: ['M2', 'M3', 'Y2', 'Y4'], points: 2, claimed: false },
     { vertices: ['Y1', 'S1', 'M1'], points: 1, claimed: false },
