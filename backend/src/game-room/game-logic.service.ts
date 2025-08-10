@@ -235,6 +235,9 @@ export class GameLogicService {
     const soldier = player.stand.splice(soldierIndex, 1)[0];
     vertex.soldiers.push(soldier);
 
+    // 마지막 배치 정보 업데이트
+    this.updateLastPlacement(gameState, playerId, soldier.type, targetVertex);
+
     // 병정 효과 적용
     this.applySoldierEffect(gameState, playerId, soldier, targetVertex);
 
@@ -373,6 +376,31 @@ export class GameLogicService {
         enemy.discardPile.push(removedSoldier);
         break; // 한 명의 상대에게서만 제거
       }
+    }
+  }
+
+  // 마지막 배치 정보 업데이트
+  private updateLastPlacement(
+    gameState: GameState,
+    playerId: string,
+    soldierType: number,
+    vertexId: string
+  ): void {
+    const newPlacement = {
+      vertexId,
+      playerId,
+      soldierType,
+      timestamp: Date.now()
+    };
+
+    // 캡틴 추가 배치인 경우 기존 배치들과 함께 유지
+    if (gameState.pendingAction?.type === 'place_additional_soldier' &&
+        gameState.pendingAction.playerId === playerId) {
+      // 캡틴으로 인한 추가 배치이므로 기존 배치에 추가
+      gameState.lastPlacements.push(newPlacement);
+    } else {
+      // 새로운 턴의 시작이므로 이전 배치들을 모두 초기화하고 새로 시작
+      gameState.lastPlacements = [newPlacement];
     }
   }
 

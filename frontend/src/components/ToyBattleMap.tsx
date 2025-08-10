@@ -130,6 +130,14 @@ export default function ToyBattleMap({
     return { x: vertex.x, y: vertex.y }; // 픽셀 값 그대로 사용
   };
 
+  // 마지막 배치 여부 확인
+  const isLastPlacement = (vertexId: string) => {
+    if (!gameState?.lastPlacements || gameState.lastPlacements.length === 0) {
+      return false;
+    }
+    return gameState.lastPlacements.some((placement: any) => placement.vertexId === vertexId);
+  };
+
   return (
     <div
       className='toy-battle-map-container'
@@ -171,6 +179,7 @@ export default function ToyBattleMap({
             const topSoldier =
               gameVertex?.soldiers?.[gameVertex.soldiers.length - 1];
             const vertexColor = getVertexColor(vertex, gameVertex, owner);
+            const isLastPlaced = isLastPlacement(vertex.id);
 
             return (
               <g key={vertex.id}>
@@ -191,6 +200,10 @@ export default function ToyBattleMap({
                   } ${
                     isGiantSelectionMode && availableTargets.includes(vertex.id)
                       ? 'giant-target-available'
+                      : ''
+                  } ${
+                    isLastPlaced && topSoldier
+                      ? 'last-placement'
                       : ''
                   }`}
                   onClick={() => onVertexClick && onVertexClick(vertex.id)}
@@ -327,6 +340,16 @@ export default function ToyBattleMap({
                           {gameVertex.soldiers.length}
                         </text>
                       </g>
+                    )}
+
+                    {/* 마지막 배치 효과 링 */}
+                    {isLastPlaced && (
+                      <circle
+                        cx={vertex.x}
+                        cy={vertex.y}
+                        r='50'
+                        className='last-placement-ring'
+                      />
                     )}
                   </g>
                 )}

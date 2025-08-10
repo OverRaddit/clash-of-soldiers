@@ -150,6 +150,37 @@
   }
 }
 
+/* 마지막 배치 병정 효과 */
+@keyframes last-placement-glow {
+  0% {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 16px rgba(255, 215, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 1)) drop-shadow(0 0 24px rgba(255, 215, 0, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 16px rgba(255, 215, 0, 0.6));
+  }
+}
+
+@keyframes last-placement-ring {
+  0% {
+    stroke: rgba(255, 215, 0, 1);
+    stroke-width: 6;
+    opacity: 1;
+  }
+  50% {
+    stroke: rgba(255, 215, 0, 0.7);
+    stroke-width: 8;
+    opacity: 0.8;
+  }
+  100% {
+    stroke: rgba(255, 215, 0, 1);
+    stroke-width: 6;
+    opacity: 1;
+  }
+}
+
 @keyframes giant-target-glow {
   0% {
     filter: drop-shadow(0 0 3px rgba(46, 213, 115, 0.5));
@@ -173,6 +204,17 @@
   stroke-width: 3 !important;
 }
 
+/* 마지막 배치 병정 스타일 */
+.vertex.last-placement {
+  animation: last-placement-glow 2s infinite;
+}
+
+.last-placement-ring {
+  animation: last-placement-ring 2s infinite;
+  fill: none;
+  pointer-events: none;
+}
+
 /* 접근성 개선 */
 @media (prefers-reduced-motion: reduce) {
   .vertex,
@@ -181,7 +223,9 @@
   }
 
   .vertex.selected,
-  .vertex.giant-target-available {
+  .vertex.giant-target-available,
+  .vertex.last-placement,
+  .last-placement-ring {
     animation: none;
   }
 }

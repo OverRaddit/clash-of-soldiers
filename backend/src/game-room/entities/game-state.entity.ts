@@ -39,6 +39,13 @@ export interface MedalZone {
   claimedBy?: string; // 누가 획득했는지
 }
 
+export interface LastPlacement {
+  vertexId: string;
+  playerId: string;
+  soldierType: number;
+  timestamp: number;
+}
+
 export class GameState {
   // 맵 구조
   vertices: Map<string, Vertex> = new Map();
@@ -50,6 +57,9 @@ export class GameState {
   turnCount: number = 0;
   gameStatus: 'waiting' | 'playing' | 'finished' = 'waiting';
   winner?: string;
+
+  // 마지막 배치들 정보 (캡틴 등으로 여러 개 배치 가능)
+  lastPlacements: LastPlacement[] = [];
 
   // 스냅샷 시스템
   turnStartSnapshot?: any; // 턴 시작 시점의 상태
@@ -267,6 +277,7 @@ export class GameState {
       medalZones: this.medalZones,
       turnStartSnapshot: this.turnStartSnapshot,
       pendingAction: this.pendingAction,
+      lastPlacements: this.lastPlacements,
     };
   }
 
@@ -286,6 +297,7 @@ export class GameState {
     gameState.medalZones = jsonData.medalZones || [];
     gameState.turnStartSnapshot = jsonData.turnStartSnapshot;
     gameState.pendingAction = jsonData.pendingAction;
+    gameState.lastPlacements = jsonData.lastPlacements || [];
 
     return gameState;
   }
