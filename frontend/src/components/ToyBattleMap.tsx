@@ -232,7 +232,7 @@ export default function ToyBattleMap({
                       stroke={
                         topSoldier.playerColor === 'red' ? '#c92a2a' : '#1864ab'
                       }
-                      strokeWidth='2'
+                      strokeWidth='8'
                       opacity='0.6'
                       style={{ pointerEvents: 'none' }}
                     />
