@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import GameLobby from './components/GameLobby';
 import GameRoom from './components/GameRoom';

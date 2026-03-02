@@ -203,6 +203,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('kraken_error', handleKrakenError);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Waiting room
