@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
-import { GameRoom } from './entities/game-room-memory.entity';
+import { GameRoom, GameType } from './entities/game-room-memory.entity';
 
 @Injectable()
 export class GameRoomService implements OnModuleDestroy {
@@ -23,11 +23,14 @@ export class GameRoomService implements OnModuleDestroy {
 
   createRoom(createRoomDto: CreateRoomDto): GameRoom {
     const roomId = this.generateRoomId();
+    const gameType = (createRoomDto.gameType || 'toy-battle') as GameType;
+    const defaultMaxPlayers = gameType === 'no-touch-kraken' ? 4 : 2;
     const room = new GameRoom(
       roomId,
       createRoomDto.roomName,
       createRoomDto.hostId,
-      createRoomDto.maxPlayers || 2
+      createRoomDto.maxPlayers || defaultMaxPlayers,
+      gameType
     );
     
     // 호스트를 방에 추가
@@ -109,8 +112,9 @@ export class GameRoomService implements OnModuleDestroy {
       throw new Error('게임 시작 권한이 없습니다.');
     }
 
-    if (room.players.length < 2) {
-      throw new Error('최소 2명의 플레이어가 필요합니다.');
+    const minPlayers = room.gameType === 'no-touch-kraken' ? 3 : 2;
+    if (room.players.length < minPlayers) {
+      throw new Error(`최소 ${minPlayers}명의 플레이어가 필요합니다.`);
     }
 
     if (!room.players.every(player => player.isReady || player.isHost)) {
@@ -139,6 +143,21 @@ export class GameRoomService implements OnModuleDestroy {
     }
 
     player.isReady = !player.isReady;
+    return room;
+  }
+
+  resetRoom(roomId: string): GameRoom {
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('방을 찾을 수 없습니다.');
+    }
+    room.status = 'waiting';
+    room.gameState = null;
+    for (const player of room.players) {
+      if (!player.isHost) {
+        player.isReady = false;
+      }
+    }
     return room;
   }
 

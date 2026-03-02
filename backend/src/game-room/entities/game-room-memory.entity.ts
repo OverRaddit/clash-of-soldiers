@@ -6,6 +6,7 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
+export type GameType = 'toy-battle' | 'no-touch-kraken';
 
 export class GameRoom {
   id: string;
@@ -16,8 +17,9 @@ export class GameRoom {
   status: GameRoomStatus;
   createdAt: Date;
   gameState: any;
+  gameType: GameType;
 
-  constructor(id: string, name: string, hostId: string, maxPlayers: number = 2) {
+  constructor(id: string, name: string, hostId: string, maxPlayers: number = 2, gameType: GameType = 'toy-battle') {
     this.id = id;
     this.name = name;
     this.hostId = hostId;
@@ -26,6 +28,7 @@ export class GameRoom {
     this.status = 'waiting';
     this.createdAt = new Date();
     this.gameState = null;
+    this.gameType = gameType;
   }
 
   addPlayer(player: Player): void {
@@ -56,7 +59,8 @@ export class GameRoom {
       players: this.players,
       status: this.status,
       createdAt: this.createdAt,
-      gameState: this.gameState
+      gameState: this.gameState,
+      gameType: this.gameType
     };
   }
 }

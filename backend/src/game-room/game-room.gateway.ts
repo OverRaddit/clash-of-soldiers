@@ -10,6 +10,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { GameRoomService } from './game-room.service';
 import { GameLogicService } from './game-logic.service';
+import { KrakenLogicService } from './kraken-logic.service';
 import { GameState } from './entities/game-state.entity';
 
 interface ClientInfo {
@@ -45,6 +46,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
   constructor(
     private readonly gameRoomService: GameRoomService,
     private readonly gameLogicService: GameLogicService,
+    private readonly krakenLogicService: KrakenLogicService,
   ) {}
 
   handleConnection(client: Socket) {
@@ -227,20 +229,28 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     try {
       const room = this.gameRoomService.startGame(data.roomId, data.hostId);
-      
-      // 게임 로직 초기화
+
       const playerIds = room.players.map(p => p.id);
       const playerNames = room.players.map(p => p.name);
-      const gameState = this.gameLogicService.initializeGame(playerIds, playerNames);
-      
-      // 방에 게임 상태 저장
-      room.gameState = gameState.toJSON();
 
-      this.server.to(data.roomId).emit('game_started', {
-        room: room.toJSON(),
-        gameState: gameState.toJSON(),
-        message: '게임이 시작되었습니다!'
-      });
+      if (room.gameType === 'no-touch-kraken') {
+        // 크라켄 게임 초기화
+        const krakenState = this.krakenLogicService.initializeGame(playerIds, playerNames);
+        room.gameState = krakenState.toJSON();
+
+        // 플레이어별 다른 상태를 개별 emit
+        this.emitKrakenStateToAll(data.roomId, room, '게임이 시작되었습니다!', 'game_started');
+      } else {
+        // 토이배틀 게임 초기화
+        const gameState = this.gameLogicService.initializeGame(playerIds, playerNames);
+        room.gameState = gameState.toJSON();
+
+        this.server.to(data.roomId).emit('game_started', {
+          room: room.toJSON(),
+          gameState: gameState.toJSON(),
+          message: '게임이 시작되었습니다!'
+        });
+      }
 
     } catch (error) {
       client.emit('start_game_error', {
@@ -479,14 +489,211 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         throw new Error('방을 찾을 수 없습니다.');
       }
 
-      client.emit('room_state', {
-        room: room.toJSON()
-      });
+      if (room.gameType === 'no-touch-kraken' && room.gameState) {
+        const clientInfo = this.clients.get(client.id);
+        if (clientInfo?.playerId) {
+          const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+          const playerView = this.krakenLogicService.getPlayerView(krakenState, clientInfo.playerId);
+          client.emit('room_state', {
+            room: { ...room.toJSON(), gameState: playerView }
+          });
+        }
+      } else {
+        client.emit('room_state', {
+          room: room.toJSON()
+        });
+      }
 
     } catch (error) {
       client.emit('get_room_state_error', {
         message: error.message
       });
+    }
+  }
+
+  // --- 크라켄 전용 이벤트 핸들러 ---
+
+  @SubscribeMessage('kraken_select_card')
+  handleKrakenSelectCard(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; targetPlayerId: string; cardIndex: number }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
+
+      const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+      this.krakenLogicService.selectCard(krakenState, data.playerId, data.targetPlayerId, data.cardIndex);
+      room.gameState = krakenState.toJSON();
+
+      this.emitKrakenStateToAll(data.roomId, room, `카드를 선택했습니다.`);
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('kraken_change_selection')
+  handleKrakenChangeSelection(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; targetPlayerId: string; cardIndex: number }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
+
+      const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+      this.krakenLogicService.changeSelection(krakenState, data.playerId, data.targetPlayerId, data.cardIndex);
+      room.gameState = krakenState.toJSON();
+
+      this.emitKrakenStateToAll(data.roomId, room, `선택을 변경했습니다.`);
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('kraken_confirm_reveal')
+  handleKrakenConfirmReveal(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
+
+      const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+
+      // Capture selectedCard before confirmReveal clears it
+      const capturedSelection = krakenState.selectedCard
+        ? { targetPlayerId: krakenState.selectedCard.targetPlayerId, cardIndex: krakenState.selectedCard.cardIndex }
+        : undefined;
+
+      const result = this.krakenLogicService.confirmReveal(krakenState, data.playerId);
+      room.gameState = krakenState.toJSON();
+
+      // Build lastRevealedCard from captured selection + result
+      const lastRevealedCard = capturedSelection ? {
+        cardType: result.cardType,
+        revealedBy: data.playerId,
+        revealedFrom: capturedSelection.targetPlayerId,
+        cardIndex: capturedSelection.cardIndex,
+      } : undefined;
+
+      if (result.gameEnded) {
+        room.status = 'finished';
+        // 게임 종료 시 모든 플레이어에게 최종 상태 전송
+        for (const [socketId, info] of this.clients.entries()) {
+          if (info.roomId === data.roomId && info.playerId) {
+            const playerView = this.krakenLogicService.getPlayerView(krakenState, info.playerId);
+            if (lastRevealedCard) playerView.lastRevealedCard = lastRevealedCard;
+            this.server.to(socketId).emit('game_ended', {
+              room: room.toJSON(),
+              gameState: playerView,
+              winner: krakenState.winner,
+              winReason: krakenState.winReason,
+              message: result.message
+            });
+          }
+        }
+      } else {
+        this.emitKrakenStateToAll(data.roomId, room, result.message, 'kraken_state_updated', lastRevealedCard);
+      }
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('return_to_room')
+  handleReturnToRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room) throw new Error('방을 찾을 수 없습니다.');
+      if (room.hostId !== data.playerId) throw new Error('방장만 방으로 돌아갈 수 있습니다.');
+
+      this.gameRoomService.resetRoom(data.roomId);
+
+      this.server.to(data.roomId).emit('room_updated', {
+        type: 'returned_to_room',
+        room: room.toJSON(),
+        message: '방으로 돌아왔습니다.'
+      });
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('kraken_ping')
+  handleKrakenPing(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; targetPlayerId: string; cardIndex: number; pingType: string; color: string }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room) throw new Error('방을 찾을 수 없습니다.');
+
+      const player = room.players.find(p => p.id === data.playerId);
+      const pingerName = player?.name || data.playerId;
+
+      this.server.to(data.roomId).emit('kraken_ping', {
+        pingerId: data.playerId,
+        pingerName,
+        targetPlayerId: data.targetPlayerId,
+        cardIndex: data.cardIndex,
+        pingType: data.pingType,
+        color: data.color,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('kraken_chat')
+  handleKrakenChat(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; message: string }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
+
+      const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+      const chatMessage = this.krakenLogicService.addChatMessage(krakenState, data.playerId, data.message);
+      room.gameState = krakenState.toJSON();
+
+      // 채팅은 모든 플레이어에게 동일하게 전송
+      this.server.to(data.roomId).emit('kraken_chat_message', chatMessage);
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
+  // --- 헬퍼 메서드 ---
+
+  private findSocketIdByPlayerId(playerId: string): string | null {
+    for (const [socketId, info] of this.clients.entries()) {
+      if (info.playerId === playerId) {
+        return socketId;
+      }
+    }
+    return null;
+  }
+
+  private emitKrakenStateToAll(roomId: string, room: any, message: string, event: string = 'kraken_state_updated', lastRevealedCard?: any) {
+    const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+
+    for (const [socketId, info] of this.clients.entries()) {
+      if (info.roomId === roomId && info.playerId) {
+        const playerView = this.krakenLogicService.getPlayerView(krakenState, info.playerId);
+        if (lastRevealedCard) playerView.lastRevealedCard = lastRevealedCard;
+        this.server.to(socketId).emit(event, {
+          room: { ...room.toJSON(), gameState: playerView },
+          gameState: playerView,
+          message
+        });
+      }
     }
   }
 }
