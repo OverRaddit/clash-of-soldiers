@@ -49,6 +49,7 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
   const [activePings, setActivePings] = useState<CardPing[]>([]);
   const [showPingSelector, setShowPingSelector] = useState<{ targetPlayerId: string; cardIndex: number } | null>(null);
   const pingTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const [playerMarks, setPlayerMarks] = useState<Record<string, 'explorer' | 'skeleton' | null>>({});
 
   const isMyTurn = krakenState.actionMarkerHolder === playerId;
   const hasSelection = !!krakenState.selectedCard;
@@ -196,6 +197,17 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
     setShowPingSelector({ targetPlayerId, cardIndex });
   }, []);
 
+  const handleToggleMark = useCallback((pid: string) => {
+    setPlayerMarks(prev => {
+      const current = prev[pid] || null;
+      let next: 'explorer' | 'skeleton' | null;
+      if (current === null) next = 'explorer';
+      else if (current === 'explorer') next = 'skeleton';
+      else next = null;
+      return { ...prev, [pid]: next };
+    });
+  }, []);
+
   // Step 7: Handle animation complete - flush pending overlays
   const handleRevealAnimationComplete = useCallback(() => {
     setRevealAnimation(null);
@@ -264,6 +276,8 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
           showPingSelector={showPingSelector}
           onShowPingSelector={handleShowPingSelector}
           getPlayerColor={getPlayerColor}
+          playerMarks={playerMarks}
+          onToggleMark={handleToggleMark}
         />
 
         {/* Confirm Button */}

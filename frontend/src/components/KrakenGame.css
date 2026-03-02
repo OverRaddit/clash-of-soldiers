@@ -313,11 +313,50 @@
   padding: 4px 0;
 }
 
+/* --- Player Mark Button --- */
+.player-mark-btn {
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #78909c;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  padding: 0;
+  align-self: center;
+}
+
+.player-mark-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.player-mark-btn.explorer {
+  background: rgba(56, 142, 60, 0.25);
+  border-color: rgba(56, 142, 60, 0.5);
+  color: #66bb6a;
+}
+
+.player-mark-btn.skeleton {
+  background: rgba(183, 28, 28, 0.25);
+  border-color: rgba(183, 28, 28, 0.5);
+  color: #ef5350;
+}
+
 /* === Confirm Section === */
 .kraken-confirm-section {
   display: flex;
   justify-content: center;
   padding: 4px 0;
+  flex-shrink: 0;
 }
 
 .kraken-confirm-btn {

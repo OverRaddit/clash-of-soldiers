@@ -32,6 +32,8 @@ interface PlayerCardsAreaProps {
   showPingSelector: { targetPlayerId: string; cardIndex: number } | null;
   onShowPingSelector: (targetPlayerId: string, cardIndex: number) => void;
   getPlayerColor: (playerId: string) => string;
+  playerMarks: Record<string, 'explorer' | 'skeleton' | null>;
+  onToggleMark: (playerId: string) => void;
 }
 
 const getCompositionChips = (types: KrakenCardType[]) => {
@@ -63,6 +65,8 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
   showPingSelector,
   onShowPingSelector,
   getPlayerColor,
+  playerMarks,
+  onToggleMark,
 }) => {
   const canSelect = isMyTurn && (gamePhase === 'selecting' || gamePhase === 'discussing');
 
@@ -239,6 +243,16 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
             )}
           </div>
         </div>
+
+        {!isSelf && (
+          <button
+            className={`player-mark-btn ${playerMarks[pid] || ''}`}
+            onClick={(e) => { e.stopPropagation(); onToggleMark(pid); }}
+            title="역할 추리 마크"
+          >
+            {playerMarks[pid] === 'explorer' ? '⛵' : playerMarks[pid] === 'skeleton' ? '💀' : '◯'}
+          </button>
+        )}
       </div>
     );
   };
