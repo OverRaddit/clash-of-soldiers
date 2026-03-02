@@ -1,0 +1,1083 @@
+/* === Kraken Game Layout === */
+.kraken-game {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0d1b2a 0%, #1b2838 50%, #0d1b2a 100%);
+  color: #e0e0e0;
+}
+
+/* Header */
+.kraken-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kraken-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kraken-title {
+  margin: 0;
+  font-size: 18px;
+  color: #4fc3f7;
+  font-weight: bold;
+}
+
+.kraken-room-name {
+  font-size: 13px;
+  color: #90a4ae;
+}
+
+/* Status Bar */
+.kraken-status-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+}
+
+.status-item {
+  color: #b0bec5;
+}
+
+.status-item.phase {
+  color: #4fc3f7;
+  font-weight: bold;
+}
+
+.status-divider {
+  color: #455a64;
+}
+
+/* Main Layout */
+.kraken-main-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 8px;
+  gap: 8px;
+}
+
+.kraken-main-layout > .game-message {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+/* === Player Cards Area === */
+.kraken-players-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- Player Row --- */
+.player-row {
+  display: flex;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: visible;
+  position: relative;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.player-row--active {
+  border-color: rgba(255, 183, 77, 0.35);
+  background: rgba(255, 183, 77, 0.04);
+}
+
+.player-row--self {
+  border-color: color-mix(in srgb, var(--player-color) 30%, transparent);
+  background: color-mix(in srgb, var(--player-color) 6%, transparent);
+}
+
+.player-stripe {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 10px 0 0 10px;
+  opacity: 0.7;
+}
+
+.player-row--active .player-stripe {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--player-color);
+}
+
+.player-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  min-width: 0;
+}
+
+/* --- Identity line --- */
+.player-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.player-identity-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.action-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: rgba(255, 152, 0, 0.18);
+  color: #ffb74d;
+  border: 1px solid rgba(255, 152, 0, 0.35);
+  animation: markerPulse 2s ease-in-out infinite;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.action-marker-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffb74d;
+  box-shadow: 0 0 4px #ffb74d;
+}
+
+@keyframes markerPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.2); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(255, 152, 0, 0); }
+}
+
+.player-nickname {
+  font-size: 14px;
+  font-weight: 700;
+  color: #cfd8dc;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-me-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+  border: 1px solid rgba(79, 195, 247, 0.3);
+  text-transform: uppercase;
+}
+
+.player-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.player-role-badge.explorer {
+  background: rgba(56, 142, 60, 0.15);
+  color: #66bb6a;
+  border: 1px solid rgba(56, 142, 60, 0.3);
+}
+
+.player-role-badge.skeleton {
+  background: rgba(183, 28, 28, 0.15);
+  color: #ef5350;
+  border: 1px solid rgba(183, 28, 28, 0.3);
+}
+
+/* --- Composition chips --- */
+.player-composition {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.comp-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+}
+
+.comp-chip-treasure {
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd54f;
+}
+
+.comp-chip-kraken {
+  background: rgba(244, 67, 54, 0.12);
+  color: #ef5350;
+}
+
+.comp-chip-empty {
+  background: rgba(158, 158, 158, 0.12);
+  color: #9e9e9e;
+}
+
+/* --- Cards row --- */
+.player-cards-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.card-slot {
+  position: relative;
+  width: 40px;
+  height: 56px;
+  -webkit-touch-callout: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+  z-index: 1;
+}
+
+.card-slot--selector-open {
+  z-index: 50;
+}
+
+.card-slot--clickable {
+  cursor: pointer;
+}
+
+.card-slot--clickable:hover {
+  border-color: #64b5f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
+}
+
+.card-slot--selected {
+  border: 2px solid #ff9800;
+  box-shadow: 0 0 16px rgba(255, 152, 0, 0.5);
+  transform: translateY(-4px);
+}
+
+.card-slot--self {
+  border: 2px solid color-mix(in srgb, var(--card-accent, #4fc3f7) 50%, #3949ab);
+}
+
+.card-slot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.no-cards-text {
+  color: #546e7a;
+  font-size: 12px;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* === Confirm Section === */
+.kraken-confirm-section {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.kraken-confirm-btn {
+  padding: 10px 32px;
+  background: linear-gradient(135deg, #ff6f00 0%, #ff8f00 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 111, 0, 0.4);
+}
+
+.kraken-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 111, 0, 0.5);
+}
+
+/* === Revealed Cards Area === */
+.kraken-revealed-area {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.revealed-header {
+  font-size: 13px;
+  font-weight: bold;
+  color: #78909c;
+  margin-bottom: 6px;
+}
+
+.revealed-empty {
+  font-size: 12px;
+  color: #546e7a;
+  font-style: italic;
+  text-align: center;
+  padding: 8px;
+}
+
+.revealed-cards-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.revealed-card-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.revealed-card-item.empty {
+  background: rgba(158, 158, 158, 0.2);
+  color: #9e9e9e;
+  border: 1px solid rgba(158, 158, 158, 0.3);
+}
+
+.revealed-card-item.treasure {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd54f;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.revealed-card-item.kraken {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ef5350;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.revealed-card-emoji {
+  font-size: 14px;
+}
+
+.revealed-card-label {
+  font-size: 11px;
+}
+
+/* === Chat Panel === */
+.kraken-chat-panel {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 160px;
+  min-height: 160px;
+  flex-shrink: 0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+
+.chat-message {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #b0bec5;
+}
+
+.chat-message.system {
+  color: #78909c;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.chat-message.mine .chat-sender {
+  color: #4fc3f7;
+}
+
+.chat-sender {
+  font-weight: 600;
+  color: #81c784;
+}
+
+.system-text {
+  color: #78909c;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+}
+
+.chat-input:focus {
+  border-color: #4fc3f7;
+}
+
+.chat-input::placeholder {
+  color: #546e7a;
+}
+
+.chat-send-btn {
+  padding: 6px 14px;
+  background: #1565c0;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-send-btn:hover {
+  background: #1976d2;
+}
+
+/* === My Cards Area === */
+.kraken-my-area {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.my-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.role-badge.explorer {
+  background: rgba(56, 142, 60, 0.2);
+  color: #66bb6a;
+  border: 1px solid rgba(56, 142, 60, 0.4);
+}
+
+.role-badge.skeleton {
+  background: rgba(183, 28, 28, 0.2);
+  color: #ef5350;
+  border: 1px solid rgba(183, 28, 28, 0.4);
+}
+
+.role-badge-small {
+  font-size: 14px;
+}
+
+.action-holder-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  background: rgba(255, 152, 0, 0.2);
+  color: #ffb74d;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.my-card-composition {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.composition-label {
+  color: #78909c;
+  font-weight: 600;
+}
+
+.composition-item {
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.composition-item.empty {
+  background: rgba(158, 158, 158, 0.15);
+  color: #9e9e9e;
+}
+
+.composition-item.treasure {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd54f;
+}
+
+.composition-item.kraken {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ef5350;
+}
+
+.my-cards-display {
+  display: flex;
+  gap: 6px;
+}
+
+.kraken-my-card {
+  width: 36px;
+  height: 50px;
+  background: linear-gradient(135deg, #263238 0%, #37474f 100%);
+  border: 2px solid #546e7a;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #78909c;
+}
+
+/* === Card Reveal Animation === */
+.card-reveal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.card-reveal-container {
+  width: 120px;
+  height: 168px;
+  perspective: 1000px;
+}
+
+.card-reveal-container.flipped .card-reveal-inner {
+  transform: rotateY(180deg);
+}
+
+.card-reveal-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s ease;
+  transform-style: preserve-3d;
+}
+
+.card-reveal-front,
+.card-reveal-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.card-reveal-front {
+  overflow: hidden;
+}
+
+.card-reveal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 9px;
+}
+
+.card-reveal-back {
+  transform: rotateY(180deg);
+  border: 3px solid;
+  overflow: hidden;
+}
+
+.card-reveal-back.empty {
+  border-color: #78909c;
+}
+
+.card-reveal-back.treasure {
+  border-color: #ffd54f;
+}
+
+.card-reveal-back.kraken {
+  border-color: #ef5350;
+}
+
+.card-reveal-label {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* === Cinema Video Overlay === */
+.cinema-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1002;
+  background: #000;
+}
+
+.reveal-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cinema-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+}
+
+.cinema-close-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* === Overlays === */
+.kraken-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+.kraken-overlay.game-end-bg {
+  z-index: 1001;
+}
+
+.kraken-overlay-content {
+  background: linear-gradient(135deg, #1b2838 0%, #263238 100%);
+  padding: 32px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.overlay-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+.kraken-overlay-content h2 {
+  margin: 0 0 12px 0;
+  color: #4fc3f7;
+}
+
+.kraken-overlay-content p {
+  margin: 0 0 8px 0;
+  color: #90a4ae;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.round-info {
+  font-size: 18px !important;
+  font-weight: bold;
+  color: #4fc3f7 !important;
+  margin-top: 8px !important;
+}
+
+.overlay-btn {
+  margin-top: 16px;
+  padding: 10px 28px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.overlay-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.overlay-btn.primary {
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+  border-color: #1976d2;
+}
+
+.overlay-btn.primary:hover {
+  background: linear-gradient(135deg, #1976d2 0%, #1e88e5 100%);
+}
+
+/* Game End Styles */
+.game-end-title-kraken {
+  font-size: 40px;
+  margin: 0 0 8px 0;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-end-winner-team {
+  font-size: 22px;
+  margin: 0 0 12px 0;
+  color: #4fc3f7;
+}
+
+.game-end-reason {
+  font-size: 14px;
+  color: #90a4ae;
+  margin: 0 0 20px 0;
+}
+
+.role-reveal-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.role-reveal-section h3 {
+  margin: 0 0 12px 0;
+  color: #78909c;
+  font-size: 14px;
+}
+
+.role-reveal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.role-reveal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.role-reveal-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .kraken-header {
+    padding: 6px 12px;
+  }
+
+  .kraken-title {
+    font-size: 16px;
+  }
+
+  .kraken-status-bar {
+    font-size: 12px;
+    padding: 4px 12px;
+  }
+
+  .kraken-main-layout {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .card-slot {
+    width: 36px;
+    height: 50px;
+  }
+
+  .kraken-confirm-btn {
+    font-size: 14px;
+    padding: 8px 24px;
+  }
+
+  .kraken-overlay-content {
+    padding: 24px;
+  }
+
+  .game-end-title-kraken {
+    font-size: 32px;
+  }
+}
+
+/* === Revealed Cards Round Grouping === */
+.revealed-rounds-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.revealed-round-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.revealed-round-label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* (Self row styles moved into player-row--self above) */
+
+/* === Game End Actions === */
+.game-end-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.waiting-host-text {
+  font-size: 13px;
+  color: #78909c;
+  font-style: italic;
+  margin: 0;
+}
+
+/* === Ping System === */
+.ping-indicators {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.ping-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 10px;
+  background: rgba(13, 27, 42, 0.92);
+  border: 1.5px solid;
+  animation: pingPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.ping-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px currentColor;
+}
+
+.ping-emoji {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.ping-name {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  max-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ping selector dropdown */
+.ping-selector {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: linear-gradient(180deg, #1e2d3d 0%, #162230 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0,0,0,0.3);
+  min-width: 100px;
+  animation: pingSelectorIn 0.15s ease-out;
+}
+
+.ping-selector-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 6px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 2px;
+}
+
+.ping-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  color: #cfd8dc;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.12s, transform 0.12s;
+}
+
+.ping-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+.ping-option:active {
+  transform: scale(0.97);
+}
+
+.ping-option-emoji {
+  font-size: 15px;
+}
+
+.ping-option-label {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.ping-option-treasure:hover { background: rgba(255, 215, 0, 0.1); }
+.ping-option-kraken:hover { background: rgba(244, 67, 54, 0.1); }
+.ping-option-avoid:hover { background: rgba(158, 158, 158, 0.1); }
+
+@keyframes pingPop {
+  0% { transform: scale(0) translateX(-50%); opacity: 0; }
+  70% { transform: scale(1.15) translateX(-50%); }
+  100% { transform: scale(1) translateX(-50%); opacity: 1; }
+}
+
+@keyframes pingSelectorIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px) scale(0.95); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* Reuse confetti and fadeIn from GameRoom.css */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kraken-game * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

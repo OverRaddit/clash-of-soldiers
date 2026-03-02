@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GameRoom } from '../types/game.types';
+import { GameRoom, GameType } from '../types/game.types';
 import apiService from '../services/api.service';
 import socketService from '../services/socket.service';
 import './GameLobby.css';
@@ -10,6 +10,25 @@ interface GameLobbyProps {
   onJoinRoom: (room: GameRoom) => void;
 }
 
+const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; maxPlayers: number; color: string; bgColor: string; borderColor: string }> = {
+  'toy-battle': {
+    label: '토이배틀',
+    minPlayers: 2,
+    maxPlayers: 2,
+    color: '#1565c0',
+    bgColor: '#e3f2fd',
+    borderColor: '#90caf9',
+  },
+  'no-touch-kraken': {
+    label: '노터치크라켄',
+    minPlayers: 3,
+    maxPlayers: 8,
+    color: '#2e7d32',
+    bgColor: '#e8f5e9',
+    borderColor: '#a5d6a7',
+  },
+};
+
 const GameLobby: React.FC<GameLobbyProps> = ({
   playerId,
   playerName,
@@ -19,9 +38,17 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
+  const [selectedGameType, setSelectedGameType] = useState<GameType>('toy-battle');
+  const [maxPlayers, setMaxPlayers] = useState(2);
   const [error, setError] = useState<string | null>(null);
 
-  // 방 목록 로드
+  // 게임 타입 변경 시 maxPlayers 기본값 업데이트
+  const handleGameTypeChange = (gameType: GameType) => {
+    setSelectedGameType(gameType);
+    const config = GAME_TYPE_CONFIG[gameType];
+    setMaxPlayers(gameType === 'toy-battle' ? 2 : config.minPlayers);
+  };
+
   const loadRooms = async () => {
     try {
       setLoading(true);
@@ -37,7 +64,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     }
   };
 
-  // 방 생성
   const createRoom = async () => {
     if (!newRoomName.trim()) {
       setError('방 이름을 입력해주세요.');
@@ -50,19 +76,18 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
       const response = await apiService.createRoom(
         newRoomName.trim(),
-        playerId
+        playerId,
+        maxPlayers,
+        selectedGameType
       );
       if (response.success && response.data) {
-        // 소켓이 연결되어 있는지 확인
         const socket = socketService.getSocket();
         if (!socket || !socket.connected) {
           socketService.connect();
         }
 
-        // Socket으로 방에 입장 (방장도 Socket 연결 필요)
         socketService.joinRoom(response.data.id, playerId, playerName);
 
-        // 성공 응답을 기다림
         socketService.onJoinRoomSuccess((data) => {
           onJoinRoom(data.room);
         });
@@ -81,21 +106,17 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     }
   };
 
-  // 방 참여
   const joinRoom = async (roomId: string) => {
     try {
       setError(null);
 
-      // 소켓이 연결되어 있는지 확인
       const socket = socketService.getSocket();
       if (!socket || !socket.connected) {
         socketService.connect();
       }
 
-      // Socket.IO로 방 참여
       socketService.joinRoom(roomId, playerId, playerName);
 
-      // 성공 응답을 기다림
       socketService.onJoinRoomSuccess((data) => {
         onJoinRoom(data.room);
       });
@@ -110,24 +131,19 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   };
 
   useEffect(() => {
-    // 소켓 연결
     socketService.connect();
-
     loadRooms();
-
-    // 5초마다 방 목록 갱신
     const interval = setInterval(loadRooms, 5000);
-
     return () => {
       clearInterval(interval);
-      // 컴포넌트 언마운트 시 소켓 연결 해제
-      // socketService.disconnect();
     };
   }, []);
 
+  const config = GAME_TYPE_CONFIG[selectedGameType];
+
   return (
     <div className="game-lobby">
-      <h1>토이배틀 게임 로비</h1>
+      <h1>게임 로비</h1>
 
       <div className="player-info">
         <h3>플레이어 정보</h3>
@@ -142,6 +158,50 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       {/* 방 생성 */}
       <div className="create-room-section">
         <h3>새 방 만들기</h3>
+
+        {/* 게임 타입 선택 */}
+        <div className="game-type-selector">
+          {(Object.keys(GAME_TYPE_CONFIG) as GameType[]).map((type) => {
+            const typeConfig = GAME_TYPE_CONFIG[type];
+            const isSelected = selectedGameType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => handleGameTypeChange(type)}
+                className={`game-type-btn ${isSelected ? 'selected' : ''}`}
+                style={{
+                  backgroundColor: isSelected ? typeConfig.bgColor : '#f8f9fa',
+                  color: isSelected ? typeConfig.color : '#666',
+                  borderColor: isSelected ? typeConfig.borderColor : '#ddd',
+                }}
+              >
+                {typeConfig.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 인원 설정 (크라켄만) */}
+        {selectedGameType === 'no-touch-kraken' && (
+          <div className="max-players-selector">
+            <label>인원 설정: </label>
+            <select
+              value={maxPlayers}
+              onChange={(e) => setMaxPlayers(Number(e.target.value))}
+              className="max-players-select"
+            >
+              {Array.from(
+                { length: config.maxPlayers - config.minPlayers + 1 },
+                (_, i) => config.minPlayers + i
+              ).map((n) => (
+                <option key={n} value={n}>
+                  {n}명
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="create-room-form">
           <input
             type="text"
@@ -161,7 +221,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         </div>
       </div>
 
-      {/* 에러 메시지 */}
       {error && (
         <div className="error-message">
           {error}
@@ -187,38 +246,53 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           </div>
         ) : (
           <div className="rooms-grid">
-            {rooms.map((room) => (
-              <div key={room.id} className="room-card">
-                <div className="room-info">
-                  <h4>{room.name}</h4>
-                  <p className="room-details">
-                    플레이어: {room.players.length}/{room.maxPlayers} | 상태:{' '}
-                    {room.status === 'waiting'
-                      ? '대기 중'
-                      : room.status === 'playing'
-                      ? '게임 중'
-                      : '종료'}{' '}
-                    | 방장:{' '}
-                    {room.players.find((p) => p.isHost)?.name || '알 수 없음'}
-                  </p>
-                </div>
+            {rooms.map((room) => {
+              const roomTypeConfig = GAME_TYPE_CONFIG[room.gameType] || GAME_TYPE_CONFIG['toy-battle'];
+              return (
+                <div key={room.id} className="room-card">
+                  <div className="room-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h4 style={{ margin: 0 }}>{room.name}</h4>
+                      <span
+                        className="game-type-badge"
+                        style={{
+                          backgroundColor: roomTypeConfig.bgColor,
+                          color: roomTypeConfig.color,
+                          border: `1px solid ${roomTypeConfig.borderColor}`,
+                        }}
+                      >
+                        {roomTypeConfig.label}
+                      </span>
+                    </div>
+                    <p className="room-details">
+                      플레이어: {room.players.length}/{room.maxPlayers} | 상태:{' '}
+                      {room.status === 'waiting'
+                        ? '대기 중'
+                        : room.status === 'playing'
+                        ? '게임 중'
+                        : '종료'}{' '}
+                      | 방장:{' '}
+                      {room.players.find((p) => p.isHost)?.name || '알 수 없음'}
+                    </p>
+                  </div>
 
-                <button
-                  onClick={() => joinRoom(room.id)}
-                  disabled={
-                    room.players.length >= room.maxPlayers ||
-                    room.status !== 'waiting'
-                  }
-                  className="join-room-btn"
-                >
-                  {room.players.length >= room.maxPlayers
-                    ? '가득참'
-                    : room.status !== 'waiting'
-                    ? '진행중'
-                    : '참여'}
-                </button>
-              </div>
-            ))}
+                  <button
+                    onClick={() => joinRoom(room.id)}
+                    disabled={
+                      room.players.length >= room.maxPlayers ||
+                      room.status !== 'waiting'
+                    }
+                    className="join-room-btn"
+                  >
+                    {room.players.length >= room.maxPlayers
+                      ? '가득참'
+                      : room.status !== 'waiting'
+                      ? '진행중'
+                      : '참여'}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

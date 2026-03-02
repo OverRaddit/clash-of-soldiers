@@ -1,5 +1,6 @@
-export type PlayerColor = 'red' | 'blue';
+// Common types shared across all games
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
+export type GameType = 'toy-battle' | 'no-touch-kraken';
 
 export interface Player {
   id: string;
@@ -17,54 +18,9 @@ export interface GameRoom {
   status: GameRoomStatus;
   createdAt: string;
   gameState?: any;
+  gameType: GameType;
 }
 
-export interface Soldier {
-  type: number; // 1-8
-  power: number;
-  playerId: string;
-  playerColor: PlayerColor;
-}
-
-export interface Vertex {
-  id: string;
-  type: 1 | 2 | 3; // 1: base, 2: special, 3: gray
-  soldiers: Soldier[];
-}
-
-export interface GamePlayer {
-  id: string;
-  name: string;
-  color: PlayerColor;
-  isHost: boolean;
-  deck: Soldier[];
-  stand: Soldier[];
-  medals: number;
-  discardPile: Soldier[];
-}
-
-export interface MedalZone {
-  vertices: string[];
-  points: number;
-  claimed: boolean;
-  claimedBy?: string;
-}
-
-export interface PendingAction {
-  type: 'select_giant_target' | 'place_additional_soldier';
-  playerId: string;
-  availableTargets?: string[]; // 거인병용: 제거 가능한 정점들
-  sourceVertex?: string; // 거인병이 배치된 정점
-}
-
-export interface GameState {
-  vertices: [string, Vertex][];
-  players: [string, GamePlayer][];
-  currentTurn: string;
-  turnCount: number;
-  gameStatus: 'waiting' | 'playing' | 'finished';
-  winner?: string;
-  medalZones: MedalZone[];
-  pendingAction?: PendingAction;
-  turnStartSnapshot?: any;
-}
+// Re-export toy-battle types for backward compatibility
+export type { PlayerColor, Soldier, Vertex, GamePlayer, MedalZone, PendingAction } from './toy-battle.types';
+export type { ToyBattleGameState as GameState } from './toy-battle.types';

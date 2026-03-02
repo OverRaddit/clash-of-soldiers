@@ -57,7 +57,7 @@ function App() {
     return (
       <div className="main-screen">
         <div className="main-screen-container">
-          <h1>토이배틀</h1>
+          <h1>보드게임 플랫폼</h1>
           <p className="main-screen-description">
             게임에 참여하기 위해 플레이어 이름을 입력해주세요.
           </p>

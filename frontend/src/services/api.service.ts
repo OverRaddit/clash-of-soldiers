@@ -20,11 +20,12 @@ export interface ApiResponse<T> {
 
 class ApiService {
   // 방 생성
-  async createRoom(roomName: string, hostId: string, maxPlayers: number = 2): Promise<ApiResponse<GameRoom>> {
+  async createRoom(roomName: string, hostId: string, maxPlayers: number = 2, gameType: string = 'toy-battle'): Promise<ApiResponse<GameRoom>> {
     const response = await api.post('/game-rooms', {
       roomName,
       hostId,
       maxPlayers,
+      gameType,
     });
     return response.data;
   }
