@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameRoom as GameRoomType } from '../types/game.types';
-import { KrakenClientState, KrakenCardType, ChatMessage, CardPing, PingType, PLAYER_COLORS } from '../types/kraken.types';
+import { KrakenClientState, KrakenCardType, ChatMessage, CardPing, PingType, PLAYER_COLORS, PlayerClaim } from '../types/kraken.types';
 import socketService from '../services/socket.service';
 import PlayerCardsArea from './kraken/PlayerCardsArea';
 import RevealedCardsArea from './kraken/RevealedCardsArea';
@@ -193,6 +193,10 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
     setShowPingSelector(null);
   }, [room.id, playerId, getPlayerColor]);
 
+  const handleSetClaim = useCallback((claim: PlayerClaim) => {
+    socketService.krakenSetClaim(room.id, playerId, claim);
+  }, [room.id, playerId]);
+
   const handleShowPingSelector = useCallback((targetPlayerId: string, cardIndex: number) => {
     setShowPingSelector({ targetPlayerId, cardIndex });
   }, []);
@@ -278,6 +282,8 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
           getPlayerColor={getPlayerColor}
           playerMarks={playerMarks}
           onToggleMark={handleToggleMark}
+          myClaim={krakenState.myClaim}
+          onSetClaim={handleSetClaim}
         />
 
         {/* Confirm Button */}

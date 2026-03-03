@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { KrakenOtherPlayer, KrakenGamePhase, KrakenCardType, KrakenRole, CardPing, PingType } from '../../types/kraken.types';
+import { KrakenOtherPlayer, KrakenGamePhase, KrakenCardType, KrakenRole, CardPing, PingType, PlayerClaim } from '../../types/kraken.types';
 
 const PING_EMOJI: Record<PingType, string> = {
   treasure: '💎',
@@ -34,6 +34,8 @@ interface PlayerCardsAreaProps {
   getPlayerColor: (playerId: string) => string;
   playerMarks: Record<string, 'explorer' | 'skeleton' | null>;
   onToggleMark: (playerId: string) => void;
+  myClaim?: PlayerClaim;
+  onSetClaim: (claim: PlayerClaim) => void;
 }
 
 const getCompositionChips = (types: KrakenCardType[]) => {
@@ -67,6 +69,8 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
   getPlayerColor,
   playerMarks,
   onToggleMark,
+  myClaim,
+  onSetClaim,
 }) => {
   const canSelect = isMyTurn && (gamePhase === 'selecting' || gamePhase === 'discussing');
 
@@ -168,6 +172,17 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
   const hasPingSelectorOpen = (pid: string, idx: number) =>
     showPingSelector?.targetPlayerId === pid && showPingSelector?.cardIndex === idx;
 
+  const handleClaimTreasure = useCallback((delta: number) => {
+    const current = myClaim || { treasureCount: 0, hasKraken: false };
+    const next = Math.max(0, Math.min(myCardCount, current.treasureCount + delta));
+    onSetClaim({ ...current, treasureCount: next });
+  }, [myClaim, myCardCount, onSetClaim]);
+
+  const handleClaimKraken = useCallback(() => {
+    const current = myClaim || { treasureCount: 0, hasKraken: false };
+    onSetClaim({ ...current, hasKraken: !current.hasKraken });
+  }, [myClaim, onSetClaim]);
+
   const renderPlayerRow = (
     pid: string,
     name: string,
@@ -175,6 +190,7 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
     role: KrakenRole | undefined,
     isSelf: boolean,
     composition?: KrakenCardType[],
+    claim?: PlayerClaim,
   ) => {
     const color = getPlayerColor(pid);
     const isHolder = isActionHolder(pid);
@@ -242,6 +258,32 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
               <span className="no-cards-text">카드 없음</span>
             )}
           </div>
+
+          {/* Claim area */}
+          {isSelf && gamePhase !== 'finished' && (
+            <div className="player-claim-area">
+              <span className="claim-label">주장:</span>
+              <div className="claim-controls">
+                <button className="claim-btn" onClick={() => handleClaimTreasure(-1)}>−</button>
+                <span className="claim-value">💎{myClaim?.treasureCount ?? 0}</span>
+                <button className="claim-btn" onClick={() => handleClaimTreasure(1)}>+</button>
+              </div>
+              <button
+                className={`claim-toggle ${myClaim?.hasKraken ? 'active' : ''}`}
+                onClick={handleClaimKraken}
+              >
+                🐙{myClaim?.hasKraken ? '있음' : '없음'}
+              </button>
+            </div>
+          )}
+          {!isSelf && claim && (
+            <div className="player-claim-chips">
+              <span className="player-claim-chip">💎{claim.treasureCount} 주장</span>
+              <span className={`player-claim-chip ${claim.hasKraken ? 'kraken' : 'no-kraken'}`}>
+                🐙{claim.hasKraken ? '있음' : '없음'} 주장
+              </span>
+            </div>
+          )}
         </div>
 
         {!isSelf && (
@@ -259,9 +301,9 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
 
   return (
     <div className="kraken-players-area">
-      {renderPlayerRow(playerId, playerName, myCardCount, myRole, true, myKnownCardTypes)}
+      {renderPlayerRow(playerId, playerName, myCardCount, myRole, true, myKnownCardTypes, myClaim)}
       {otherPlayers.map((player) =>
-        renderPlayerRow(player.id, player.name, player.cardCount, player.role, false)
+        renderPlayerRow(player.id, player.name, player.cardCount, player.role, false, undefined, player.claim)
       )}
     </div>
   );

@@ -41,6 +41,11 @@ export interface ChatMessage {
   isSystem: boolean;
 }
 
+export interface PlayerClaim {
+  treasureCount: number;
+  hasKraken: boolean;
+}
+
 export type KrakenGamePhase = 'selecting' | 'discussing' | 'revealing' | 'round-end' | 'finished';
 
 export class KrakenGameState {
@@ -57,6 +62,7 @@ export class KrakenGameState {
   winReason?: string;
   chatMessages: ChatMessage[];
   allRoles: KrakenRole[];           // All roles dealt (including unused), hidden until game end
+  playerClaims: Map<string, PlayerClaim>; // Player bluff claims
 
   constructor() {
     this.players = new Map();
@@ -69,6 +75,7 @@ export class KrakenGameState {
     this.revealedCards = [];
     this.chatMessages = [];
     this.allRoles = [];
+    this.playerClaims = new Map();
   }
 
   toJSON(): any {
@@ -92,6 +99,7 @@ export class KrakenGameState {
       winReason: this.winReason,
       chatMessages: this.chatMessages,
       allRoles: this.allRoles,
+      playerClaims: Array.from(this.playerClaims.entries()),
     };
   }
 
@@ -118,6 +126,7 @@ export class KrakenGameState {
     state.winReason = data.winReason;
     state.chatMessages = data.chatMessages || [];
     state.allRoles = data.allRoles || [];
+    state.playerClaims = new Map(data.playerClaims || []);
     return state;
   }
 }

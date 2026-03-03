@@ -352,6 +352,107 @@
   color: #ef5350;
 }
 
+/* === Claim Area === */
+.player-claim-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 0;
+}
+
+.claim-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #78909c;
+  flex-shrink: 0;
+}
+
+.claim-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.claim-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #cfd8dc;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.claim-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.claim-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffd54f;
+  min-width: 28px;
+  text-align: center;
+}
+
+.claim-toggle {
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #78909c;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.claim-toggle.active {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ef5350;
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.claim-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.player-claim-chips {
+  display: flex;
+  gap: 4px;
+  padding: 2px 0 0;
+  flex-wrap: wrap;
+}
+
+.player-claim-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.1);
+  color: #ffd54f;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.player-claim-chip.kraken {
+  background: rgba(244, 67, 54, 0.1);
+  color: #ef5350;
+  border-color: rgba(244, 67, 54, 0.2);
+}
+
+.player-claim-chip.no-kraken {
+  background: rgba(102, 187, 106, 0.1);
+  color: #66bb6a;
+  border-color: rgba(102, 187, 106, 0.2);
+}
+
 /* === Confirm Section === */
 .kraken-confirm-section {
   display: flex;

@@ -7,6 +7,7 @@ import {
   KrakenRole,
   RevealedCard,
   ChatMessage,
+  PlayerClaim,
 } from './entities/kraken-game-state.entity';
 
 // Role/card distribution table from rulebook
@@ -367,6 +368,7 @@ export class KrakenLogicService {
         cardCount: player.cards.length,
         // Only reveal roles at game end
         ...(isGameFinished ? { role: player.role } : {}),
+        claim: state.playerClaims.get(id),
       }));
 
     return {
@@ -382,6 +384,7 @@ export class KrakenLogicService {
       gamePhase: state.gamePhase,
       selectedCard: state.selectedCard,
       chatMessages: state.chatMessages,
+      myClaim: state.playerClaims.get(viewingPlayerId),
       winner: state.winner,
       winReason: state.winReason,
       // At game end, reveal all roles
@@ -393,6 +396,18 @@ export class KrakenLogicService {
         })),
       } : {}),
     };
+  }
+
+  // --- Claims ---
+
+  setClaim(state: KrakenGameState, playerId: string, claim: PlayerClaim): void {
+    if (!state.players.has(playerId)) {
+      throw new Error('플레이어를 찾을 수 없습니다.');
+    }
+    if (state.gamePhase === 'finished') {
+      throw new Error('게임이 종료되었습니다.');
+    }
+    state.playerClaims.set(playerId, claim);
   }
 
   // --- Chat ---

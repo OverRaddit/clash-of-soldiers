@@ -92,6 +92,10 @@ class SocketService {
     this.socket?.emit('return_to_room', { roomId, playerId });
   }
 
+  krakenSetClaim(roomId: string, playerId: string, claim: { treasureCount: number; hasKraken: boolean }): void {
+    this.socket?.emit('kraken_set_claim', { roomId, playerId, claim });
+  }
+
   krakenPing(roomId: string, playerId: string, targetPlayerId: string, cardIndex: number, pingType: string, color: string): void {
     this.socket?.emit('kraken_ping', { roomId, playerId, targetPlayerId, cardIndex, pingType, color });
   }

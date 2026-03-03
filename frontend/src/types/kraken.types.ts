@@ -41,11 +41,17 @@ export interface RevealedCard {
   round: number;
 }
 
+export interface PlayerClaim {
+  treasureCount: number;
+  hasKraken: boolean;
+}
+
 export interface KrakenOtherPlayer {
   id: string;
   name: string;
   cardCount: number;
   role?: KrakenRole; // Only at game end
+  claim?: PlayerClaim;
 }
 
 export interface KrakenPlayerWithRole {
@@ -67,6 +73,7 @@ export interface KrakenClientState {
   gamePhase: KrakenGamePhase;
   selectedCard?: { targetPlayerId: string; cardIndex: number };
   chatMessages: ChatMessage[];
+  myClaim?: PlayerClaim;
   winner?: 'explorers' | 'skeletons' | 'all-lose';
   winReason?: string;
   allPlayersWithRoles?: KrakenPlayerWithRole[];

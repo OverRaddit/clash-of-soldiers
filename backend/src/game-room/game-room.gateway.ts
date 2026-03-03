@@ -650,6 +650,25 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('kraken_set_claim')
+  handleKrakenSetClaim(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; claim: { treasureCount: number; hasKraken: boolean } }
+  ) {
+    try {
+      const room = this.gameRoomService.getRoom(data.roomId);
+      if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
+
+      const krakenState = this.krakenLogicService.deserializeState(room.gameState);
+      this.krakenLogicService.setClaim(krakenState, data.playerId, data.claim);
+      room.gameState = krakenState.toJSON();
+
+      this.emitKrakenStateToAll(data.roomId, room, `${data.playerId}님이 주장을 변경했습니다.`);
+    } catch (error) {
+      client.emit('kraken_error', { message: error.message });
+    }
+  }
+
   @SubscribeMessage('kraken_chat')
   handleKrakenChat(
     @ConnectedSocket() client: Socket,
