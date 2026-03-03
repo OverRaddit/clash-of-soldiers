@@ -41,9 +41,6 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
   const [showRoundEnd, setShowRoundEnd] = useState(false);
   const [pendingRoundEnd, setPendingRoundEnd] = useState(false);
   const [pendingGameEnd, setPendingGameEnd] = useState(false);
-  const [showCinema, setShowCinema] = useState(false);
-  const [cinemaDone, setCinemaDone] = useState(false);
-  const cinemaVideoRef = useRef<HTMLVideoElement>(null);
   const [lastRound, setLastRound] = useState(krakenState.currentRound);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(krakenState.chatMessages || []);
   const [activePings, setActivePings] = useState<CardPing[]>([]);
@@ -130,31 +127,6 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
     };
   }, []);
 
-  // Show cinema video when game ends (after reveal animation completes)
-  useEffect(() => {
-    if (gameEnded && !revealAnimation && !cinemaDone && (winner === 'explorers' || winner === 'skeletons')) {
-      setShowCinema(true);
-    }
-  }, [gameEnded, revealAnimation, cinemaDone, winner]);
-
-  // Handle cinema video autoplay with muted fallback
-  useEffect(() => {
-    if (showCinema && cinemaVideoRef.current) {
-      const video = cinemaVideoRef.current;
-      const playPromise = video.play();
-      if (playPromise) {
-        playPromise.catch(() => {
-          video.muted = true;
-          video.play().catch(() => {});
-        });
-      }
-    }
-  }, [showCinema]);
-
-  const handleCinemaClose = useCallback(() => {
-    setShowCinema(false);
-    setCinemaDone(true);
-  }, []);
 
   // Close ping selector on document click (defer to avoid immediate close from contextmenu)
   useEffect(() => {
@@ -335,25 +307,8 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
         />
       )}
 
-      {/* Cinema Video */}
-      {showCinema && (
-        <div className="cinema-overlay">
-          <video
-            ref={cinemaVideoRef}
-            className="reveal-video"
-            src={`/kraken/${winner === 'explorers' ? 'treasure' : 'kraken'}.mp4`}
-            autoPlay
-            playsInline
-            onEnded={handleCinemaClose}
-          />
-          <button className="cinema-close-btn" onClick={handleCinemaClose}>
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Game End Overlay - delay if animation or cinema is playing */}
-      {gameEnded && !revealAnimation && !showCinema && (
+      {/* Game End Overlay - delay if animation is playing */}
+      {gameEnded && !revealAnimation && (
         <GameEndOverlay
           winner={winner as any}
           winReason={winReason}
