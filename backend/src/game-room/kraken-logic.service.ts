@@ -11,7 +11,7 @@ import {
 
 // Role/card distribution table from rulebook
 const GAME_CONFIG: Record<number, { explorers: number; skeletons: number; empty: number; treasure: number; kraken: number }> = {
-  3: { explorers: 3, skeletons: 2, empty: 11, treasure: 3, kraken: 1 },
+  3: { explorers: 2, skeletons: 1, empty: 11, treasure: 3, kraken: 1 },
   4: { explorers: 3, skeletons: 2, empty: 15, treasure: 4, kraken: 1 },
   5: { explorers: 4, skeletons: 2, empty: 19, treasure: 5, kraken: 1 },
   6: { explorers: 4, skeletons: 2, empty: 23, treasure: 6, kraken: 1 },
@@ -198,6 +198,9 @@ export class KrakenLogicService {
     state.actionsThisRound++;
     state.selectedCard = undefined;
 
+    // Always move action marker to target player first
+    state.actionMarkerHolder = targetPlayerId;
+
     // System chat
     const actingPlayer = state.players.get(actingPlayerId);
     const cardTypeName = this.getCardTypeName(cardType);
@@ -234,8 +237,6 @@ export class KrakenLogicService {
       };
     }
 
-    // Move action marker to the target player
-    state.actionMarkerHolder = targetPlayerId;
     state.gamePhase = 'selecting';
 
     return {
