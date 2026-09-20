@@ -182,8 +182,18 @@
 /* 게임 타입 선택 */
 .game-type-selector {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.bomb-lobby-description {
+  color: #805124;
+  background: #fff8eb;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .game-type-btn {

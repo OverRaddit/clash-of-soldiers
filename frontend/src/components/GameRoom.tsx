@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { GameRoom as GameRoomType, GameState } from '../types/game.types';
 import { KrakenClientState } from '../types/kraken.types';
+import { BombBustersClientState } from '../types/bomb-busters.types';
 import socketService from '../services/socket.service';
 import './GameRoom.css';
 import WaitingRoom from './WaitingRoom';
 import ToyBattleGame from './ToyBattleGame';
 import KrakenGame from './KrakenGame';
+import BombBustersGame from './BombBustersGame';
 
 interface GameRoomProps {
   room: GameRoomType;
@@ -21,6 +23,10 @@ const GameRoom: React.FC<GameRoomProps> = ({
   const [room, setRoom] = useState<GameRoomType>(initialRoom);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [krakenState, setKrakenState] = useState<KrakenClientState | null>(null);
+  const [bombState, setBombState] = useState<BombBustersClientState | null>(
+    initialRoom.gameType === 'bomb-busters' ? initialRoom.gameState || null : null
+  );
+  const missionId = room.selectedMissionId ?? 1;
   const [message, setMessage] = useState<string>('');
   const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
   const [gameEnded, setGameEnded] = useState<boolean>(false);
@@ -47,7 +53,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
   const handleStartGame = () => {
     const currentPlayer = room.players.find((p) => p.id === playerId);
     if (currentPlayer?.isHost) {
-      socketService.startGame(room.id, playerId);
+      socketService.startGame(room.id, playerId, room.gameType === 'bomb-busters' ? missionId : undefined);
     }
   };
 
@@ -73,8 +79,10 @@ const GameRoom: React.FC<GameRoomProps> = ({
 
   useEffect(() => {
     const handleRoomUpdated = (data: any) => {
+      if (!data.room || data.room.id !== initialRoom.id) return;
       setRoom(data.room);
       if (data.type === 'returned_to_room') {
+        setBombState(null);
         setKrakenState(null);
         setGameEnded(false);
         setKrakenWinner(null);
@@ -93,6 +101,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
       setRoom(data.room);
       if (data.room.gameType === 'no-touch-kraken') {
         setKrakenState(data.gameState);
+      } else if (data.room.gameType === 'bomb-busters') {
+        setBombState(data.gameState);
       } else {
         setGameState(data.gameState);
       }
@@ -111,7 +121,10 @@ const GameRoom: React.FC<GameRoomProps> = ({
     };
 
     const handleGameEnded = (data: any) => {
-      if (data.room?.gameType === 'no-touch-kraken' || krakenState) {
+      if (data.room?.gameType === 'bomb-busters' || initialRoom.gameType === 'bomb-busters') {
+        if (data.room) setRoom(data.room);
+        setBombState(data.gameState);
+      } else if (data.room?.gameType === 'no-touch-kraken' || initialRoom.gameType === 'no-touch-kraken') {
         setKrakenState(data.gameState);
         setGameEnded(true);
         setKrakenWinner(data.winner);
@@ -177,6 +190,34 @@ const GameRoom: React.FC<GameRoomProps> = ({
       }
     };
 
+    const handleBombStateUpdated = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      setBombState(data.gameState);
+      if (data.message) {
+        setMessage(data.message);
+        setMessageType('info');
+      }
+    };
+
+    const handleSnapshot = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      const state = data.gameState || data.room.gameState;
+      if (data.room.gameType === 'bomb-busters') {
+        setBombState(state || null);
+        if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
+      } else if (data.room.gameType === 'no-touch-kraken') {
+        if (state) setKrakenState(state);
+      } else if (state) setGameState(state);
+    };
+
+    const handleReconnect = () => {
+      if (initialRoom.gameType !== 'bomb-busters') return;
+      const player = initialRoom.players.find((p) => p.id === playerId);
+      if (player) socketService.joinRoom(initialRoom.id, playerId, player.name);
+    };
+
     socketService.onRoomUpdated(handleRoomUpdated);
     socketService.onGameStarted(handleGameStarted);
     socketService.onGameUpdated(handleGameUpdated);
@@ -187,6 +228,17 @@ const GameRoom: React.FC<GameRoomProps> = ({
     socketService.onSelectGiantTargetError(handleSelectGiantTargetError);
     socketService.onKrakenStateUpdated(handleKrakenStateUpdated);
     socketService.onKrakenError(handleKrakenError);
+    socketService.onBombBustersStateUpdated(handleBombStateUpdated);
+    socketService.onBombBustersError(handleKrakenError);
+    const activeSocket = socketService.getSocket();
+    activeSocket?.on('room_state', handleSnapshot);
+    activeSocket?.on('join_room_success', handleSnapshot);
+    activeSocket?.on('join_room_error', handleKrakenError);
+    activeSocket?.on('connect', handleReconnect);
+    activeSocket?.on('start_game_error', handleKrakenError);
+    activeSocket?.on('get_room_state_error', handleKrakenError);
+    activeSocket?.on('return_to_room_error', handleKrakenError);
+    if (initialRoom.status !== 'waiting') socketService.getRoomState(initialRoom.id);
 
     return () => {
       const socket = socketService.getSocket();
@@ -201,6 +253,15 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('select_giant_target_error', handleSelectGiantTargetError);
         socket.off('kraken_state_updated', handleKrakenStateUpdated);
         socket.off('kraken_error', handleKrakenError);
+        socket.off('bomb_busters_state_updated', handleBombStateUpdated);
+        socket.off('bomb_busters_error', handleKrakenError);
+        socket.off('room_state', handleSnapshot);
+        socket.off('join_room_success', handleSnapshot);
+        socket.off('join_room_error', handleKrakenError);
+        socket.off('connect', handleReconnect);
+        socket.off('start_game_error', handleKrakenError);
+        socket.off('get_room_state_error', handleKrakenError);
+        socket.off('return_to_room_error', handleKrakenError);
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -217,8 +278,26 @@ const GameRoom: React.FC<GameRoomProps> = ({
         onLeaveRoom={handleLeaveRoom}
         onToggleReady={handleToggleReady}
         onStartGame={handleStartGame}
+        missionId={missionId}
+        onMissionChange={id => socketService.selectBombMission(room.id, playerId, id)}
+        missions={room.bombMissions}
       />
     );
+  }
+
+  if (room.gameType === 'bomb-busters' && bombState) {
+    return <BombBustersGame room={room} playerId={playerId} state={bombState}
+      message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
+      onReturnToRoom={handleReturnToRoom} />;
+  }
+
+  if (room.gameType === 'bomb-busters') {
+    return <main className="bomb-loading" role="status">
+      <h2>봄버스터즈 작전 정보를 불러오는 중</h2>
+      <p>{message || '잠시만 기다려주세요.'}</p>
+      <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
+      <button onClick={handleLeaveRoom}>로비로 이동</button>
+    </main>;
   }
 
   // Kraken game

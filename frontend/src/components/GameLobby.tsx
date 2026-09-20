@@ -27,6 +27,14 @@ const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; ma
     bgColor: '#e8f5e9',
     borderColor: '#a5d6a7',
   },
+  'bomb-busters': {
+    label: '봄버스터즈',
+    minPlayers: 2,
+    maxPlayers: 5,
+    color: '#b45309',
+    bgColor: '#fff7e6',
+    borderColor: '#f4bd61',
+  },
 };
 
 const GameLobby: React.FC<GameLobbyProps> = ({
@@ -87,14 +95,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         }
 
         socketService.joinRoom(response.data.id, playerId, playerName);
-
-        socketService.onJoinRoomSuccess((data) => {
-          onJoinRoom(data.room);
-        });
-
-        socketService.onJoinRoomError((data) => {
-          setError(data.message || '방 참여에 실패했습니다.');
-        });
       } else {
         setError(response.message || '방 생성에 실패했습니다.');
       }
@@ -116,14 +116,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       }
 
       socketService.joinRoom(roomId, playerId, playerName);
-
-      socketService.onJoinRoomSuccess((data) => {
-        onJoinRoom(data.room);
-      });
-
-      socketService.onJoinRoomError((data) => {
-        setError(data.message || '방 참여에 실패했습니다.');
-      });
     } catch (error) {
       setError('방 참여에 실패했습니다.');
       console.error('Failed to join room:', error);
@@ -138,6 +130,18 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       clearInterval(interval);
     };
   }, []);
+
+  useEffect(() => {
+    const socket = socketService.connect();
+    const handleJoined = (data: { room: GameRoom }) => onJoinRoom(data.room);
+    const handleJoinError = (data: { message?: string }) => setError(data.message || '방 참여에 실패했습니다.');
+    socket.on('join_room_success', handleJoined);
+    socket.on('join_room_error', handleJoinError);
+    return () => {
+      socket.off('join_room_success', handleJoined);
+      socket.off('join_room_error', handleJoinError);
+    };
+  }, [onJoinRoom]);
 
   const config = GAME_TYPE_CONFIG[selectedGameType];
 
@@ -181,8 +185,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           })}
         </div>
 
-        {/* 인원 설정 (크라켄만) */}
-        {selectedGameType === 'no-touch-kraken' && (
+        {/* 토이배틀 외 게임은 방 정원을 선택할 수 있습니다. */}
+        {selectedGameType !== 'toy-battle' && (
           <div className="max-players-selector">
             <label>인원 설정: </label>
             <select
@@ -200,6 +204,10 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               ))}
             </select>
           </div>
+        )}
+
+        {selectedGameType === 'bomb-busters' && (
+          <p className="bomb-lobby-description">2–5명이 함께 전선을 해체하는 협력 추리 게임. 내 전선과 동료의 단서를 연결해 폭탄을 해체하세요.</p>
         )}
 
         <div className="create-room-form">

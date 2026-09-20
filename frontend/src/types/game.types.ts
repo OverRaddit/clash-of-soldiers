@@ -1,6 +1,7 @@
 // Common types shared across all games
+import type { BombMission } from './bomb-busters.types';
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters';
 
 export interface Player {
   id: string;
@@ -19,6 +20,8 @@ export interface GameRoom {
   createdAt: string;
   gameState?: any;
   gameType: GameType;
+  selectedMissionId?: number;
+  bombMissions?: BombMission[];
 }
 
 // Re-export toy-battle types for backward compatibility

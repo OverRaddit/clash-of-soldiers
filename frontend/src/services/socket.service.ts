@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { BombBustersAction } from '../types/bomb-busters.types';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -8,6 +9,11 @@ class SocketService {
       const serverUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
       this.socket = io(`${serverUrl}/game`, {
         withCredentials: true,
+      });
+      this.socket.on('join_room_success', (data: { room: { id: string }; playerId: string; sessionToken?: string }) => {
+        if (data.sessionToken) {
+          sessionStorage.setItem(`bomb-resume:${data.room.id}:${data.playerId}`, data.sessionToken);
+        }
       });
     }
     return this.socket;
@@ -27,7 +33,8 @@ class SocketService {
   // --- 공통 이벤트 ---
 
   joinRoom(roomId: string, playerId: string, playerName: string): void {
-    this.socket?.emit('join_room', { roomId, playerId, playerName });
+    const sessionToken = sessionStorage.getItem(`bomb-resume:${roomId}:${playerId}`) || undefined;
+    this.socket?.emit('join_room', { roomId, playerId, playerName, sessionToken });
   }
 
   leaveRoom(roomId: string, playerId: string): void {
@@ -38,12 +45,28 @@ class SocketService {
     this.socket?.emit('toggle_ready', { roomId, playerId });
   }
 
-  startGame(roomId: string, hostId: string): void {
-    this.socket?.emit('start_game', { roomId, hostId });
+  startGame(roomId: string, hostId: string, missionId?: number): void {
+    this.socket?.emit('start_game', { roomId, hostId, missionId });
+  }
+
+  selectBombMission(roomId: string, playerId: string, missionId: number): void {
+    this.socket?.emit('select_bomb_mission', { roomId, playerId, missionId });
   }
 
   getRoomState(roomId: string): void {
     this.socket?.emit('get_room_state', { roomId });
+  }
+
+  bombBustersAction(roomId: string, playerId: string, action: BombBustersAction): void {
+    this.socket?.emit('bomb_busters_action', { roomId, playerId, action });
+  }
+
+  onBombBustersStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('bomb_busters_state_updated', callback);
+  }
+
+  onBombBustersError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('bomb_busters_error', callback);
   }
 
   // --- 토이배틀 이벤트 ---
