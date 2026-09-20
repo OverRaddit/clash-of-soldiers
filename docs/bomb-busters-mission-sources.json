@@ -1,0 +1,605 @@
+{
+  "verifiedOn": "2026-09-20",
+  "scope": "Bomb Busters base game missions 1–66",
+  "purpose": "Research source inventory; not an executable mission rules configuration",
+  "cardSourceType": "Unofficial public TTS host of English printed-card scans",
+  "officialFaq": "https://www.cocktailgames.com/nos-jeux/bomb-busters-faq/",
+  "officialAudioIndex": "https://pegasusna.com/welcome-bomb-busters",
+  "audioEventsTranscribed": false,
+  "missions": [
+    {
+      "id": 1,
+      "title": "훈련 1일차 — TRAINING, Day 1",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%201%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%201%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 2,
+      "title": "훈련 2일차 — TRAINING, Day 2",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%202%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%202%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 3,
+      "title": "훈련 3일차 — TRAINING, Day 3",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%203%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%203%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 4,
+      "title": "첫 현장 훈련 — TRAINING: First Day in the Field",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%204%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%204%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 5,
+      "title": "두 번째 현장 훈련 — TRAINING: Second Day in the Field",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%205%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%205%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 6,
+      "title": "세 번째 현장 훈련 — TRAINING: Third Day in the Field",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%206%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%206%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 7,
+      "title": "마지막 수업 — TRAINING: Last Day of Class",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%207%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%207%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 8,
+      "title": "최종 시험 — FINAL EXAM",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%208%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%208%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 9,
+      "title": "우선순위 — A Sense of Priorities",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%209%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%209%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 10,
+      "title": "힘든 하루 — A Rough Patch",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2010%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2010%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 11,
+      "title": "파란 전선의 배신 — Blue on Red, Looks Like We Are Dead",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2011%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2011%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 12,
+      "title": "서류에 묶인 장비 — Wrapped in Red Tape",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2012%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2012%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 13,
+      "title": "적색경보 — Red Alert!",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2013%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2013%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 14,
+      "title": "위험한 신입 — High-Risk Bomb Disposal Expert (aka. NOOB)",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2014%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2014%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 15,
+      "title": "노보시비르스크 임무 — Mission in Новосибирск",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2015%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2015%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 16,
+      "title": "더 엄격한 우선순위 — Time to Reprioritize",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2016%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2016%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 17,
+      "title": "거짓 단서의 대장 — Rhett Herrings",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2017%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2017%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 18,
+      "title": "배트 레이더의 도움 — BAT-Helping-Hand",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2018%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2018%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 19,
+      "title": "괴수의 뱃속 — In the Belly of the Beast",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2019%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2019%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": true,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 20,
+      "title": "크고 나쁜 늑대 — The Big Bad Wolf",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2020%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2020%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 21,
+      "title": "해기스 속 폭탄 — Death by Haggis",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2021%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2021%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 22,
+      "title": "없는 값으로 전하는 단서 — Negative Impressions",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2022%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2022%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 23,
+      "title": "Defusing in Fordwich",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2023%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2023%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 24,
+      "title": "Tally Ho!",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2024%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2024%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 25,
+      "title": "The Better to Hear You with...",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2025%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2025%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 26,
+      "title": "Speaking of the Wolf...",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2026%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2026%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 27,
+      "title": "Playing with Wire",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2027%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2027%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 28,
+      "title": "Captain Careless",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2028%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2028%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 29,
+      "title": "Guessing Game",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2029%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2029%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 30,
+      "title": "Speed Mission!",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2030%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2030%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": true,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 31,
+      "title": "With One Hand Tied Behind My Back...",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2031%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2031%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 32,
+      "title": "Pranks-A-Plenty",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2032%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2032%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 33,
+      "title": "What Happens in Vegas...",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2033%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2033%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 34,
+      "title": "The Weakest Link",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2034%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2034%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 3
+    },
+    {
+      "id": 35,
+      "title": "No Link, Single Wire",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2035%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2035%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 36,
+      "title": "Panic under the Palm Trees",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2036%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2036%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 37,
+      "title": "Joker’s Gone Wild",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2037%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2037%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 38,
+      "title": "Knit a Wire, Purl a Wire...",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2038%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2038%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 39,
+      "title": "The 4 Noble Wires",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2039%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2039%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 40,
+      "title": "Hard to Die (A Christmas Tale)",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2040%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2040%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 41,
+      "title": "Latin Bombshell",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2041%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2041%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 42,
+      "title": "Time to Run Away and Join The Circus...",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2042%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2042%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": true,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 43,
+      "title": "Nano the Robot",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2043%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2043%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 44,
+      "title": "Underwater Pressure",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2044%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2044%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 45,
+      "title": "Seeking Volunteers — 자원자를 찾습니다",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2045%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2045%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 46,
+      "title": "Secret Agent — 비밀요원",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2046%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2046%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 47,
+      "title": "Calculate the Odds — 계산으로 절단하기",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2047%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2047%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 48,
+      "title": "Lethal Wires 3 — 치명적인 전선 3",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2048%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2048%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 49,
+      "title": "Message in a Bottle — 산소통의 메시지",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2049%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2049%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 50,
+      "title": "The Blackest Sea — 암흑의 바다",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2050%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2050%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 51,
+      "title": "It's Your (Un)Lucky Day! — 당신의 운을 시험합니다",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2051%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2051%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 52,
+      "title": "Dirty Double-crossers — 거짓 정보",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2052%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2052%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 53,
+      "title": "Nano Nano — 나노의 역주행",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2053%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2053%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 54,
+      "title": "The Attack of Rabbit the Red — 붉은 토끼의 습격",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2054%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2054%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": true,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 55,
+      "title": "Doctor Nope's Challenge — 닥터 노프의 도전",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2055%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2055%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 56,
+      "title": "Tripwires — 뒤집힌 전선",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2056%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2056%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 57,
+      "title": "An Impossible Mission — 불가능한 임무",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2057%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2057%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 58,
+      "title": "Double and/or Nothing — 무제한 더블 탐지기",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2058%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2058%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 59,
+      "title": "Nano to the Rescue — 나노의 구조 작전",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2059%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2059%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 60,
+      "title": "Yep, it's Doctor Nope! — 다시 닥터 노프",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2060%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2060%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 61,
+      "title": "Sharing is Caring — 제약 나누기",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2061%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2061%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 62,
+      "title": "Armageddon Roulette — 아마겟돈 룰렛",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2062%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2062%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 63,
+      "title": "It is Positively Titanic — 타이타닉 작전",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2063%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2063%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 64,
+      "title": "Return of the Tripwires — 돌아온 뒤집힌 전선",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2064%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2064%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 2
+    },
+    {
+      "id": 65,
+      "title": "Hand-Me-Downs — 숫자 넘겨주기",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2065%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2065%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": false,
+      "minimumPlayers": 3
+    },
+    {
+      "id": 66,
+      "title": "The Final Countdown — 마지막 카운트다운",
+      "front": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2066%20Front.png",
+      "back": "https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Missions/Mission%2066%20Back.png",
+      "cardFacesReviewed": true,
+      "requiresAudio": true,
+      "minimumPlayers": 2
+    }
+  ]
+}
