@@ -117,6 +117,7 @@ export interface BombCampaignPanel {
 }
 
 export interface BombBustersClientState {
+  feedback?: { id: string; kind: 'success' | 'failure' };
   serverNow?: number;
   campaign?: BombCampaignPanel;
   phase: 'setup' | 'playing' | 'finished';

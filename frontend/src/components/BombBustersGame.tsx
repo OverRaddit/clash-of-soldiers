@@ -6,6 +6,7 @@ import './BombBustersGame.css';
 import BombBustersEquipment from './BombBustersEquipment';
 import BombBustersCampaign from './BombBustersCampaign';
 import useServerClock from '../hooks/useServerClock';
+import useBombFeedback from '../hooks/useBombFeedback';
 import { bombSelectionRevision } from '../utils/bomb-selection-revision';
 
 interface Props {
@@ -48,6 +49,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
   const [reversedGuess, setReversedGuess] = useState('');
   const clueTime = useServerClock(state.serverNow, !!state.campaign?.flashClues?.length, 250);
   const [connected, setConnected] = useState(!!socketService.getSocket()?.connected);
+  const feedback = useBombFeedback(state, room.id, connected);
   const campaignControl = state.campaign?.controls.find((control) => control.id === campaignControlId) ?? null;
   const campaignPending = !!state.campaign?.pendingActorId;
   const isRedValue = (value: BombWireValue | null) => value === 'red' || (value !== null && !!state.campaign?.redValues?.includes(value));
@@ -237,10 +239,11 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
             const relation = state.relationMarkers?.find((marker) => marker.rackId === rack.id && marker.wireIds.includes(wire.id) && marker.wireIds.includes(rack.wires[index + 1]?.id));
             const pointed = detector?.targetWireIds.includes(wire.id);
             return <button key={wire.id} type="button"
-              className={`bb-wire bb-wire-${color} ${wire.cut ? 'bb-wire-cut' : ''} ${selected ? 'bb-wire-selected' : ''} ${pointed ? 'bb-wire-pointed' : ''} ${wire.reversed ? 'bb-wire-reversed' : ''} ${wire.excluded ? 'bb-wire-excluded' : ''}`}
+              className={`bb-wire bb-wire-${color} ${wire.cut ? 'bb-wire-cut' : ''} ${feedback?.wireIds.includes(wire.id) ? 'bb-wire-celebrate' : ''} ${selected ? 'bb-wire-selected' : ''} ${pointed ? 'bb-wire-pointed' : ''} ${wire.reversed ? 'bb-wire-reversed' : ''} ${wire.excluded ? 'bb-wire-excluded' : ''}`}
               disabled={!wireSelectable(player, wire)} onClick={() => selectWire(player, rack.id, wire)}
               aria-label={`${player.name} 받침대 ${rackIndex + 1}, ${index + 1}번 전선: ${wire.cut ? '해체됨 ' : ''}${visibleValue === null ? '비공개' : valueLabel(visibleValue)}${displayedClue !== null ? `, 공개 단서 ${displayedClue}` : ''}${wire.reversed ? ', 역방향 전선' : ''}${wire.excluded ? ', 정렬 제외 전선' : ''}${wire.singleLabel ? ', 받침대에 하나뿐인 값' : ''}${typeof visibleValue === 'number' && isRedValue(visibleValue) ? ', 빨강 취급' : ''}`}
               aria-pressed={!!selected}>
+              {feedback?.wireIds.includes(wire.id) && <span key={feedback.key} className="bb-cut-flash" aria-hidden="true" />}
               <span className="bb-wire-index">{index + 1}</span>
               {(wire.reversed || wire.excluded) && <span className="bb-wire-special">{wire.reversed ? '↶' : 'X'}</span>}
               <span className="bb-wire-value">{valueLabel(visibleValue)}</span>
@@ -269,6 +272,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
   const orderedPlayers = myIndex < 0 ? state.players : [...state.players.slice(myIndex), ...state.players.slice(0, myIndex)];
 
   return <main className="bb-game">
+    {feedback?.kind === 'failure' && <div key={feedback.key} className={`bb-damage-vignette ${mistakesRemaining <= 1 ? 'bb-damage-critical' : ''}`} aria-hidden="true" />}
     <header className="bb-header">
       <div><p className="bb-eyebrow">BOMB BUSTERS · COOPERATIVE MISSION</p><h1>봄버스터즈 <span>해체반 작전실</span></h1><p className="bb-room-name">{room.name} · {state.players.length}인 협력 · 대장 {captain?.name}</p></div>
       <button className="bb-button bb-button-quiet" onClick={onLeaveRoom}>방 나가기</button>
@@ -281,18 +285,18 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       <div className="bb-dashboard">
         <div className="bb-mission"><span className="bb-eyebrow">{state.mission.id === 0 ? 'FREE PRACTICE' : `MISSION ${String(state.mission.id).padStart(2, '0')}`}</span><h2>{state.mission.name}</h2></div>
         <div className="bb-stats">
-          {state.mission.id === 53 ? <div className="bb-stat bb-stat-nano" role="img" aria-label="기폭 조건: 나노가 12칸에 도달" title="나노가 12칸에 도달하면 폭발 · 현재 위치는 미션 보드에서 확인"><StatusIcon kind="nano" /><strong>12<small>칸</small></strong></div> : <div className={`bb-stat bb-stat-mistakes ${mistakesRemaining <= 1 ? 'bb-stat-danger' : ''}`} role="img" aria-label={`기폭까지 남은 실수 ${mistakesRemaining}회`} title={`폭발까지 남은 실수 ${mistakesRemaining}회`}><StatusIcon kind="bomb" /><strong>{mistakesRemaining}</strong></div>}
-          <div className="bb-stat bb-stat-cut" role="img" aria-label={`해체한 전선 ${cutTotal}개, 전체 ${totalWires.length}개`} title={`해체한 전선 ${cutTotal} / ${totalWires.length}`}><StatusIcon kind="cut" /><strong>{cutTotal}<small>/{totalWires.length}</small></strong></div>
+          {state.mission.id === 53 ? <div className="bb-stat bb-stat-nano" role="img" aria-label="기폭 조건: 나노가 12칸에 도달" title="나노가 12칸에 도달하면 폭발 · 현재 위치는 미션 보드에서 확인"><StatusIcon kind="nano" /><strong>12<small>칸</small></strong></div> : <div className={`bb-stat bb-stat-mistakes ${mistakesRemaining <= 1 ? 'bb-stat-danger' : ''}`} role="img" aria-label={`기폭까지 남은 실수 ${mistakesRemaining}회`} title={`폭발까지 남은 실수 ${mistakesRemaining}회`}><StatusIcon kind="bomb" /><strong key={feedback?.livesLost ? feedback.key : 'steady'} className={feedback?.livesLost ? 'bb-life-hit' : ''}>{mistakesRemaining}</strong>{!!feedback?.livesLost && <span key={`loss-${feedback.key}`} className="bb-life-loss" aria-hidden="true">−{feedback.livesLost}</span>}</div>}
+          <div className="bb-stat bb-stat-cut" role="img" aria-label={`해체한 전선 ${cutTotal}개, 전체 ${totalWires.length}개`} title={`해체한 전선 ${cutTotal} / ${totalWires.length}`}><StatusIcon kind="cut" /><strong key={feedback?.kind === 'success' ? feedback.key : 'steady'} className={feedback?.kind === 'success' ? 'bb-cut-gain' : ''}>{cutTotal}<small>/{totalWires.length}</small></strong></div>
         </div>
       </div>
       {state.mission.id !== 50 && <section className="bb-public-board" aria-label="공개 전선 정보">
         {hideCutCounts ? <p className="bb-counts-hidden">이 작전에서는 값별 해체 수가 표시되지 않습니다.</p> : <>
           <div className="bb-counts-heading"><h2>검증 토큰</h2><span>4개 해체하면 <b>✓ 완료</b></span></div>
-          <div className={`bb-counts ${state.mission.blueMax <= 6 ? 'bb-counts-short' : ''}`} role="list" aria-label="숫자별 해체 현황">{Array.from({ length: state.mission.blueMax }, (_, i) => i + 1).map((value) => {
+          <div className="bb-counts" style={{ gridTemplateColumns: `repeat(${state.mission.blueMax}, minmax(0, 1fr))` }} role="list" aria-label="숫자별 해체 현황">{Array.from({ length: state.mission.blueMax }, (_, i) => i + 1).map((value) => {
             const count = state.cutCounts[String(value)] || 0;
             const complete = count === 4;
             return <div key={value} role="listitem" className={`bb-count ${complete ? 'complete' : count > 0 ? 'started' : ''}`} aria-label={`${value}번 전선 ${count}/4 해체${complete ? ', 완료' : ''}`} title={`${value}번 전선 ${count}/4 해체`}>
-              <b aria-hidden="true">{value}</b><span className="bb-count-status" aria-hidden="true">{complete ? <><span className="bb-count-check">✓</span> 완료</> : `${count}/4`}</span>
+              <b aria-hidden="true">{value}</b><span className="bb-count-status" aria-hidden="true">{complete ? <><span className="bb-count-check">✓</span><span className="bb-count-complete-label"> 완료</span></> : `${count}/4`}</span>
               <span className="bb-count-track" aria-hidden="true">{Array.from({ length: 4 }, (_, index) => <i key={index} className={index < count ? 'filled' : ''} />)}</span>
             </div>;
           })}</div>

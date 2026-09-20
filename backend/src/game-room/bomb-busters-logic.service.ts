@@ -120,6 +120,7 @@ export class BombBustersLogicService {
     this.updateEquipment(next);
     if (next.phase === 'playing' && !next.pendingDetector && !next.pendingExchange && !next.campaign?.pending
       && bombAudioAllowsVictory(next) && next.players.every(p => this.wires(p).every(w => w.cut)) && !next.campaign?.nano?.reserve.length) this.finish(next, 'won', '모든 전선을 처리하여 폭탄을 해체했습니다!');
+    this.updateFeedback(state, next, action);
     next.log = next.log.slice(-80);
     Object.assign(state, next);
     return { message: state.log[state.log.length - 1] };
@@ -147,6 +148,7 @@ export class BombBustersLogicService {
       captainId: state.captainId, currentPlayerId: state.currentPlayerId,
       mistakes: state.mistakes, maxMistakes: state.maxMistakes, turnNumber: state.turnNumber,
       outcome: state.outcome, endReason: state.endReason,
+      ...(state.feedback ? { feedback: { id: state.feedback.id, kind: state.feedback.kind } } : {}),
       redMarkers: bombRule(state, 'memory_hints') && !state.campaign.memoryPreview ? [] : [...state.redMarkers],
       yellowMarkers: bombRule(state, 'memory_hints') && !state.campaign.memoryPreview ? [] : [...state.yellowMarkers],
       equipment: state.equipment.map(e => ({ id: e.id, name: e.name, description: e.description,
@@ -186,6 +188,20 @@ export class BombBustersLogicService {
       cutCounts: bombAudioHideCutCounts(state) ? {} : this.cutCounts(state),
     };
     return view;
+  }
+
+  /** Emit only after an accepted action resolves; snapshots keep the same event identity. */
+  private updateFeedback(before: BombBustersState, after: BombBustersState, action: BombBustersAction) {
+    if (before.phase !== 'playing' || after.pendingDetector) return;
+    const previouslyCut = new Set(before.players.flatMap(p => this.wires(p)).filter(w => w.cut).map(w => w.id));
+    const newlyCut = after.players.some(p => this.wires(p).some(w => w.cut && !previouslyCut.has(w.id)));
+    const resolvedTurns = (after.campaign?.history ?? []).slice(before.campaign?.history.length ?? 0);
+    const failedCut = resolvedTurns.some(turn => ['dual', 'solo', 'special'].includes(turn.kind) && !turn.success);
+    const directCut = action.type === 'dual' || action.type === 'resolve_detector'
+      || (action.type === 'mission' && action.operation === 'audio_laser');
+    const failure = (after.outcome === 'lost' && before.outcome !== 'lost')
+      || after.mistakes > before.mistakes || failedCut || (directCut && !newlyCut);
+    if (failure || newlyCut) after.feedback = { id: randomUUID(), kind: failure ? 'failure' : 'success' };
   }
 
   private initialHint(state: BombBustersState, player: BombPlayer, wireId: string) {

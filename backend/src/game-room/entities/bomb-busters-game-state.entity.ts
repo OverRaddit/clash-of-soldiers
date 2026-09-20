@@ -99,6 +99,12 @@ export interface BombExchangeMove {
   toIndex: number;
 }
 
+/** Latest committed action result, intentionally free of wire identities or values. */
+export interface BombFeedback {
+  id: string;
+  kind: 'success' | 'failure';
+}
+
 export interface BombBustersState {
   phase: BombBustersPhase;
   mission: BombMission;
@@ -109,6 +115,7 @@ export interface BombBustersState {
   maxMistakes: number;
   turnNumber: number;
   outcome: 'won' | 'lost' | null;
+  feedback?: BombFeedback;
   endReason: string | null;
   redMarkers: number[];
   yellowMarkers: number[];
@@ -161,6 +168,7 @@ export interface BombBustersClientState {
   maxMistakes: number;
   turnNumber: number;
   outcome: 'won' | 'lost' | null;
+  feedback?: BombFeedback;
   endReason: string | null;
   redMarkers: number[];
   yellowMarkers: number[];
