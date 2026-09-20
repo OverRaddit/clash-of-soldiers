@@ -6,7 +6,7 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters';
 
 export class GameRoom {
   id: string;
@@ -18,6 +18,8 @@ export class GameRoom {
   createdAt: Date;
   gameState: any;
   gameType: GameType;
+  selectedMissionId: number = 1;
+  nextBombCaptainId?: string;
 
   constructor(id: string, name: string, hostId: string, maxPlayers: number = 2, gameType: GameType = 'toy-battle') {
     this.id = id;
@@ -59,8 +61,10 @@ export class GameRoom {
       players: this.players,
       status: this.status,
       createdAt: this.createdAt,
-      gameState: this.gameState,
-      gameType: this.gameType
+      // Hidden Bomb Busters racks must only be sent through the player-view serializer.
+      gameState: this.gameType === 'bomb-busters' ? null : this.gameState,
+      gameType: this.gameType,
+      ...(this.gameType === 'bomb-busters' ? { selectedMissionId: this.selectedMissionId } : {}),
     };
   }
 }

@@ -12,16 +12,22 @@ import { GameRoomService } from './game-room.service';
 import { GameLogicService } from './game-logic.service';
 import { KrakenLogicService } from './kraken-logic.service';
 import { GameState } from './entities/game-state.entity';
+import { GameRoom, GameType } from './entities/game-room-memory.entity';
+import { BombBustersLogicService } from './bomb-busters-logic.service';
+import { BombBustersAction } from './entities/bomb-busters-game-state.entity';
+import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 interface ClientInfo {
   playerId: string;
   roomId?: string;
+  sessionToken?: string;
 }
 
 interface DisconnectedClient {
   playerId: string;
   roomId: string;
   disconnectTime: Date;
+  timer?: NodeJS.Timeout;
 }
 
 @WebSocketGateway({
@@ -35,126 +41,119 @@ interface DisconnectedClient {
   },
   namespace: '/game'
 })
-export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
   @WebSocketServer()
   server: Server;
 
   private clients: Map<string, ClientInfo> = new Map();
   private disconnectedClients: Map<string, DisconnectedClient> = new Map();
   private reconnectTimeout = 30 * 1000; // 30초
+  private shuttingDown = false;
+  private bombClock?: ReturnType<typeof setInterval>;
 
   constructor(
     private readonly gameRoomService: GameRoomService,
     private readonly gameLogicService: GameLogicService,
     private readonly krakenLogicService: KrakenLogicService,
+    private readonly bombBustersLogicService: BombBustersLogicService,
   ) {}
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
   }
 
-  handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
-    
-    const clientInfo = this.clients.get(client.id);
-    if (clientInfo?.roomId && clientInfo?.playerId) {
-      // 즉시 방에서 제거하지 않고 재연결 대기 목록에 추가
-      this.disconnectedClients.set(clientInfo.playerId, {
-        playerId: clientInfo.playerId,
-        roomId: clientInfo.roomId,
-        disconnectTime: new Date()
-      });
+  onModuleInit() {
+    this.bombClock = setInterval(() => {
+      if (this.shuttingDown) return;
+      for (const room of this.gameRoomService.getActiveBombRooms()) this.tickBombRoom(room);
+    }, 250);
+    this.bombClock.unref();
+  }
 
-      // 소켓 룸에서 나가기
-      client.leave(clientInfo.roomId);
-
-      // 30초 후 재연결이 없으면 방에서 제거
-      setTimeout(() => {
-        const disconnectedClient = this.disconnectedClients.get(clientInfo.playerId);
-        if (disconnectedClient && disconnectedClient.roomId === clientInfo.roomId) {
-          try {
-            // 재연결이 없었으므로 방에서 제거
-            const room = this.gameRoomService.leaveRoom(clientInfo.roomId, clientInfo.playerId);
-            
-            // 방이 존재하면 다른 플레이어들에게 알림
-            if (room) {
-              this.server.to(clientInfo.roomId).emit('room_updated', {
-                type: 'player_left',
-                room: room.toJSON(),
-                message: `플레이어가 연결 해제되어 나갔습니다.`
-              });
-            } else {
-              console.log(`방이 삭제됨: ${clientInfo.roomId}`);
-            }
-          } catch (error) {
-            console.error('지연된 연결 해제 처리 중 오류:', error);
-          }
-          
-          this.disconnectedClients.delete(clientInfo.playerId);
-        }
-      }, this.reconnectTimeout);
-
-      // 다른 플레이어들에게 일시적 연결 해제 알림
-      this.server.to(clientInfo.roomId).emit('room_updated', {
-        type: 'player_disconnected',
-        room: this.gameRoomService.getRoom(clientInfo.roomId)?.toJSON(),
-        message: `${clientInfo.playerId}님의 연결이 일시적으로 끊어졌습니다.`
-      });
+  onModuleDestroy() {
+    this.shuttingDown = true;
+    if (this.bombClock) clearInterval(this.bombClock);
+    for (const disconnected of this.disconnectedClients.values()) {
+      clearTimeout(disconnected.timer);
     }
-    
+    this.disconnectedClients.clear();
+  }
+
+  handleDisconnect(client: Socket) {
+    const info = this.clients.get(client.id);
     this.clients.delete(client.id);
+    if (this.shuttingDown) return;
+    if (!info?.roomId || !info.playerId) return;
+    const currentRoom = this.gameRoomService.getRoom(info.roomId);
+    if (!currentRoom || !this.isBoundMember(info, currentRoom)) return;
+
+    // Another browser tab can still be connected for this same player.
+    if ([...this.clients.values()].some(other => other.playerId === info.playerId && this.isBoundMember(other, currentRoom))) {
+      return;
+    }
+
+    const key = this.reconnectKey(info.roomId, info.playerId);
+    const disconnected: DisconnectedClient = {
+      playerId: info.playerId,
+      roomId: info.roomId,
+      disconnectTime: new Date(),
+    };
+    this.clearReconnect(info.roomId, info.playerId);
+    this.disconnectedClients.set(key, disconnected);
+    disconnected.timer = setTimeout(() => {
+      // A previous disconnect timer must not remove a newly reconnected session.
+      if (this.disconnectedClients.get(key) !== disconnected) return;
+      this.disconnectedClients.delete(key);
+      const existingRoom = this.gameRoomService.getRoom(info.roomId);
+      if (!existingRoom || !this.isBoundMember(info, existingRoom)) return;
+      const room = this.gameRoomService.leaveRoom(info.roomId, info.playerId);
+      if (room) {
+        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters'
+          ? '플레이어가 재연결하지 않아 대기실로 돌아왔습니다.'
+          : '플레이어가 연결 해제되어 나갔습니다.');
+      }
+    }, this.reconnectTimeout);
+
+    const room = this.gameRoomService.getRoom(info.roomId);
+    if (room) this.emitRoomUpdate(room, 'player_disconnected', '플레이어의 재연결을 기다리고 있습니다. (30초)');
   }
 
   @SubscribeMessage('join_room')
   handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; playerId: string; playerName: string }
+    @MessageBody() data: { roomId: string; playerId: string; playerName: string; sessionToken?: string }
   ) {
     try {
-      // 기존 방에서 나가기
+      if (!data || typeof data.roomId !== 'string' || typeof data.playerId !== 'string' ||
+          typeof data.playerName !== 'string' || !data.playerId.trim() || !data.playerName.trim()) {
+        throw new Error('올바른 방과 플레이어 정보를 입력해주세요.');
+      }
       const existingInfo = this.clients.get(client.id);
-      if (existingInfo?.roomId) {
+      if (existingInfo?.roomId && existingInfo.playerId !== data.playerId) {
+        throw new Error('현재 연결의 플레이어를 변경할 수 없습니다.');
+      }
+      const isReconnecting = this.disconnectedClients.has(this.reconnectKey(data.roomId, data.playerId));
+      const existingRoom = this.gameRoomService.getRoom(data.roomId);
+      const { room, sessionToken } = this.gameRoomService.joinSocketRoom(data, data.sessionToken,
+        existingRoom && existingInfo?.playerId === data.playerId && this.isBoundMember(existingInfo, existingRoom));
+
+      if (existingInfo?.roomId && existingInfo.roomId !== data.roomId) {
         client.leave(existingInfo.roomId);
+        const previousRoom = this.gameRoomService.getRoom(existingInfo.roomId);
+        if (previousRoom?.players.some(player => player.id === existingInfo.playerId)) {
+          const remainingRoom = this.gameRoomService.leaveRoom(existingInfo.roomId, existingInfo.playerId);
+          if (remainingRoom) this.emitRoomUpdate(remainingRoom, 'player_left', '플레이어가 나갔습니다.');
+        }
       }
-
-      // 재연결인지 확인
-      const disconnectedClient = this.disconnectedClients.get(data.playerId);
-      const isReconnecting = disconnectedClient && disconnectedClient.roomId === data.roomId;
-
-      // 새 방 참여
-      const room = this.gameRoomService.joinRoom({
-        roomId: data.roomId,
-        playerId: data.playerId,
-        playerName: data.playerName
-      });
-
-      // 재연결인 경우 대기 목록에서 제거
-      if (isReconnecting) {
-        this.disconnectedClients.delete(data.playerId);
-      }
-
-      // 클라이언트 정보 저장
-      this.clients.set(client.id, {
-        playerId: data.playerId,
-        roomId: data.roomId
-      });
-
-      // 소켓 룸 참여
+      this.clearReconnect(data.roomId, data.playerId);
+      this.clients.set(client.id, { playerId: data.playerId, roomId: data.roomId, sessionToken });
       client.join(data.roomId);
-
-      // 방 전체에 업데이트 알림
-      this.server.to(data.roomId).emit('room_updated', {
-        type: isReconnecting ? 'player_reconnected' : 'player_joined',
-        room: room.toJSON(),
-        message: isReconnecting 
-          ? `${data.playerName}님이 재연결했습니다.` 
-          : `${data.playerName}님이 입장했습니다.`
-      });
-
-      // 참여한 클라이언트에 성공 응답
+      this.emitRoomUpdate(room, isReconnecting ? 'player_reconnected' : 'player_joined',
+        `${data.playerName}님이 ${isReconnecting ? '재연결했습니다' : '입장했습니다'}.`);
       client.emit('join_room_success', {
-        room: room.toJSON(),
-        playerId: data.playerId
+        room: this.gameRoomService.serializeRoom(room, data.playerId),
+        playerId: data.playerId,
+        ...(sessionToken ? { sessionToken } : {}),
       });
 
     } catch (error) {
@@ -170,7 +169,9 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string }
   ) {
     try {
+      this.requireMember(client, data.roomId, data.playerId);
       const room = this.gameRoomService.leaveRoom(data.roomId, data.playerId);
+      this.clearReconnect(data.roomId, data.playerId);
       
       // 소켓 룸에서 나가기
       client.leave(data.roomId);
@@ -183,11 +184,9 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       // 방이 존재하면 다른 플레이어들에게 알림
       if (room) {
-        this.server.to(data.roomId).emit('room_updated', {
-          type: 'player_left',
-          room: room.toJSON(),
-          message: `플레이어가 나갔습니다.`
-        });
+        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters'
+          ? '플레이어가 나가 대기실로 돌아왔습니다.'
+          : '플레이어가 나갔습니다.');
       }
 
       client.emit('leave_room_success', {
@@ -207,13 +206,10 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string }
   ) {
     try {
+      this.requireMember(client, data.roomId, data.playerId);
       const room = this.gameRoomService.toggleReady(data.roomId, data.playerId);
       
-      this.server.to(data.roomId).emit('room_updated', {
-        type: 'ready_changed',
-        room: room.toJSON(),
-        message: '준비 상태가 변경되었습니다.'
-      });
+      this.emitRoomUpdate(room, 'ready_changed', '준비 상태가 변경되었습니다.');
 
     } catch (error) {
       client.emit('toggle_ready_error', {
@@ -222,18 +218,35 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('select_bomb_mission')
+  handleSelectBombMission(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; missionId: number },
+  ) {
+    try {
+      this.requireMember(client, data?.roomId, data?.playerId, 'bomb-busters');
+      const room = this.gameRoomService.selectBombMission(data.roomId, data.playerId, data.missionId);
+      this.emitRoomUpdate(room, 'mission_changed', '미션이 변경되었습니다. 규칙을 확인하고 준비해 주세요.');
+    } catch (error) {
+      client.emit('bomb_busters_error', { message: error.message });
+    }
+  }
+
   @SubscribeMessage('start_game')
   handleStartGame(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; hostId: string }
+    @MessageBody() data: { roomId: string; hostId: string; missionId?: number }
   ) {
     try {
-      const room = this.gameRoomService.startGame(data.roomId, data.hostId);
+      this.requireMember(client, data.roomId, data.hostId);
+      const room = this.gameRoomService.startGame(data.roomId, data.hostId, data.missionId);
 
       const playerIds = room.players.map(p => p.id);
       const playerNames = room.players.map(p => p.name);
 
-      if (room.gameType === 'no-touch-kraken') {
+      if (room.gameType === 'bomb-busters') {
+        this.emitBombBustersStateToAll(room, '게임이 시작되었습니다!', 'game_started');
+      } else if (room.gameType === 'no-touch-kraken') {
         // 크라켄 게임 초기화
         const krakenState = this.krakenLogicService.initializeGame(playerIds, playerNames);
         room.gameState = krakenState.toJSON();
@@ -246,7 +259,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         room.gameState = gameState.toJSON();
 
         this.server.to(data.roomId).emit('game_started', {
-          room: room.toJSON(),
+          room: this.gameRoomService.serializeRoom(room),
           gameState: gameState.toJSON(),
           message: '게임이 시작되었습니다!'
         });
@@ -265,7 +278,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'toy-battle');
       if (!room || !room.gameState) {
         throw new Error('게임을 찾을 수 없습니다.');
       }
@@ -327,7 +340,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'toy-battle');
       if (!room || !room.gameState) {
         throw new Error('게임을 찾을 수 없습니다.');
       }
@@ -438,7 +451,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'toy-battle');
       if (!room || !room.gameState) {
         throw new Error('게임을 찾을 수 없습니다.');
       }
@@ -484,7 +497,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId);
       if (!room) {
         throw new Error('방을 찾을 수 없습니다.');
       }
@@ -495,12 +508,12 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
           const krakenState = this.krakenLogicService.deserializeState(room.gameState);
           const playerView = this.krakenLogicService.getPlayerView(krakenState, clientInfo.playerId);
           client.emit('room_state', {
-            room: { ...room.toJSON(), gameState: playerView }
+            room: { ...this.gameRoomService.serializeRoom(room), gameState: playerView }
           });
         }
       } else {
         client.emit('room_state', {
-          room: room.toJSON()
+          room: this.gameRoomService.serializeRoom(room, this.clients.get(client.id)?.playerId)
         });
       }
 
@@ -519,7 +532,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string; targetPlayerId: string; cardIndex: number }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'no-touch-kraken');
       if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
 
       const krakenState = this.krakenLogicService.deserializeState(room.gameState);
@@ -538,7 +551,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string; targetPlayerId: string; cardIndex: number }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'no-touch-kraken');
       if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
 
       const krakenState = this.krakenLogicService.deserializeState(room.gameState);
@@ -557,7 +570,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'no-touch-kraken');
       if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
 
       const krakenState = this.krakenLogicService.deserializeState(room.gameState);
@@ -586,7 +599,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
             const playerView = this.krakenLogicService.getPlayerView(krakenState, info.playerId);
             if (lastRevealedCard) playerView.lastRevealedCard = lastRevealedCard;
             this.server.to(socketId).emit('game_ended', {
-              room: room.toJSON(),
+              room: this.gameRoomService.serializeRoom(room),
               gameState: playerView,
               winner: krakenState.winner,
               winReason: krakenState.winReason,
@@ -608,19 +621,16 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId);
       if (!room) throw new Error('방을 찾을 수 없습니다.');
       if (room.hostId !== data.playerId) throw new Error('방장만 방으로 돌아갈 수 있습니다.');
 
       this.gameRoomService.resetRoom(data.roomId);
 
-      this.server.to(data.roomId).emit('room_updated', {
-        type: 'returned_to_room',
-        room: room.toJSON(),
-        message: '방으로 돌아왔습니다.'
-      });
+      this.emitRoomUpdate(room, 'returned_to_room', '방으로 돌아왔습니다.');
     } catch (error) {
-      client.emit('kraken_error', { message: error.message });
+      client.emit(this.gameRoomService.getRoom(data?.roomId)?.gameType === 'bomb-busters'
+        ? 'bomb_busters_error' : 'kraken_error', { message: error.message });
     }
   }
 
@@ -630,7 +640,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string; targetPlayerId: string; cardIndex: number; pingType: string; color: string }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'no-touch-kraken');
       if (!room) throw new Error('방을 찾을 수 없습니다.');
 
       const player = room.players.find(p => p.id === data.playerId);
@@ -656,7 +666,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string; claim: { treasureCount: number; hasKraken: boolean } }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'no-touch-kraken');
       if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
 
       const krakenState = this.krakenLogicService.deserializeState(room.gameState);
@@ -675,7 +685,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() data: { roomId: string; playerId: string; message: string }
   ) {
     try {
-      const room = this.gameRoomService.getRoom(data.roomId);
+      const room = this.requireMember(client, data.roomId, data.playerId, 'no-touch-kraken');
       if (!room || !room.gameState) throw new Error('게임을 찾을 수 없습니다.');
 
       const krakenState = this.krakenLogicService.deserializeState(room.gameState);
@@ -689,7 +699,102 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('bomb_busters_action')
+  handleBombBustersAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; action: BombBustersAction },
+  ) {
+    try {
+      const room = this.requireMember(client, data?.roomId, data?.playerId, 'bomb-busters');
+      if (room.status !== 'playing' || !room.gameState) {
+        throw new Error('진행 중인 봄버스터즈 게임이 없습니다.');
+      }
+      if (!data.action || typeof data.action !== 'object' || Array.isArray(data.action)) {
+        throw new Error('올바른 행동을 선택해주세요.');
+      }
+      // Process elapsed server time before accepting an action at a deadline.
+      this.tickBombRoom(room);
+      if (room.status !== 'playing') throw new Error('미션 제한 시간이 끝났습니다.');
+      // Commit only a complete valid action, keeping rejected payloads atomic.
+      const nextState = JSON.parse(JSON.stringify(room.gameState));
+      const result = this.bombBustersLogicService.applyAction(nextState, data.playerId, data.action);
+      room.gameState = nextState;
+      const gameEnded = nextState.phase === 'finished';
+      if (gameEnded) room.finishGame();
+      this.emitBombBustersStateToAll(room, result.message,
+        gameEnded ? 'game_ended' : 'bomb_busters_state_updated');
+    } catch (error) {
+      client.emit('bomb_busters_error', { message: error.message });
+    }
+  }
+
   // --- 헬퍼 메서드 ---
+
+  private tickBombRoom(room: GameRoom): void {
+    if (room.status !== 'playing' || !room.gameState) return;
+    if (!this.bombBustersLogicService.tick(room.gameState)) return;
+    const finished = room.gameState.phase === 'finished';
+    if (finished) room.finishGame();
+    this.emitBombBustersStateToAll(room, room.gameState.log.at(-1) ?? '미션 시간이 갱신되었습니다.',
+      finished ? 'game_ended' : 'bomb_busters_state_updated');
+  }
+
+  private reconnectKey(roomId: string, playerId: string): string {
+    return JSON.stringify([roomId, playerId]);
+  }
+
+  private clearReconnect(roomId: string, playerId: string): void {
+    const key = this.reconnectKey(roomId, playerId);
+    const disconnected = this.disconnectedClients.get(key);
+    if (disconnected) clearTimeout(disconnected.timer);
+    this.disconnectedClients.delete(key);
+  }
+
+  private requireMember(client: Socket, roomId: string, playerId?: string, gameType?: GameType): GameRoom {
+    const info = this.clients.get(client.id);
+    const room = this.gameRoomService.getRoom(roomId);
+    if (!room) throw new Error('방을 찾을 수 없습니다.');
+    if (!info || (playerId !== undefined && info.playerId !== playerId) || !this.isBoundMember(info, room)) {
+      throw new Error('현재 연결로 참여한 플레이어만 행동할 수 있습니다.');
+    }
+    if (gameType && room.gameType !== gameType) throw new Error('이 게임에서 사용할 수 없는 행동입니다.');
+    return room;
+  }
+
+  private isBoundMember(info: ClientInfo, room: GameRoom): boolean {
+    if (!info || info.roomId !== room.id || !room.players.some(player => player.id === info.playerId)) return false;
+    try {
+      this.gameRoomService.assertBombSession(room.id, info.playerId, info.sessionToken);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private emitRoomUpdate(room: GameRoom, type: string, message: string): void {
+    for (const [socketId, info] of this.clients) {
+      if (this.isBoundMember(info, room)) {
+        this.server.to(socketId).emit('room_updated', {
+          type,
+          room: this.gameRoomService.serializeRoom(room, info.playerId),
+          message,
+        });
+      }
+    }
+  }
+
+  private emitBombBustersStateToAll(room: GameRoom, message: string, event = 'bomb_busters_state_updated'): void {
+    for (const [socketId, info] of this.clients) {
+      if (this.isBoundMember(info, room)) {
+        const playerRoom = this.gameRoomService.serializeRoom(room, info.playerId);
+        this.server.to(socketId).emit(event, {
+          room: playerRoom,
+          gameState: playerRoom.gameState,
+          message,
+        });
+      }
+    }
+  }
 
   private findSocketIdByPlayerId(playerId: string): string | null {
     for (const [socketId, info] of this.clients.entries()) {
@@ -708,7 +813,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         const playerView = this.krakenLogicService.getPlayerView(krakenState, info.playerId);
         if (lastRevealedCard) playerView.lastRevealedCard = lastRevealedCard;
         this.server.to(socketId).emit(event, {
-          room: { ...room.toJSON(), gameState: playerView },
+          room: { ...this.gameRoomService.serializeRoom(room), gameState: playerView },
           gameState: playerView,
           message
         });

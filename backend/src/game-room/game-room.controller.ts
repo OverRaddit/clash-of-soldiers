@@ -8,6 +8,7 @@ import {
   Patch,
   HttpException,
   HttpStatus,
+  Headers,
 } from '@nestjs/common';
 import { GameRoomService } from './game-room.service';
 import { GameLogicService } from './game-logic.service';
@@ -28,7 +29,7 @@ export class GameRoomController {
       const room = this.gameRoomService.createRoom(createRoomDto);
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
         message: '방이 성공적으로 생성되었습니다.',
       };
     } catch (error) {
@@ -40,13 +41,17 @@ export class GameRoomController {
   }
 
   @Post(':roomId/join')
-  joinRoom(@Param('roomId') roomId: string, @Body() joinRoomDto: JoinRoomDto) {
+  joinRoom(@Param('roomId') roomId: string, @Body() joinRoomDto: JoinRoomDto,
+    @Headers('x-game-session') sessionToken?: string) {
     try {
+      if (this.gameRoomService.getRoom(roomId)?.players.some(player => player.id === joinRoomDto.playerId)) {
+        this.gameRoomService.assertBombSession(roomId, joinRoomDto.playerId, sessionToken);
+      }
       joinRoomDto.roomId = roomId;
       const room = this.gameRoomService.joinRoom(joinRoomDto);
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
         message: '방에 성공적으로 참여했습니다.',
       };
     } catch (error) {
@@ -60,13 +65,15 @@ export class GameRoomController {
   @Delete(':roomId/leave/:playerId')
   leaveRoom(
     @Param('roomId') roomId: string,
-    @Param('playerId') playerId: string
+    @Param('playerId') playerId: string,
+    @Headers('x-game-session') sessionToken?: string,
   ) {
     try {
+      this.gameRoomService.assertBombSession(roomId, playerId, sessionToken);
       const room = this.gameRoomService.leaveRoom(roomId, playerId);
       return {
         success: true,
-        data: room?.toJSON() || null,
+        data: room ? this.gameRoomService.serializeRoom(room) : null,
         message: '방에서 나갔습니다.',
       };
     } catch (error) {
@@ -80,13 +87,15 @@ export class GameRoomController {
   @Patch(':roomId/ready/:playerId')
   toggleReady(
     @Param('roomId') roomId: string,
-    @Param('playerId') playerId: string
+    @Param('playerId') playerId: string,
+    @Headers('x-game-session') sessionToken?: string,
   ) {
     try {
+      this.gameRoomService.assertBombSession(roomId, playerId, sessionToken);
       const room = this.gameRoomService.toggleReady(roomId, playerId);
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
         message: '준비 상태가 변경되었습니다.',
       };
     } catch (error) {
@@ -98,9 +107,19 @@ export class GameRoomController {
   }
 
   @Post(':roomId/start')
-  startGame(@Param('roomId') roomId: string, @Body() body: { hostId: string }) {
+  startGame(@Param('roomId') roomId: string, @Body() body: { hostId: string; missionId?: number },
+    @Headers('x-game-session') sessionToken?: string) {
     try {
-      const room = this.gameRoomService.startGame(roomId, body.hostId);
+      this.gameRoomService.assertBombSession(roomId, body.hostId, sessionToken);
+      const room = this.gameRoomService.startGame(roomId, body.hostId, body.missionId);
+
+      if (room.gameType === 'bomb-busters') {
+        return {
+          success: true,
+          data: this.gameRoomService.serializeRoom(room),
+          message: '게임이 시작되었습니다.',
+        };
+      }
 
       // 게임 로직 초기화
       const playerIds = room.players.map((p) => p.id);
@@ -115,7 +134,7 @@ export class GameRoomController {
 
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
         message: '게임이 시작되었습니다.',
       };
     } catch (error) {
@@ -139,7 +158,7 @@ export class GameRoomController {
 
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -158,7 +177,7 @@ export class GameRoomController {
       const rooms = this.gameRoomService.getAllRooms();
       return {
         success: true,
-        data: rooms.map((room) => room.toJSON()),
+        data: rooms.map((room) => this.gameRoomService.serializeRoom(room)),
         count: rooms.length,
       };
     } catch (error) {
@@ -177,7 +196,7 @@ export class GameRoomController {
   ) {
     try {
       const room = this.gameRoomService.getRoom(roomId);
-      if (!room || !room.gameState) {
+      if (!room || room.gameType !== 'toy-battle' || room.status !== 'playing' || !room.gameState) {
         throw new Error('게임을 찾을 수 없습니다.');
       }
 
@@ -204,7 +223,7 @@ export class GameRoomController {
 
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
         message: '병정 2개를 뽑았습니다.',
       };
     } catch (error) {
@@ -227,7 +246,7 @@ export class GameRoomController {
   ) {
     try {
       const room = this.gameRoomService.getRoom(roomId);
-      if (!room || !room.gameState) {
+      if (!room || room.gameType !== 'toy-battle' || room.status !== 'playing' || !room.gameState) {
         throw new Error('게임을 찾을 수 없습니다.');
       }
 
@@ -273,7 +292,7 @@ export class GameRoomController {
 
       return {
         success: true,
-        data: room.toJSON(),
+        data: this.gameRoomService.serializeRoom(room),
         message,
         medalAwarded: result.medalAwarded,
         gameEnded: result.gameEnded,

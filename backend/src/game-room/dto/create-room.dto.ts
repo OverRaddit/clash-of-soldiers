@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, Max, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsIn } from 'class-validator';
 
 export class CreateRoomDto {
   @IsString()
@@ -10,13 +10,13 @@ export class CreateRoomDto {
   hostId: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(2)
   @Max(8)
-  maxPlayers?: number = 2;
+  maxPlayers?: number;
 
   @IsOptional()
   @IsString()
-  @IsIn(['toy-battle', 'no-touch-kraken'])
+  @IsIn(['toy-battle', 'no-touch-kraken', 'bomb-busters'])
   gameType?: string = 'toy-battle';
 }
