@@ -133,6 +133,7 @@ export interface BombBustersClientState {
   redMarkers: number[];
   yellowMarkers: number[];
   equipment: BombEquipment[];
+  preparedEquipment?: { equipmentId: 3 | 5 | 9 | 10; playerId: string; personal: boolean }[];
   stabilizerActive: boolean;
   superDetectorActive: boolean;
   tripleDetectorActive: boolean;

@@ -65,7 +65,7 @@ export class BombBustersLogicService {
       outcome: null, endReason: null, redMarkers, yellowMarkers,
       equipment: mission.equipment ? selectedEquipment.map(e => ({ ...structuredClone(e), used: false, unlocked: false })) : [],
       stabilizerActive: false, superDetectorActive: false, tripleDetectorActive: false, pendingDetector: null,
-      xyRayActive: false, pendingExchange: null, relationMarkers: [], radarResults: [], lastExchange: [],
+      xyRayActive: false, preparedEquipment: [], pendingExchange: null, relationMarkers: [], radarResults: [], lastExchange: [],
       log: [`${mission.name} 시작. 캡틴부터 파란 전선 하나에 정보 토큰을 놓으세요.`],
     };
     configureBombCampaign(state, this.campaignApi());
@@ -90,6 +90,10 @@ export class BombBustersLogicService {
       }
       this.resolveDetector(next, action.wireId);
     } else if (action.type === 'mission') {
+      const protectedPass = action.operation === 'pass' && next.stabilizerActive
+        && !bombRule(next, 'constraints') && !bombRule(next, 'secret_constraint_role')
+        && !bombRule(next, 'number_cycle') && !bombRule(next, 'yellow_single_cut');
+      if (action.operation === 'audio_laser' || protectedPass) this.consumePreparedEquipment(next, player.id, [9]);
       if (!applyBombAudioCommand(next, player, action, this.campaignApi())) applyBombMissionCommand(next, player, action, this.campaignApi());
     } else if (next.campaign?.pending) {
       throw new Error('먼저 미션의 선택을 마치세요.');
@@ -109,8 +113,8 @@ export class BombBustersLogicService {
           case 'cancel_equipment': {
             if (!next.superDetectorActive && !next.tripleDetectorActive && !next.stabilizerActive && !next.xyRayActive) throw new Error('취소할 준비 장비가 없습니다.');
             next.superDetectorActive = false; next.tripleDetectorActive = false;
-            next.stabilizerActive = false; next.xyRayActive = false;
-            next.log.push(`${player.name}님이 준비한 장비 효과를 취소했습니다. 사용한 장비는 되돌아오지 않습니다.`);
+            next.stabilizerActive = false; next.xyRayActive = false; next.preparedEquipment = [];
+            next.log.push(`${player.name}님이 장비 준비를 취소했습니다. 장비는 소모되지 않았습니다.`);
             break;
           }
           default: throw new Error('현재 사용할 수 없는 행동입니다.');
@@ -156,6 +160,7 @@ export class BombBustersLogicService {
       })),
       stabilizerActive: state.stabilizerActive, superDetectorActive: state.superDetectorActive,
       tripleDetectorActive: state.tripleDetectorActive, xyRayActive: state.xyRayActive ?? false,
+      preparedEquipment: (state.preparedEquipment ?? []).map(e => ({ equipmentId: e.equipmentId, playerId: e.playerId, personal: e.personal })),
       relationMarkers: (state.relationMarkers ?? []).map(m => ({ id: m.id, playerId: m.playerId, rackId: m.rackId, wireIds: [...m.wireIds] as [string, string], relation: m.relation })),
       radarResults: (state.radarResults ?? []).map(r => ({ value: r.value, racks: r.racks.map(p => ({ playerId: p.playerId, rackId: p.rackId, present: p.present })) })),
       lastExchange: (state.lastExchange ?? []).map(m => ({ wireId: m.wireId, fromPlayerId: m.fromPlayerId, fromRackId: m.fromRackId, fromIndex: m.fromIndex, toPlayerId: m.toPlayerId, toRackId: m.toRackId, toIndex: m.toIndex })),
@@ -235,36 +240,41 @@ export class BombBustersLogicService {
     const tripleDetector = state.tripleDetectorActive;
     const xyRay = state.xyRayActive;
     const detector = action.useDetector === true;
+    const usingDetector = detector || superDetector || tripleDetector;
+    let alternative: BombWire | undefined;
+    const guesses: BombWireValue[] = [ownWire.value];
     if ((superDetector || tripleDetector) && detector) throw new Error('공용 탐지기와 개인 탐지기는 함께 사용할 수 없습니다.');
-    if (xyRay && (detector || superDetector || tripleDetector)) throw new Error('X/Y 광선은 전선 하나에만 사용할 수 있습니다.');
     if (!xyRay && action.alternativeWireId) throw new Error('두 값을 선언하려면 X/Y 광선을 먼저 사용하세요.');
     if (!Array.isArray(action.targetWireIds) || (tripleDetector ? ![2, 3].includes(action.targetWireIds.length) : action.targetWireIds.length !== (detector ? 2 : 1)) || new Set(action.targetWireIds).size !== action.targetWireIds.length) {
       throw new Error(tripleDetector ? '같은 스탠드의 전선 3개 (2개만 남았다면 2개)를 선택하세요.' : detector ? '서로 다른 전선 두 개를 선택하세요.' : '팀원의 전선 하나를 선택하세요.');
     }
     let targetWires = action.targetWireIds.map(id => this.uncutWire(target, id));
     validateBombCampaignCut(state, player, guess, 'dual', (detector || superDetector || tripleDetector) ? [] : targetWires, ownWire, detector || superDetector || tripleDetector || xyRay || state.stabilizerActive);
+    this.consumePreparedEquipment(state, player.id);
     beginCampaignCut(state, player, 'dual', guess);
     if (state.campaign) state.campaign.turn.reversedOwn = !!ownWire.reversed;
     if (ownWire.reversed && ownWire.value !== guess) { this.finish(state, 'lost', '자기 역방향 전선의 값을 잘못 선언하여 폭발했습니다.'); return; }
     if (xyRay) {
-      const alternative = this.uncutWire(player, action.alternativeWireId);
+      alternative = this.uncutWire(player, action.alternativeWireId);
       if (alternative.reversed || alternative.excluded) throw new Error('X/Y 광선의 두 값은 자신에게 보이는 일반 전선이어야 합니다.');
       if (isBombRed(state, alternative) || alternative.value === ownWire.value) throw new Error('서로 다른 두 값을 선택하세요. 빨강은 선언할 수 없습니다.');
       const targetWire = targetWires[0];
       if (state.campaign) {
         const copy = structuredClone(state); const copiedPlayer = this.player(copy, player.id);
         const copiedTarget = this.player(copy, target.id);
-        validateBombCampaignCut(copy, copiedPlayer, alternative.value, 'dual', [this.uncutWire(copiedTarget, targetWire.id)], this.uncutWire(copiedPlayer, alternative.id), true);
+        validateBombCampaignCut(copy, copiedPlayer, alternative.value, 'dual', usingDetector ? [] : [this.uncutWire(copiedTarget, targetWire.id)], this.uncutWire(copiedPlayer, alternative.id), true);
       }
-      const guesses: BombWireValue[] = [ownWire.value, alternative.value];
-      state.pendingDetector = {
-        kind: 'xy', actorId: player.id, targetPlayerId: target.id,
-        ownWireId: ownWire.id, alternativeWireId: alternative.id,
-        targetWireIds: [targetWire.id], guess: ownWire.value, guesses,
-        eligibleWireIds: [targetWire.id], success: guesses.includes(targetWire.value),
-      };
-      state.log.push(`${player.name}님이 ${target.name}님의 전선에 ${guesses.map(value => this.label(value)).join(' 또는 ')}을 선언했습니다.`);
-      return;
+      guesses.push(alternative.value);
+      if (!usingDetector) {
+        state.pendingDetector = {
+          kind: 'xy', actorId: player.id, targetPlayerId: target.id,
+          ownWireId: ownWire.id, alternativeWireId: alternative.id,
+          targetWireIds: [targetWire.id], guess: ownWire.value, guesses,
+          eligibleWireIds: [targetWire.id], success: guesses.includes(targetWire.value),
+        };
+        state.log.push(`${player.name}님이 ${target.name}님의 전선에 ${guesses.map(value => this.label(value)).join(' 또는 ')}을 선언했습니다.`);
+        return;
+      }
     }
     if (superDetector) targetWires = target.racks.find(r => r.wires.some(w => w.id === targetWires[0].id)).wires.filter(w => !w.cut);
     if (detector || superDetector || tripleDetector) {
@@ -275,7 +285,7 @@ export class BombBustersLogicService {
       if (detector && player.personalEquipmentId && player.personalEquipmentId !== 0) throw new Error('선택한 개인 장비는 더블 탐지기가 아닙니다.');
       if (detector && this.personalEquipmentDisabled(state, player.id)) throw new Error('이 미션에서는 현재 개인 장비를 사용할 수 없습니다.');
       if (detector && player.detectorUsed && !bombRule(state, 'unlimited_detector')) throw new Error('개인 더블 탐지기는 미션당 한 번만 사용할 수 있습니다.');
-      if (typeof ownWire.value !== 'number') throw new Error('탐지기는 1~12 파란 전선에만 사용할 수 있습니다.');
+      if (guesses.some(value => typeof value !== 'number')) throw new Error('탐지기와 함께 선언하는 값은 모두 1~12 파란 숫자여야 합니다.');
       if (!target.racks.some(rack => targetWires.every(w => rack.wires.some(r => r.id === w.id)))) {
         throw new Error('탐지기는 같은 스탠드의 전선을 선택해야 합니다.');
       }
@@ -299,15 +309,16 @@ export class BombBustersLogicService {
         this.finish(state, 'lost', '빨간 전선을 잘라 폭탄이 폭발했습니다.');
         return;
       }
-      const matches = targetWires.filter(wire => wire.value === ownWire.value);
+      const matches = targetWires.filter(wire => guesses.includes(wire.value));
       const eligible = matches.length ? matches : targetWires.filter(wire => !isBombRed(state, wire));
       state.pendingDetector = {
-        kind: 'detector',
+        kind: xyRay ? 'xy' : 'detector',
+        ...(xyRay ? { guesses, alternativeWireId: alternative.id } : {}),
         actorId: player.id, targetPlayerId: target.id, ownWireId: ownWire.id,
         targetWireIds: targetWires.map(w => w.id), guess: ownWire.value,
         eligibleWireIds: eligible.map(wire => wire.id), success: matches.length > 0,
       };
-      state.log.push(`${player.name}님이 ${target.name}님의 전선에 ${superDetector ? '슈퍼' : tripleDetector ? '트리플' : '더블'} 탐지기 (${ownWire.value})를 사용했습니다.`);
+      state.log.push(`${player.name}님이 ${target.name}님의 전선에 ${superDetector ? '슈퍼' : tripleDetector ? '트리플' : '더블'} 탐지기 (${guesses.map(value => this.label(value)).join(' 또는 ')})를 사용했습니다.`);
       // Always ask the owner to acknowledge, even for one eligible wire. An automatic
       // result would disclose whether the other selected wire also matched or was red.
       return;
@@ -352,6 +363,7 @@ export class BombBustersLogicService {
       return;
     }
     if (pending.success) {
+      if (state.campaign?.turn) state.campaign.turn.value = wire.value;
       wire.cut = true;
       const actor = this.player(state, pending.actorId);
       const primary = this.uncutWire(actor, pending.ownWireId);
@@ -524,19 +536,45 @@ export class BombBustersLogicService {
           ? new Set(ownWires.filter(w => w.value !== 'red').map(w => w.value)).size >= 2
           : ownWires.some(w => equipment.id === 9 ? w.value !== 'red' : typeof w.value === 'number');
         const hasTarget = state.players.filter(p => p.id !== player.id).some(p => p.racks.some(r => r.wires.filter(w => !w.cut && !w.excluded).length >= (equipment.id === 3 ? 2 : 1)));
-        if (!hasOwnWire || !hasTarget) throw new Error('현재 이 장비로 이중 절단을 진행할 수 없습니다.');
-        if ([3, 5, 10].includes(equipment.id) && (state.superDetectorActive || state.tripleDetectorActive || state.xyRayActive)) throw new Error('다른 탐지기 또는 X/Y 광선을 이미 준비했습니다.');
+        const canStabilizeLaser = equipment.id === 9 && bombAudioView(state, player.id)?.controls.some(control => control.id === 'audio_laser');
+        if (!canStabilizeLaser && (!hasOwnWire || !hasTarget)) throw new Error('현재 이 장비로 이중 절단을 진행할 수 없습니다.');
+        if ([3, 5].includes(equipment.id) && (state.superDetectorActive || state.tripleDetectorActive)) throw new Error('다른 탐지기를 이미 준비했습니다.');
+        if ((equipment.id === 10 && state.xyRayActive) || (equipment.id === 9 && state.stabilizerActive)) throw new Error('이미 준비한 장비입니다.');
+        if ((equipment.id === 10 && (state.superDetectorActive || state.tripleDetectorActive)) || ([3, 5].includes(equipment.id) && state.xyRayActive)) {
+          if (new Set(ownWires.filter(w => typeof w.value === 'number' && !isBombRed(state, w)).map(w => w.value)).size < 2) throw new Error('X/Y와 탐지기를 함께 쓰려면 서로 다른 파란 숫자 두 개가 필요합니다.');
+        }
         if (equipment.id === 3) state.tripleDetectorActive = true;
         else if (equipment.id === 5) state.superDetectorActive = true;
         else if (equipment.id === 10) state.xyRayActive = true;
         else state.stabilizerActive = true;
-        break;
+        (state.preparedEquipment ??= []).push({ equipmentId: equipment.id as 3 | 5 | 9 | 10, playerId: player.id, personal });
+        state.log.push(`${player.name}님이 ${personal ? '개인' : '공용'} 장비 ${equipment.name}을 준비했습니다.`);
+        return;
       }
       default: throw new Error('지원하지 않는 장비입니다.');
     }
     equipment.used = true;
     if (personal) player.detectorUsed = true;
-    state.log.push(`${player.name}님이 공용 장비 ${equipment.name}을 사용했습니다.`);
+    state.log.push(`${player.name}님이 ${personal ? '개인' : '공용'} 장비 ${equipment.name}을 사용했습니다.`);
+  }
+
+  /** Mutates only the action copy: rejected declarations leave every prepared source unspent. */
+  private consumePreparedEquipment(state: BombBustersState, playerId: string, equipmentIds?: number[]) {
+    const prepared = state.preparedEquipment ?? [];
+    const consumed = prepared.filter(entry => !equipmentIds || equipmentIds.includes(entry.equipmentId));
+    for (const entry of consumed) {
+      if (entry.playerId !== playerId) throw new Error('장비를 준비한 플레이어가 절단해야 합니다.');
+      if (entry.personal) {
+        const owner = this.player(state, entry.playerId);
+        if (owner.detectorUsed || owner.personalEquipmentId !== entry.equipmentId || this.personalEquipmentDisabled(state, owner.id)) throw new Error('준비한 개인 장비를 사용할 수 없습니다. 준비를 취소하세요.');
+        owner.detectorUsed = true;
+      } else {
+        const card = state.equipment.find(e => e.id === entry.equipmentId);
+        if (!card || !card.unlocked || card.used) throw new Error('준비한 공용 장비를 사용할 수 없습니다. 준비를 취소하세요.');
+        card.used = true;
+      }
+    }
+    state.preparedEquipment = prepared.filter(entry => !consumed.includes(entry));
   }
 
   private exchangeWire(state: BombBustersState, player: BombPlayer, wireId: string) {
@@ -591,6 +629,7 @@ export class BombBustersLogicService {
     state.superDetectorActive = false;
     state.tripleDetectorActive = false;
     state.xyRayActive = false;
+    state.preparedEquipment = [];
     if (state.mistakes >= state.maxMistakes && !bombRule(state, 'nano_race')) {
       this.finish(state, 'lost', '기폭 다이얼이 끝에 도달했습니다.');
       return;
@@ -615,6 +654,7 @@ export class BombBustersLogicService {
 
   private finish(state: BombBustersState, outcome: 'won' | 'lost', reason: string) {
     state.phase = 'finished'; state.outcome = outcome; state.endReason = reason;
+    state.preparedEquipment = [];
     state.pendingDetector = null;
     state.pendingExchange = null;
     if (state.campaign) { state.campaign.pending = null; state.campaign.pendingAfterTurn = false; }

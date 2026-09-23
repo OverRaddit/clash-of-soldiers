@@ -171,9 +171,9 @@ test('coffee may choose the current player and submits that explicit choice', ()
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', expect.objectContaining({ equipmentId: 11, targetPlayerId: 'me' }));
 });
 
-test('armed equipment can be cancelled without pretending the spent card is restored', () => {
+test('prepared equipment can be cancelled without consuming a card', () => {
   show(makeState({ xyRayActive: true }));
-  expect(screen.getByText('장비는 사용 완료 상태로 남습니다. 차례는 계속 진행합니다.')).toBeInTheDocument();
+  expect(screen.getByText('아직 사용하지 않은 장비는 소모되지 않습니다. 차례는 계속 진행합니다.')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: '준비한 장비 효과 모두 취소' }));
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', { type: 'cancel_equipment' });
 });
@@ -437,4 +437,50 @@ test('triple detector excludes X wires when only two eligible candidates remain'
   expect(screen.getByRole('button', { name: '협력 해체 실행' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: '협력 해체 실행' }));
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', expect.objectContaining({ targetWireIds: ['other-a', 'other-b'] }));
+});
+
+
+test.each(['double', 'triple', 'super'] as const)('XY ray combines with the %s detector and submits both declared values', (detectorKind) => {
+  const state = makeState({ xyRayActive: true, tripleDetectorActive: detectorKind === 'triple', superDetectorActive: detectorKind === 'super' });
+  state.players[0].racks[0].wires[1].value = 5;
+  show(state);
+  if (detectorKind === 'double') fireEvent.click(screen.getByRole('checkbox', { name: /더블 탐지기/ }));
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 5' }));
+  fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }));
+  const submit = screen.getByRole('button', { name: '협력 해체 실행' });
+  if (detectorKind !== 'super') {
+    expect(submit).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 1번 전선: 비공개, 공개 단서 3' }));
+  }
+  expect(submit).toBeEnabled();
+  fireEvent.click(submit);
+  expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', {
+    type: 'dual', ownWireId: 'own-a', alternativeWireId: 'own-b', targetPlayerId: 'friend',
+    targetWireIds: detectorKind === 'super' ? ['other-b'] : ['other-b', 'other-a'], useDetector: detectorKind === 'double',
+  });
+});
+
+test('XY plus a detector cannot declare a yellow value in either selection order', () => {
+  const state = makeState({ xyRayActive: true });
+  state.players[0].racks[0].wires[1].value = 'yellow';
+  show(state);
+  const detector = screen.getByRole('checkbox', { name: /더블 탐지기/ });
+  const yellow = screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 노랑' });
+  fireEvent.click(detector);
+  expect(yellow).toBeDisabled();
+  fireEvent.click(detector);
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  fireEvent.click(yellow);
+  expect(detector).toBeDisabled();
+});
+
+
+test('preparing XY preserves an already selected personal double detector', () => {
+  const state = makeState();
+  state.players[0].racks[0].wires[1].value = 5;
+  const { rerender } = show(state);
+  fireEvent.click(screen.getByRole('checkbox', { name: /더블 탐지기/ }));
+  rerender(<BombBustersGame room={room} playerId="me" state={{ ...state, xyRayActive: true }} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  expect(screen.getByRole('checkbox', { name: /더블 탐지기/ })).toBeChecked();
 });

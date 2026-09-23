@@ -105,6 +105,12 @@ export interface BombFeedback {
   kind: 'success' | 'failure';
 }
 
+export interface BombPreparedEquipment {
+  equipmentId: 3 | 5 | 9 | 10;
+  playerId: string;
+  personal: boolean;
+}
+
 export interface BombBustersState {
   phase: BombBustersPhase;
   mission: BombMission;
@@ -125,6 +131,7 @@ export interface BombBustersState {
   tripleDetectorActive: boolean;
   pendingDetector: BombDetectorChoice | null;
   xyRayActive: boolean;
+  preparedEquipment?: BombPreparedEquipment[];
   pendingExchange: BombExchange | null;
   relationMarkers: BombRelationMarker[];
   radarResults: BombRadarResult[];
@@ -177,6 +184,7 @@ export interface BombBustersClientState {
   superDetectorActive: boolean;
   tripleDetectorActive: boolean;
   xyRayActive: boolean;
+  preparedEquipment?: BombPreparedEquipment[];
   pendingExchange: {
     actorId: string; targetPlayerId: string; selectedPlayerIds: string[]; ownSelectedWireId?: string;
   } | null;

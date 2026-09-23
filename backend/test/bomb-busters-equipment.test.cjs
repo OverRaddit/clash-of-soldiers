@@ -227,3 +227,100 @@ test('Winning still requires red-only hands to be safely revealed after the fina
   assert.equal(state.outcome, 'won');
   assert.equal(state.mistakes, 0);
 });
+
+function withRay(state) {
+  state.equipment.push({ ...structuredClone(BOMB_BUSTERS_EQUIPMENT.find(e => e.id === 10)), unlocked: true, used: false });
+  return state;
+}
+
+test('prepared shared devices survive cancellation and invalid declarations without consumption', () => {
+  for (const id of [3, 5, 9, 10]) {
+    const state = withRay(fixture([[2, 6]], [[2, 6, 8]])); use(state, id);
+    assert.equal(equipment(state, id).used, false);
+    assert.deepEqual(state.preparedEquipment, [{ equipmentId: id, playerId: 'actor', personal: false }]);
+    rejectsAtomically(state, { type: 'dual', ownWireId: 'missing', targetPlayerId: 'target', targetWireIds: ['target-0-0'] });
+    act(state, { type: 'cancel_equipment' });
+    assert.equal(equipment(state, id).used, false); assert.deepEqual(state.preparedEquipment, []); assert.equal(state.turnNumber, 1);
+    use(state, id); assert.equal(equipment(state, id).used, false);
+  }
+});
+
+test('personal preparation spends only its owner device on a valid declaration', () => {
+  for (const id of [3, 10]) {
+    const state = withRay(fixture([[2, 6]], [[2, 6, 8]])); state.players[0].personalEquipmentId = id;
+    use(state, id, { personal: true });
+    assert.equal(state.players[0].detectorUsed, false); assert.equal(equipment(state, id).used, false);
+    act(state, { type: 'cancel_equipment' }); assert.equal(state.players[0].detectorUsed, false);
+    use(state, id, { personal: true });
+    const targets = id === 3 ? ['target-0-0', 'target-0-1', 'target-0-2'] : ['target-0-1'];
+    cut(state, targets, id === 10 ? { alternativeWireId: 'actor-0-1' } : {});
+    assert.ok(state.pendingDetector); assert.equal(state.players[0].detectorUsed, true);
+    assert.equal(equipment(state, id).used, false); assert.deepEqual(state.preparedEquipment, []);
+    rejectsAtomically(state, { type: 'cancel_equipment' }); resolve(state, targets[0]);
+    assert.equal(state.players[0].detectorUsed, true);
+  }
+});
+
+test('mixed personal/shared preparation cancels together and spends exactly its recorded sources', () => {
+  const state = fixture([[2, 6]], [[2, 6, 8]]); state.players[0].personalEquipmentId = 3;
+  use(state, 3, { personal: true }); use(state, 9); act(state, { type: 'cancel_equipment' });
+  assert.equal(state.players[0].detectorUsed, false); assert.equal(equipment(state, 9).used, false); assert.deepEqual(state.preparedEquipment, []);
+  use(state, 3, { personal: true }); use(state, 9); cut(state, ['target-0-0', 'target-0-1', 'target-0-2']);
+  assert.equal(state.players[0].detectorUsed, true); assert.equal(equipment(state, 3).used, false); assert.equal(equipment(state, 9).used, true);
+});
+
+for (const detector of ['double', 'triple', 'super']) test(`X/Y plus ${detector} selects either matching value privately`, () => {
+  for (const rayFirst of [true, false]) {
+    const state = withRay(fixture([[2, 6, 11]], [['red', 2, 6, 8]]));
+    const id = detector === 'triple' ? 3 : detector === 'super' ? 5 : null;
+    if (rayFirst) use(state, 10); if (id) use(state, id); if (!rayFirst) use(state, 10);
+    const targets = detector === 'double' ? ['target-0-1', 'target-0-2'] : detector === 'triple' ? ['target-0-0', 'target-0-1', 'target-0-2'] : ['target-0-0'];
+    cut(state, targets, { alternativeWireId: 'actor-0-1', useDetector: detector === 'double' });
+    assert.equal(state.pendingDetector.kind, 'xy'); assert.deepEqual(state.pendingDetector.guesses, [2, 6]);
+    assert.deepEqual(state.pendingDetector.eligibleWireIds, ['target-0-1', 'target-0-2']);
+    assert.equal(equipment(state, 10).used, true); if (id) assert.equal(equipment(state, id).used, true);
+    assert.equal(state.players[0].detectorUsed, detector === 'double');
+    for (const viewer of ['actor', undefined]) for (const hidden of ['success', 'ownWireId', 'alternativeWireId', 'eligibleWireIds']) assert.equal(engine.getPlayerView(state, viewer).pendingDetector[hidden], undefined);
+    resolve(state, 'target-0-2');
+    assert.equal(wire(state, 'actor-0-0').cut, false); assert.equal(wire(state, 'actor-0-1').cut, true);
+    assert.equal(wire(state, 'target-0-2').cut, true); assert.equal(state.turnNumber, 2);
+  }
+});
+
+test('failed X/Y detector combinations avoid red and may use stabilizer protection', () => {
+  const state = withRay(fixture([[2, 6, 11]], [['red', 8, 9]])); use(state, 3); use(state, 10);
+  cut(state, ['target-0-0', 'target-0-1', 'target-0-2'], { alternativeWireId: 'actor-0-1' });
+  assert.deepEqual(state.pendingDetector.eligibleWireIds, ['target-0-1', 'target-0-2']);
+  rejectsAtomically(state, { type: 'resolve_detector', wireId: 'target-0-0' }, 'target'); resolve(state, 'target-0-1');
+  assert.equal(state.mistakes, 1); assert.equal(wire(state, 'target-0-1').hint, 8); assert.equal(wire(state, 'actor-0-1').cut, false);
+  const guarded = withRay(fixture([[2, 6]], [['red', 'red']])); use(guarded, 10); use(guarded, 5); use(guarded, 9);
+  cut(guarded, ['target-0-0'], { alternativeWireId: 'actor-0-1' });
+  assert.equal(guarded.phase, 'playing'); assert.equal(guarded.mistakes, 0);
+  for (const id of [10, 5, 9]) assert.equal(equipment(guarded, id).used, true);
+});
+
+test('combined guesses must both be blue and multiple detector effects remain prohibited', () => {
+  const state = withRay(fixture([[2, 'yellow', 6]], [[2, 6, 8]])); use(state, 10);
+  rejectsAtomically(state, { type: 'dual', ownWireId: 'actor-0-0', alternativeWireId: 'actor-0-1', targetPlayerId: 'target', targetWireIds: ['target-0-0', 'target-0-1'], useDetector: true });
+  assert.equal(equipment(state, 10).used, false); use(state, 3);
+  rejectsAtomically(state, { type: 'equipment', equipmentId: 5 }); rejectsAtomically(state, { type: 'equipment', equipmentId: 10 });
+  rejectsAtomically(state, { type: 'dual', ownWireId: 'actor-0-0', alternativeWireId: 'actor-0-2', targetPlayerId: 'target', targetWireIds: ['target-0-0', 'target-0-1', 'target-0-2'], useDetector: true });
+  const tooFewBlue = withRay(fixture([[2, 'yellow']], [[2, 6, 8]])); use(tooFewBlue, 10);
+  rejectsAtomically(tooFewBlue, { type: 'equipment', equipmentId: 3 });
+});
+
+test('prepared device views enumerate only public source fields', () => {
+  const state = withRay(fixture()); use(state, 10); state.preparedEquipment[0].secret = 'PRIVATE';
+  assert.deepEqual(engine.getPlayerView(state, undefined).preparedEquipment, [{ equipmentId: 10, playerId: 'actor', personal: false }]);
+});
+
+test('a mission pass that uses stabilizer protection consumes it and clears the prepared effects', () => {
+  const state = fixture([[2, 6]], [[3, 8]]);
+  const campaign = engine.initializeGame(['actor', 'target'], [], 44, 'actor');
+  state.mission = campaign.mission; state.campaign = campaign.campaign;
+  state.campaign.pending = null; state.campaign.setupTasks = [];
+  use(state, 9); act(state, { type: 'mission', operation: 'pass' });
+  assert.equal(state.mistakes, 0); assert.equal(equipment(state, 9).used, true);
+  assert.equal(state.stabilizerActive, false); assert.deepEqual(state.preparedEquipment, []);
+  assert.equal(state.currentPlayerId, 'target');
+});

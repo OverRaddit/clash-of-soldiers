@@ -61,7 +61,7 @@
 | 7 | 비상 배터리 | 이미 사용한 개인 장비 1개 또는 2개를 다시 사용 가능하게 한다. 언제든 사용. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/Emergency%20Batteries.png) |
 | 8 | 전체 레이더 | 숫자 1–12 중 하나를 선언하면 전원이 해당 미절단 파란 전선 보유 여부만 답한다. 받침대가 둘이면 각각 답한다. 언제든 사용. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/General%20Radar.png) |
 | 9 | 안정기 | 자기 차례 협력 절단 전에 사용한다. 그 차례에는 실패로 기폭기가 전진하지 않고 빨강을 지목해도 즉시 폭발하지 않는다. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/Stabilizer.png) |
-| 10 | X/Y 광선 | 자기 차례 협력 절단에서 한 전선에 대해 값 2개를 제시한다. 두 값을 모두 자기 손에 보유해야 하며 노랑도 가능하다. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/X%20or%20Y%20ray.png) |
+| 10 | X/Y 광선 | 자기 차례 협력 절단에서 값 2개를 제시한다. 두 값을 모두 자기 손에 보유해야 하며 단독 사용은 노랑도 가능하다. 더블·트리플·슈퍼 탐지기 중 하나와 병용할 수 있고, 병용 시 두 값 모두 파란 숫자여야 한다. [공식 규칙서 6쪽](https://www.cocktailgames.com/wp-content/uploads/2023/10/BombBusters_rules_EN.pdf#page=6) | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/X%20or%20Y%20ray.png) |
 | 11 | 커피잔 | 자기 차례를 건너뛰고 상의 없이 다음 플레이어를 지명한다. 그 사람부터 시계 방향으로 진행한다. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/Coffee%20Mug.png) |
 | 12 | = 표식 | 같은 값의 인접 전선에 표식. 하나는 이미 절단되어 있어도 된다. 같은 색 빨강끼리·노랑끼리도 가능하다. 언제든 사용. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/Label%20Equals.png) |
 | 노랑 한 쌍 | 이중 바닥 | 장비 2장을 추가한다. 이미 대응 전선이 절단되어 있으면 바로 활성화될 수 있다. 즉시 효과. 9번부터 노랑이 있는 미션의 장비 더미에 포함. | [카드](https://files.timwi.de/Tabletop%20Simulator/Bomb%20Busters/Items/False%20Bottom.png) |

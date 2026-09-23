@@ -107,7 +107,7 @@ test('coffee chooses next player and normal clockwise order resumes from them',(
  act(s,{type:'dual',ownWireId:'w2-0',targetPlayerId:'p0',targetWireIds:['w0-1']},'p2');
  assert.equal(s.currentPlayerId,'p0');assert.equal(s.turnNumber,3);
 });
-test('cancel prepared equipment never refunds it or consumes a turn',()=>{
+test('cancel prepared equipment keeps it available and consumes no turn',()=>{
  const s=fixture([[2,3],[2,4]],[10]);use(s,10);
- act(s,{type:'cancel_equipment'});assert.equal(s.xyRayActive,false);assert.equal(s.equipment[0].used,true);assert.equal(s.turnNumber,1);
+ act(s,{type:'cancel_equipment'});assert.equal(s.xyRayActive,false);assert.equal(s.equipment[0].used,false);assert.equal(s.turnNumber,1);
 });

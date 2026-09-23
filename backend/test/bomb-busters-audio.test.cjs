@@ -57,3 +57,16 @@ test('real engine rejects unauthorised audio state mutations atomically and hide
 test('66 two wrong laser guesses let the team choose exactly one hint while clock continues',()=>{const s=fixture(66,[[1,2],[3,4],[5,6]]);cmd(s,'audio_start');Object.assign(s.audio.bunker,{floor:'basement',position:[3,2],stage:'disable_laser'});const deadline=s.audio.deadlineAt;cmd(s,'audio_laser',{wireIds:['w1-0','w2-0']});assert.equal(s.mistakes,1);assert.equal(s.audio.pending.kind,'laser_hint');assert.equal(s.audio.deadlineAt,deadline);assert.throws(()=>cmd(s,'audio_laser_hint',{cardId:'w1-1'}));cmd(s,'audio_laser_hint',{cardId:'w2-0'});assert.equal(all(s).find(w=>w.id==='w2-0').hint,5);assert.equal(all(s).find(w=>w.id==='w1-0').hint,null);assert.equal(s.currentPlayerId,'p1');});
 test('66 stabilizer prevents a red explosion in the laser attempt without publishing red information',()=>{const s=fixture(66,[[1,2],['yellow',3],['red',4]]);cmd(s,'audio_start');s.stabilizerActive=true;Object.assign(s.audio.bunker,{floor:'basement',position:[3,2],stage:'disable_laser'});cmd(s,'audio_laser',{wireIds:['w1-0','w2-0']});assert.equal(s.outcome,null);assert.equal(s.mistakes,0);assert.equal(s.audio.bunker.laserDisabled,false);assert.equal(all(s).find(w=>w.id==='w2-0').hint,null);});
 test('54 finished players cannot receive oxygen and a lone remaining player skips transfer selection',()=>{const s=fixture(54);s.players[1].racks[0].wires.forEach(w=>w.cut=true);enter(s,5);assert.ok(!audio.bombAudioView(s,'p0').controls[0].playerIds.includes('p1'));assert.throws(()=>cmd(s,'audio_transfer',{targetPlayerId:'p1',value:0,direction:'give'}));s.players[2].racks[0].wires.forEach(w=>w.cut=true);enter(s,5);assert.equal(s.audio.pending.kind,'ack');});
+
+test('a red-only player can prepare and consume stabilizer for the special laser action',()=>{
+ const s=fixture(66,[['red'],['red',3],['yellow',4]]);
+ const {BOMB_BUSTERS_EQUIPMENT}=require('../dist/game-room/bomb-busters-logic.service');
+ s.equipment=[{...structuredClone(BOMB_BUSTERS_EQUIPMENT.find(e=>e.id===9)),used:false,unlocked:true}];
+ engine.applyAction(s,'p0',{type:'mission',operation:'audio_start'});
+ Object.assign(s.audio.bunker,{floor:'basement',position:[3,2],stage:'disable_laser'});
+ engine.applyAction(s,'p0',{type:'equipment',equipmentId:9});
+ assert.equal(s.equipment[0].used,false);
+ engine.applyAction(s,'p0',{type:'mission',operation:'audio_laser',wireIds:['w1-0','w2-0']});
+ assert.equal(s.phase,'playing');assert.equal(s.mistakes,0);assert.equal(s.equipment[0].used,true);
+ assert.equal(s.stabilizerActive,false);assert.deepEqual(s.preparedEquipment,[]);
+});
