@@ -58,7 +58,7 @@ test('all non-audio setups can be completed using only the acting player public 
     const pendingActor=views[0].campaign?.pendingActorId;
     const actor=pendingActor&&pendingActor!=='any'?pendingActor:s.currentPlayerId;
     const view=views[ids.indexOf(actor)];const own=view.players.find(p=>p.id===actor);
-    const control=view.campaign?.controls?.[0];
+    const control=view.campaign?.controls?.find(control=>control.id==='finish_absent_hint')??view.campaign?.controls?.[0];
     if(control) {
      const action={type:'mission',operation:control.id};
      if(control.cards?.length)action.cardId=control.cards[0].id;
