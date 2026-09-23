@@ -99,6 +99,13 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
     if (state.superDetectorActive || state.tripleDetectorActive || state.stabilizerActive || state.xyRayActive) setMode('dual');
   }, [selectionRevision, state.superDetectorActive, state.tripleDetectorActive, state.stabilizerActive, state.xyRayActive]);
 
+  const selectedRelationConsumed = relationEquipmentId !== null && state.equipment.some((equipment) => equipment.id === relationEquipmentId && equipment.used);
+  useEffect(() => {
+    if (!selectedRelationConsumed) return;
+    setRelationEquipmentId(null);
+    setRelationWireIds([]);
+  }, [selectedRelationConsumed]);
+
   // Preparing X/Y or a stabilizer must preserve a selected personal detector.
   useEffect(() => { setUseDetector(false); }, [room.id, state.mission.id, state.phase, state.turnNumber, state.currentPlayerId, me?.detectorUsed, me?.personalEquipmentId, state.superDetectorActive, state.tripleDetectorActive]);
 

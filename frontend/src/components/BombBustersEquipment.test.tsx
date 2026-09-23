@@ -34,6 +34,23 @@ const show = (state = makeState(), onAction = jest.fn()) => ({
   ...render(<BombBustersEquipment state={state} playerId="me" disabled={false} onAction={onAction} onSelectRelation={jest.fn()} />),
 });
 
+test.each([1, 12] as const)('relation equipment %s shows completion only after the server consumes it', (equipmentId) => {
+  const state = makeState({ equipment: [{ id: equipmentId, name: '관계 표식', description: '', unlocked: true, used: false }] });
+  if (equipmentId === 12) state.players[0].racks[0].wires[1].value = 2;
+  const onSelectRelation = jest.fn();
+  const onAction = jest.fn();
+  const { rerender } = render(<BombBustersEquipment state={state} playerId="me" disabled={false} onAction={onAction} onSelectRelation={onSelectRelation} />);
+  fireEvent.click(card('관계 표식').getByRole('button', { name: '표식 위치 고르기' }));
+  expect(onSelectRelation).toHaveBeenCalledWith(equipmentId);
+  expect(onAction).not.toHaveBeenCalled();
+  expect(card('관계 표식').getByText('사용 가능')).toBeInTheDocument();
+  const committed = { ...state, equipment: state.equipment.map((equipment) => ({ ...equipment, used: true })) };
+  rerender(<BombBustersEquipment state={committed} playerId="me" disabled={false} onAction={onAction} onSelectRelation={onSelectRelation} />);
+  expect(card('관계 표식').getByRole('button', { name: '사용 완료' })).toBeDisabled();
+  expect(card('관계 표식').queryByRole('button', { name: '표식 위치 고르기' })).not.toBeInTheDocument();
+  expect(card('관계 표식').queryByText('내 받침대에서 인접한 전선 두 개를 선택합니다.')).not.toBeInTheDocument();
+});
+
 test('X/Y can be followed by a triple or super detector and stabilizer', () => {
   const { onAction } = show(makeState({ xyRayActive: true, preparedEquipment: [{ equipmentId: 10, playerId: 'me', personal: false }] }));
   expect(prepare('트리플 탐지기')).toBeEnabled();

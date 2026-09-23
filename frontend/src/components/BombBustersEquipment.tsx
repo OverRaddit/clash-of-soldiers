@@ -164,7 +164,7 @@ const BombBustersEquipment: React.FC<Props> = ({ state, playerId, disabled, onAc
         {!equipment.used && equipment.id === 10 && !hasPreparationValues && <p className="bb-equipment-help">{detectorArmed ? '탐지기와 함께 쓰려면 서로 다른 파란 전선 두 종류가 필요합니다.' : '서로 다른 값의 전선 두 종류가 필요합니다.'}</p>}
         {!equipment.used && [3, 5].includes(equipment.id) && state.xyRayActive && ownBlueValues.size < 2 && <p className="bb-equipment-help">X/Y 광선과 함께 쓰려면 서로 다른 파란 전선 두 종류가 필요합니다.</p>}
         {!equipment.used && [1, 12].includes(equipment.id) && <p className="bb-equipment-help">내 받침대에서 인접한 전선 두 개를 선택합니다.</p>}
-        <button className="bb-button bb-button-quiet" disabled={!ready} onClick={activate}>{isPrepared ? '준비됨' : [13, 15, 17].includes(equipment.id) ? '자동 효과' : [1, 12].includes(equipment.id) ? '표식 위치 고르기' : equipment.id === 2 ? '비공개 교환 시작' : equipment.id === 11 ? '선택한 대원에게 차례 넘기기' : equipment.id === 16 ? '선택한 값의 전선 2개 해체' : needsOwnTurn ? '이번 차례에 장비 준비' : '장비 사용'}</button>
+        <button className="bb-button bb-button-quiet" disabled={!ready} onClick={activate}>{isPrepared ? '준비됨' : [13, 15, 17].includes(equipment.id) ? '자동 효과' : [1, 12].includes(equipment.id) ? equipment.used ? '사용 완료' : '표식 위치 고르기' : equipment.id === 2 ? '비공개 교환 시작' : equipment.id === 11 ? '선택한 대원에게 차례 넘기기' : equipment.id === 16 ? '선택한 값의 전선 2개 해체' : needsOwnTurn ? '이번 차례에 장비 준비' : '장비 사용'}</button>
       </article>;
     })}</div>
   </section>;

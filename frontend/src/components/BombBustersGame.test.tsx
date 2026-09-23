@@ -132,15 +132,74 @@ test('XY ray declares two owned values and one teammate wire', () => {
   });
 });
 
-test('relation labels select an adjacent own pair including a cut wire', () => {
-  const state = makeState({ equipment: [{ id: 12, name: '= 표식', description: '인접 전선의 값이 같습니다.', unlocked: true, used: false }] });
+test('relation labels finish selecting after the server applies an adjacent pair including a cut wire', () => {
+  const state = makeState({ equipment: [
+    { id: 12, name: '= 표식', description: '인접 전선의 값이 같습니다.', unlocked: true, used: false },
+    { id: 6, name: '되감기', description: '기폭기를 한 칸 되돌립니다.', unlocked: true, used: false },
+  ] });
   state.players[0].racks[0].wires[0].cut = true;
-  show(state);
+  const { rerender } = show(state);
   fireEvent.click(screen.getByRole('button', { name: '표식 위치 고르기' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 해체됨 2' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '선택한 위치에 = 표식 놓기' }));
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', { type: 'equipment', equipmentId: 12, wireIds: ['own-a', 'own-b'] });
+  const committed: BombBustersClientState = {
+    ...state,
+    equipment: state.equipment.map((equipment) => equipment.id === 12 ? { ...equipment, used: true } : equipment),
+    relationMarkers: [{ id: 'equal', playerId: 'me', rackId: 'mine', wireIds: ['own-a', 'own-b'], relation: 'equal' }],
+  };
+  rerender(<BombBustersGame room={room} playerId="me" state={committed} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  expect(screen.queryByRole('button', { name: '선택한 위치에 = 표식 놓기' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '선택 취소' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '사용 완료' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '장비 사용' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 해체됨 2' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' })).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
+  fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }));
+  expect(screen.getByRole('button', { name: '협력 해체 실행' })).toBeEnabled();
+});
+
+test('unconsumed relation selections can be retried or cancelled without consuming the equipment', () => {
+  const state = makeState({ equipment: [{ id: 12, name: '= 표식', description: '', unlocked: true, used: false }] });
+  const { rerender } = show(state);
+  fireEvent.click(screen.getByRole('button', { name: '표식 위치 고르기' }));
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
+  fireEvent.click(screen.getByRole('button', { name: '선택한 위치에 = 표식 놓기' }));
+  rerender(<BombBustersGame room={room} playerId="me" state={{ ...state }} message="사용 요청을 다시 확인해주세요." messageType="error" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  expect(screen.getByRole('button', { name: '선택한 위치에 = 표식 놓기' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: '선택한 위치에 = 표식 놓기' }));
+  expect(socketService.bombBustersAction).toHaveBeenCalledTimes(2);
+  fireEvent.click(screen.getByRole('button', { name: '선택 취소' }));
+  rerender(<BombBustersGame room={room} playerId="me" state={{ ...state }} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  expect(screen.getByRole('button', { name: '표식 위치 고르기' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: '표식 위치 고르기' }));
+  expect(screen.getByRole('button', { name: '선택한 위치에 = 표식 놓기' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.queryByRole('button', { name: '사용 완료' })).not.toBeInTheDocument();
+});
+
+test('teammate equipment and public clue updates preserve ordinary wire selections', () => {
+  const state = makeState({ equipment: [{ id: 12, name: '= 표식', description: '', unlocked: true, used: false }] });
+  const { rerender } = show(state);
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }));
+  const committed: BombBustersClientState = {
+    ...state,
+    equipment: state.equipment.map((equipment) => ({ ...equipment, used: true })),
+    relationMarkers: [{ id: 'equal', playerId: 'friend', rackId: 'theirs', wireIds: ['other-a', 'other-b'], relation: 'equal' }],
+    players: state.players.map((player) => player.id === 'friend' ? { ...player, racks: player.racks.map((rack) => ({
+      ...rack, wires: rack.wires.map((wire) => wire.id === 'other-b' ? { ...wire, hint: 3 } : wire),
+    })) } : player),
+  };
+  rerender(<BombBustersGame room={room} playerId="me" state={committed} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  expect(screen.getByRole('button', { name: '협력 해체 실행' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: '협력 해체 실행' }));
+  expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', {
+    type: 'dual', ownWireId: 'own-a', targetPlayerId: 'friend', targetWireIds: ['other-b'], useDetector: false,
+  });
 });
 
 test('radar reports are public historical presence without locations or counts', () => {
