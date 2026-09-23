@@ -2,6 +2,7 @@ import { validateBombAudioCut } from './campaign-audio';
 import { BombBustersAction, BombBustersState, BombPlayer, BombWire, BombWireValue } from '../entities/bomb-busters-game-state.entity';
 import { BOMB_CAMPAIGN_DEFINITIONS, BombCampaignDefinition, BombCampaignRule } from './campaign-definitions';
 import { BombCampaignState, BombCampaignView, BombClue, BombMissionCommand, BombMissionControl } from './campaign-state';
+import { recordBombFailureClue } from './turn-result';
 import { BOMB_CHALLENGES, BOMB_CONSTRAINTS, BombConstraintId } from './rule-cards';
 import { evaluateBombChallenges } from './campaign-challenges';
 import { getConstraintViolation, failureMistakeCost } from './campaign-constraints';
@@ -204,7 +205,7 @@ function advanceCampaignSetup(state: BombBustersState, api: BombCampaignApi) {
   } else state.currentPlayerId = order(state).find(p => !p.initialHintPlaced).id;
 }
 
-export function placeBombClue(state: BombBustersState, owner: BombPlayer, wire: BombWire, guessedValue?: BombWireValue): BombClue | null {
+export function placeBombClue(state: BombBustersState, owner: BombPlayer, wire: BombWire, guessedValue?: BombWireValue, failedCut = false): BombClue | null {
   const c = state.campaign;
   let clue: BombClue = { kind: 'value', value: wire.value };
   if (bombRule(state, 'unlimited_detector')) return null;
@@ -219,6 +220,7 @@ export function placeBombClue(state: BombBustersState, owner: BombPlayer, wire: 
     wire.clue = clue;
     wire.hint = clue.kind === 'value' ? wire.value : null;
   }
+  if (failedCut) recordBombFailureClue(state, wire.id);
   return clue;
 }
 
@@ -665,7 +667,7 @@ export function applyBombMissionCommand(state: BombBustersState, actor: BombPlay
     if (!correct) {
       if (operation === 'yellow_single' || operation === 'triple_yellow') {
         if (selected.some(w => isBombRed(state, w))) { api.finish(state, 'lost', '빨간 전선을 지목해 폭발했습니다.'); return; }
-        selected.forEach(w => placeBombClue(state, state.players.find(p => wires(p).includes(w)), w, value)); state.mistakes++;
+        selected.forEach(w => placeBombClue(state, state.players.find(p => wires(p).includes(w)), w, value, true)); state.mistakes++;
       } else { api.finish(state, 'lost', '특별 절단의 선언이 틀려 폭발했습니다.'); return; }
     } else {
       if (operation === 'reversed_solo' && uncutValue(state, value).length !== selected.length) throw new Error('그 값의 남은 전선 전부를 보유해야 합니다.');

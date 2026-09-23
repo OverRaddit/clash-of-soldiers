@@ -6,6 +6,7 @@ import type { BombAudioState, BombAudioView } from './audio-state';
 import { BOMB_AUDIO_SOURCE_URLS, BOMB_AUDIO_STEPS } from './audio-definitions';
 import { allowedBunkerMoves, BOMB_BUNKER_MAP, BombBunkerConstraint, BombBunkerDirection, BombBunkerStage, bunkerAtStageAction, bunkerConstraintAllows, bunkerStageComplete, createBombBunker, moveBombBunker, performBunkerAction } from './campaign-bunker';
 import { beginCircusEvent, applyCircusCommand, circusControls, afterCircusCut } from './audio-circus';
+import { recordBombFailureClue } from './turn-result';
 
 type Host = BombBustersState & { audio?: BombAudioState };
 const wires = (p: BombPlayer) => p.racks.flatMap(r => r.wires);
@@ -199,7 +200,7 @@ function laserAttempt(state: Host, actor: BombPlayer, command: BombMissionComman
       note(state, '두 대상이 모두 노랑이 아닙니다. 정보를 놓을 한 전선을 선택하세요.');
       return;
     }
-    if (wrong.length === 1) wrong[0].hint = wrong[0].value;
+    if (wrong.length === 1) { wrong[0].hint = wrong[0].value; recordBombFailureClue(state, wrong[0].id); }
   }
   performBunkerAction(a.bunker, 'yellow', success);
   if (!danger(state, api)) api.endTurn(state);
@@ -231,7 +232,7 @@ export function applyBombAudioCommand(state: Host, actor: BombPlayer, command: B
   if (op === 'audio_laser_hint') {
     if (!a.pending.wireIds.includes(command.cardId)) throw new Error('이번에 지목한 두 전선 중 하나를 선택하세요.');
     const chosen = all(state).find(w => w.id === command.cardId);
-    chosen.hint = chosen.value; a.pending = null; api.endTurn(state); return true;
+    chosen.hint = chosen.value; recordBombFailureClue(state, chosen.id); a.pending = null; api.endTurn(state); return true;
   }
   if (op === 'audio_move') {
     const pending = a.pending;

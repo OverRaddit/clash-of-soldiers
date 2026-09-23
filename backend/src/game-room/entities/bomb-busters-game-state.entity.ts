@@ -105,6 +105,12 @@ export interface BombFeedback {
   kind: 'success' | 'failure';
 }
 
+/** Wire positions from the latest resolved turn; the view filters hidden clues. */
+export interface BombLastTurn {
+  cutWireIds: string[];
+  clueWireIds: string[];
+}
+
 export interface BombPreparedEquipment {
   equipmentId: 3 | 5 | 9 | 10;
   playerId: string;
@@ -122,6 +128,7 @@ export interface BombBustersState {
   turnNumber: number;
   outcome: 'won' | 'lost' | null;
   feedback?: BombFeedback;
+  lastTurn?: BombLastTurn;
   endReason: string | null;
   redMarkers: number[];
   yellowMarkers: number[];
@@ -176,6 +183,7 @@ export interface BombBustersClientState {
   turnNumber: number;
   outcome: 'won' | 'lost' | null;
   feedback?: BombFeedback;
+  lastTurn?: BombLastTurn;
   endReason: string | null;
   redMarkers: number[];
   yellowMarkers: number[];

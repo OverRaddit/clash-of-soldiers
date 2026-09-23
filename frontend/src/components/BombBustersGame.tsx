@@ -244,17 +244,21 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
             const visibleValue = wire.value;
             const flashClue = state.campaign?.flashClues?.find((clue) => clue.wireId === wire.id && clue.expiresAt > clueTime);
             const displayedClue = clueLabel(flashClue ? { ...wire, clue: flashClue.clue } : wire);
+            const lastResult = wire.cut && visibleValue !== null && state.lastTurn?.cutWireIds.includes(wire.id) ? 'success'
+              : displayedClue !== null && state.lastTurn?.clueWireIds.includes(wire.id) ? 'failure' : null;
+            const lastResultLabel = lastResult === 'success' ? '직전 턴 해체 성공' : lastResult === 'failure' ? '직전 턴 실패로 공개된 단서' : '';
             const color = isRedValue(visibleValue) ? 'red' : valueColor(visibleValue);
             const selected = wire.id === ownWireId || wire.id === alternativeWireId || target?.wireIds.includes(wire.id) || detectorChoice === wire.id || exchangeChoice === wire.id || relationWireIds.includes(wire.id) || campaignWireIds.includes(wire.id);
             const relation = state.relationMarkers?.find((marker) => marker.rackId === rack.id && marker.wireIds.includes(wire.id) && marker.wireIds.includes(rack.wires[index + 1]?.id));
             const pointed = detector?.targetWireIds.includes(wire.id);
             return <button key={wire.id} type="button"
-              className={`bb-wire bb-wire-${color} ${wire.cut ? 'bb-wire-cut' : ''} ${feedback?.wireIds.includes(wire.id) ? 'bb-wire-celebrate' : ''} ${selected ? 'bb-wire-selected' : ''} ${pointed ? 'bb-wire-pointed' : ''} ${wire.reversed ? 'bb-wire-reversed' : ''} ${wire.excluded ? 'bb-wire-excluded' : ''}`}
+              className={`bb-wire bb-wire-${color} ${wire.cut ? 'bb-wire-cut' : ''} ${lastResult ? `bb-wire-last-${lastResult}` : ''} ${feedback?.wireIds.includes(wire.id) ? 'bb-wire-celebrate' : ''} ${selected ? 'bb-wire-selected' : ''} ${pointed ? 'bb-wire-pointed' : ''} ${wire.reversed ? 'bb-wire-reversed' : ''} ${wire.excluded ? 'bb-wire-excluded' : ''}`}
               disabled={!wireSelectable(player, wire)} onClick={() => selectWire(player, rack.id, wire)}
-              aria-label={`${player.name} 받침대 ${rackIndex + 1}, ${index + 1}번 전선: ${wire.cut ? '해체됨 ' : ''}${visibleValue === null ? '비공개' : valueLabel(visibleValue)}${displayedClue !== null ? `, 공개 단서 ${displayedClue}` : ''}${wire.reversed ? ', 역방향 전선' : ''}${wire.excluded ? ', 정렬 제외 전선' : ''}${wire.singleLabel ? ', 받침대에 하나뿐인 값' : ''}${typeof visibleValue === 'number' && isRedValue(visibleValue) ? ', 빨강 취급' : ''}`}
+              title={lastResultLabel || undefined}
+              aria-label={`${player.name} 받침대 ${rackIndex + 1}, ${index + 1}번 전선: ${wire.cut ? '해체됨 ' : ''}${visibleValue === null ? '비공개' : valueLabel(visibleValue)}${displayedClue !== null ? `, 공개 단서 ${displayedClue}` : ''}${wire.reversed ? ', 역방향 전선' : ''}${wire.excluded ? ', 정렬 제외 전선' : ''}${wire.singleLabel ? ', 받침대에 하나뿐인 값' : ''}${typeof visibleValue === 'number' && isRedValue(visibleValue) ? ', 빨강 취급' : ''}${lastResultLabel ? `, ${lastResultLabel}` : ''}`}
               aria-pressed={!!selected}>
               {feedback?.wireIds.includes(wire.id) && <span key={feedback.key} className="bb-cut-flash" aria-hidden="true" />}
-              <span className="bb-wire-index">{index + 1}</span>
+              <span className="bb-wire-index">{index + 1}{lastResult && <span className="bb-wire-last-result" aria-hidden="true">{lastResult === 'success' ? '✓' : '!'}</span>}</span>
               {(wire.reversed || wire.excluded) && <span className="bb-wire-special">{wire.reversed ? '↶' : 'X'}</span>}
               <span className="bb-wire-value">{valueLabel(visibleValue)}</span>
               {visibleValue !== null && typeof visibleValue !== 'number' && wire.sortValue !== null && <span className="bb-sort-value">{wire.sortValue}</span>}

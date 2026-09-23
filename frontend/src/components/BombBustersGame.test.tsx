@@ -543,3 +543,67 @@ test('preparing XY preserves an already selected personal double detector', () =
   rerender(<BombBustersGame room={room} playerId="me" state={{ ...state, xyRayActive: true }} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
   expect(screen.getByRole('checkbox', { name: /더블 탐지기/ })).toBeChecked();
 });
+
+test('last successful cuts remain highlighted after their animation ends', () => {
+  jest.useFakeTimers();
+  try {
+    const before = makeState();
+    const { rerender, container } = show(before);
+    const after = makeState({ currentPlayerId: 'friend', turnNumber: 2,
+      feedback: { id: 'cut-result', kind: 'success' }, lastTurn: { cutWireIds: ['own-a', 'other-b'], clueWireIds: [] } });
+    after.players[0].racks[0].wires[0].cut = true;
+    Object.assign(after.players[1].racks[0].wires[1], { cut: true, value: 2 });
+    rerender(<BombBustersGame room={room} playerId="me" state={after} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+    expect(container.querySelectorAll('.bb-cut-flash')).toHaveLength(2);
+    act(() => { jest.advanceTimersByTime(1300); });
+    expect(container.querySelectorAll('.bb-cut-flash')).toHaveLength(0);
+    expect(screen.getAllByRole('button', { name: /직전 턴 해체 성공/ })).toHaveLength(2);
+    expect(container.querySelectorAll('.bb-wire-last-success')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /나 받침대 1, 1번 전선/ })).toBeDisabled();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test.each(['me', 'friend'])('a reloaded snapshot keeps the last public clue highlight for %s without replaying damage', (playerId) => {
+  const state = makeState({ lastTurn: { cutWireIds: [], clueWireIds: ['other-a'] }, feedback: { id: 'old-failure', kind: 'failure' } });
+  const { container } = show(state, playerId);
+  const clueWire = screen.getByRole('button', { name: /동료 받침대 1, 1번 전선: 비공개, 공개 단서 3, 직전 턴 실패로 공개된 단서/ });
+  expect(clueWire).toHaveClass('bb-wire-last-failure');
+  expect(clueWire.querySelector('.bb-wire-value')).toHaveTextContent('?');
+  expect(container.querySelector('.bb-damage-vignette')).toBeNull();
+  expect(container.querySelectorAll('.bb-wire-last-failure')).toHaveLength(1);
+});
+
+test('last-turn highlights survive equipment updates and are replaced by the next resolved turn', () => {
+  const state = makeState({ lastTurn: { cutWireIds: [], clueWireIds: ['other-a'] } });
+  const { rerender, container } = show(state);
+  const update = (next: BombBustersClientState) => rerender(<BombBustersGame room={room} playerId="me" state={next} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  update({ ...state, serverNow: Date.now(), stabilizerActive: true });
+  const clueWire = screen.getByRole('button', { name: /동료 받침대 1, 1번 전선/ });
+  fireEvent.click(clueWire);
+  expect(clueWire).toHaveClass('bb-wire-last-failure', 'bb-wire-selected');
+  const next = makeState({ turnNumber: 2, lastTurn: { cutWireIds: ['own-a'], clueWireIds: [] } });
+  next.players[0].racks[0].wires[0].cut = true;
+  update(next);
+  expect(container.querySelectorAll('.bb-wire-last-failure')).toHaveLength(0);
+  expect(container.querySelectorAll('.bb-wire-last-success')).toHaveLength(1);
+  update({ ...next, turnNumber: 3, lastTurn: { cutWireIds: [], clueWireIds: [] } });
+  expect(container.querySelectorAll('.bb-wire-last-success, .bb-wire-last-failure')).toHaveLength(0);
+});
+
+test('expired flash clues lose their failure highlight without exposing a hidden value', () => {
+  jest.useFakeTimers();
+  try {
+    const now = Date.now();
+    const state = makeState({ serverNow: now, lastTurn: { cutWireIds: [], clueWireIds: ['other-b'] },
+      campaign: campaignPanel({ flashClues: [{ wireId: 'other-b', clue: { kind: 'parity', value: 'odd' }, expiresAt: now + 500 }] }) });
+    const { container } = show(state);
+    expect(screen.getByRole('button', { name: /공개 단서 홀, 직전 턴 실패로 공개된 단서/ })).toHaveClass('bb-wire-last-failure');
+    act(() => { jest.advanceTimersByTime(750); });
+    expect(container.querySelectorAll('.bb-wire-last-failure')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }).querySelector('.bb-wire-value')).toHaveTextContent('?');
+  } finally {
+    jest.useRealTimers();
+  }
+});

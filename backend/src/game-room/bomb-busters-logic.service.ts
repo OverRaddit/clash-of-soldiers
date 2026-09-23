@@ -14,6 +14,7 @@ import {
 } from './bomb-busters/campaign-runtime';
 import { afterBombAudioCut, afterBombAudioTurn, applyBombAudioCommand, audioWireVisible, bombAudioAllowsVictory, bombAudioHideCutCounts, bombAudioView, configureBombAudio, tickBombAudio, validateBombAudioAction } from './bomb-busters/campaign-audio';
 import { failureHintSuppressed, getConstraintViolation } from './bomb-busters/campaign-constraints';
+import { trackBombFailureClues } from './bomb-busters/turn-result';
 export { BOMB_BUSTERS_MISSIONS } from './bomb-busters/missions';
 export { BOMB_BUSTERS_EQUIPMENT } from './bomb-busters/equipment';
 
@@ -79,6 +80,7 @@ export class BombBustersLogicService {
     if (!state || state.phase === 'finished') throw new Error('이미 종료된 미션입니다.');
     if (!action || typeof action !== 'object' || Array.isArray(action)) throw new Error('올바른 행동을 선택하세요.');
     const next: BombBustersState = JSON.parse(JSON.stringify(state));
+    const failureClueIds = trackBombFailureClues(next);
     const player = this.player(next, playerId);
     validateBombAudioAction(next, player, action);
     if (next.pendingExchange) {
@@ -125,6 +127,7 @@ export class BombBustersLogicService {
     if (next.phase === 'playing' && !next.pendingDetector && !next.pendingExchange && !next.campaign?.pending
       && bombAudioAllowsVictory(next) && next.players.every(p => this.wires(p).every(w => w.cut)) && !next.campaign?.nano?.reserve.length) this.finish(next, 'won', '모든 전선을 처리하여 폭탄을 해체했습니다!');
     this.updateFeedback(state, next, action);
+    this.updateLastTurn(state, next, action, failureClueIds);
     next.log = next.log.slice(-80);
     Object.assign(state, next);
     return { message: state.log[state.log.length - 1] };
@@ -192,7 +195,39 @@ export class BombBustersLogicService {
       } : null,
       cutCounts: bombAudioHideCutCounts(state) ? {} : this.cutCounts(state),
     };
+    if (state.lastTurn) {
+      const removed = new Set(state.audio?.removedCutWireIds ?? []);
+      const visibleCuts = new Set<string>();
+      const visibleClues = new Set<string>();
+      const flashes = new Set((campaign?.flashClues ?? []).map(clue => clue.wireId));
+      view.players.forEach(player => player.racks.forEach(rack => rack.wires.forEach(wire => {
+        if (removed.has(wire.id) || audioWireVisible(state, playerId, player.id) === false) return;
+        if (wire.cut && wire.value !== null) visibleCuts.add(wire.id);
+        if (!wire.cut && (wire.hint !== null || wire.clue || flashes.has(wire.id))) visibleClues.add(wire.id);
+      })));
+      view.lastTurn = {
+        cutWireIds: state.lastTurn.cutWireIds.filter(id => visibleCuts.has(id)),
+        clueWireIds: state.lastTurn.clueWireIds.filter(id => visibleClues.has(id)),
+      };
+    }
     return view;
+  }
+
+  private updateLastTurn(before: BombBustersState, after: BombBustersState, action: BombBustersAction, failureClueIds: Set<string>) {
+    if (before.phase !== 'playing' || after.pendingDetector || after.audio?.pending?.kind === 'laser_hint') return;
+    const previouslyCut = new Set(before.players.flatMap(p => this.wires(p)).filter(w => w.cut).map(w => w.id));
+    const newlyCut = after.players.flatMap(p => this.wires(p)).filter(w => w.cut && !previouslyCut.has(w.id));
+    const directCut = ['dual', 'resolve_detector', 'solo', 'reveal_red'].includes(action.type);
+    const completedMissionAction = action.type === 'mission' && ['audio_laser', 'audio_laser_hint', 'audio_pass', 'audio_magician'].includes(action.operation);
+    const completedCampaignTurn = (after.campaign?.history.length ?? 0) > (before.campaign?.history.length ?? 0);
+    const skippedTurn = action.type === 'equipment' && action.equipmentId === 11;
+    if (!directCut && !completedMissionAction && !completedCampaignTurn && !skippedTurn && !newlyCut.length && !failureClueIds.size && after.phase !== 'finished') return;
+    // A fatal red hit is a failed attempt, even though its wire was flipped/cut.
+    const fatalHit = after.outcome === 'lost' && (action.type === 'dual' || action.type === 'resolve_detector');
+    after.lastTurn = {
+      cutWireIds: newlyCut.filter(wire => !fatalHit || !isBombRed(after, wire)).map(wire => wire.id),
+      clueWireIds: [...failureClueIds],
+    };
   }
 
   /** Emit only after an accepted action resolves; snapshots keep the same event identity. */
@@ -339,7 +374,7 @@ export class BombBustersLogicService {
       this.finish(state, 'lost', '빨간 전선을 잘라 폭탄이 폭발했습니다.');
       return;
     } else {
-      if (!failureHintSuppressed([...campaignConstraintIds(state, player.id), ...campaignConstraintIds(state, target.id)])) placeBombClue(state, target, targetWire, guess);
+      if (!failureHintSuppressed([...campaignConstraintIds(state, player.id), ...campaignConstraintIds(state, target.id)])) placeBombClue(state, target, targetWire, guess, true);
       if (!state.stabilizerActive) state.mistakes++;
       state.log.push(`${player.name}님의 ${this.label(guess)} 추측 실패. 미션 규칙에 따라 정보를 처리했습니다.`);
     }
@@ -372,7 +407,7 @@ export class BombBustersLogicService {
       own.cut = true;
       state.log.push(`${pending.kind === 'xy' ? 'X/Y 광선' : '탐지기'} 성공! ${this.label(wire.value)} 전선 한 쌍을 잘랐습니다.`);
     } else {
-      if (!failureHintSuppressed([...campaignConstraintIds(state, pending.actorId), ...campaignConstraintIds(state, target.id)])) placeBombClue(state, target, wire, pending.guess);
+      if (!failureHintSuppressed([...campaignConstraintIds(state, pending.actorId), ...campaignConstraintIds(state, target.id)])) placeBombClue(state, target, wire, pending.guess, true);
       if (!state.stabilizerActive) state.mistakes++;
       state.log.push(`탐지기 실패. ${target.name}님의 미션 정보 규칙을 적용했습니다.`);
     }
