@@ -1,7 +1,8 @@
 // Common types shared across all games
 import type { BombMission } from './bomb-busters.types';
+import type { FellowshipChapterPreview } from './fellowship.types';
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship';
 
 export interface Player {
   id: string;
@@ -22,6 +23,8 @@ export interface GameRoom {
   gameType: GameType;
   selectedMissionId?: number;
   bombMissions?: BombMission[];
+  selectedFellowshipChapter?: number;
+  fellowshipChapters?: FellowshipChapterPreview[];
 }
 
 // Re-export toy-battle types for backward compatibility

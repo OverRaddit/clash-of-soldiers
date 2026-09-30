@@ -11,12 +11,12 @@ export class CreateRoomDto {
 
   @IsOptional()
   @IsInt()
-  @Min(2)
+  @Min(1)
   @Max(8)
   maxPlayers?: number;
 
   @IsOptional()
   @IsString()
-  @IsIn(['toy-battle', 'no-touch-kraken', 'bomb-busters'])
+  @IsIn(['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship'])
   gameType?: string = 'toy-battle';
 }

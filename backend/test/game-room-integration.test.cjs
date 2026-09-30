@@ -42,7 +42,8 @@ function fixture(t) {
   const guest = socket('socket-guest');
   const outsider = socket('socket-outsider');
   const room = service.createRoom({ roomName: 'Bomb room', hostId: 'host', gameType: 'bomb-busters' });
-  gateway.handleJoinRoom(host, { roomId: room.id, playerId: 'host', playerName: 'Host' });
+  gateway.handleJoinRoom(host, { roomId: room.id, playerId: 'host', playerName: 'Host',
+    sessionToken: service.getInitialPrivateSessionToken(room.id, 'host') });
   gateway.handleJoinRoom(guest, { roomId: room.id, playerId: 'guest', playerName: 'Guest' });
   gateway.handleToggleReady(guest, { roomId: room.id, playerId: 'guest' });
   const start = () => gateway.handleStartGame(host, { roomId: room.id, hostId: 'host', missionId: 1 });

@@ -6,7 +6,7 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship';
 
 export class GameRoom {
   id: string;
@@ -19,6 +19,7 @@ export class GameRoom {
   gameState: any;
   gameType: GameType;
   selectedMissionId: number = 1;
+  selectedFellowshipChapter: number = 1;
   nextBombCaptainId?: string;
 
   constructor(id: string, name: string, hostId: string, maxPlayers: number = 2, gameType: GameType = 'toy-battle') {
@@ -61,10 +62,11 @@ export class GameRoom {
       players: this.players,
       status: this.status,
       createdAt: this.createdAt,
-      // Hidden Bomb Busters racks must only be sent through the player-view serializer.
-      gameState: this.gameType === 'bomb-busters' ? null : this.gameState,
+      // Cooperative card games contain private hands and must use the player-view serializer.
+      gameState: this.gameType === 'bomb-busters' || this.gameType === 'fellowship' ? null : this.gameState,
       gameType: this.gameType,
       ...(this.gameType === 'bomb-busters' ? { selectedMissionId: this.selectedMissionId } : {}),
+      ...(this.gameType === 'fellowship' ? { selectedFellowshipChapter: this.selectedFellowshipChapter } : {}),
     };
   }
 }

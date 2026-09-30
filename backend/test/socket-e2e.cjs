@@ -10,8 +10,8 @@ const { io } = require('../../frontend/node_modules/socket.io-client');
 const { AppModule } = require('../dist/app.module');
 
 const errors = ['join_room_error', 'start_game_error', 'toggle_ready_error', 'leave_room_error',
-  'get_room_state_error', 'bomb_busters_error', 'kraken_error', 'connect_error'];
-const trackedEvents = ['join_room_success', 'room_updated', 'room_state', 'game_started', 'bomb_busters_state_updated', 'game_ended'];
+  'get_room_state_error', 'bomb_busters_error', 'fellowship_error', 'kraken_error', 'connect_error'];
+const trackedEvents = ['join_room_success', 'room_updated', 'room_state', 'game_started', 'bomb_busters_state_updated', 'fellowship_state_updated', 'game_ended'];
 const connections = new Set();
 const privacyFailures = [];
 let baseUrl;
@@ -111,8 +111,10 @@ async function createGame(gameType, playerCount) {
   assert.equal(created.status, 201);
   assert.equal(created.body.success, true);
   const roomId = created.body.data.id;
+  if (created.body.sessionToken) clients[0].token = created.body.sessionToken;
   for (const [index, client] of clients.entries()) {
-    await request(client, 'join_room', { roomId, playerId: client.playerId, playerName: `Tester ${index + 1}` }, 'join_room_success');
+    await request(client, 'join_room', { roomId, playerId: client.playerId, playerName: `Tester ${index + 1}`,
+      ...(client.token ? { sessionToken: client.token } : {}) }, 'join_room_success');
   }
   for (const client of clients.slice(1)) {
     await broadcast(clients, client, 'toggle_ready', { roomId, playerId: client.playerId }, 'room_updated');
@@ -242,6 +244,41 @@ async function legacyScenario(gameType, count) {
   console.log(`PASS Existing ${gameType}: ${count} clients create/join/ready/start/HTTP read/return/leave`);
 }
 
+async function fellowshipScenario() {
+  const { clients, roomId } = await createGame('fellowship', 3);
+  assert.equal(clients[0].room.fellowshipChapters.length, 18);
+  await broadcast(clients, clients[0], 'start_game', { roomId, hostId: clients[0].playerId }, 'game_started');
+  const initial = clients.map(client => structuredClone(client.view));
+  assert.ok(clients.every(client => client.room.status === 'playing' && client.view.phase === 'character_selection'));
+  for (let i = 0; i < clients.length; i++) {
+    assert.ok(initial[i].hand.length > 0);
+    for (let j = 0; j < clients.length; j++) {
+      if (i === j) continue;
+      const otherView = JSON.stringify(initial[j]);
+      for (const card of initial[i].hand) assert.ok(!otherView.includes(`"id":"${card.id}"`), `private ${card.id} leaked`);
+    }
+  }
+  const publicRoom = await json(`/game-rooms/${roomId}`);
+  assert.equal(publicRoom.status, 200);
+  const serializedPublic = JSON.stringify(publicRoom.body.data);
+  for (const card of initial[0].hand) assert.ok(!serializedPublic.includes(`"id":"${card.id}"`));
+  const ringHolderSeatId = initial[0].ringHolderSeatId;
+  const ringHolder = clients.find(client => client.playerId === ringHolderSeatId);
+  assert.ok(ringHolder);
+  await broadcast(clients, ringHolder, 'fellowship_action', {
+    roomId, playerId: ringHolder.playerId, action: { type: 'select_character', characterId: 'frodo' },
+  }, 'fellowship_state_updated');
+  assert.equal(clients[0].view.players.find(player => player.id === ringHolderSeatId).characterId, 'frodo');
+  const impostor = await connect(clients[1].playerId);
+  const rejected = await request(impostor, 'join_room', { roomId, playerId: clients[1].playerId, playerName: 'Impostor' }, 'join_room_error', []);
+  assert.ok(rejected.message);
+  impostor.socket.disconnect();
+  await broadcast(clients, clients[0], 'return_to_room', { roomId, playerId: clients[0].playerId }, 'room_updated');
+  assert.ok(clients.every(client => client.room.status === 'waiting'));
+  await cleanRoom(clients, roomId);
+  console.log('PASS Fellowship: 3 clients, private deal, character action, HTTP privacy, session token, lobby');
+}
+
 async function campaignSetupScenario(missionId) {
   const { clients, roomId } = await createGame('bomb-busters', 3);
   await broadcast(clients,clients[0],'select_bomb_mission',{roomId,playerId:clients[0].playerId,missionId},'room_updated');
@@ -292,13 +329,16 @@ async function campaignSetupScenario(missionId) {
     await app.listen(0, '127.0.0.1');
     baseUrl = `http://127.0.0.1:${app.getHttpServer().address().port}`;
     let scenarios=0;
-    if(!process.env.CAMPAIGN_ONLY) {
+    if(process.env.FELLOWSHIP_ONLY) {
+      await fellowshipScenario(); scenarios++;
+    } else if(!process.env.CAMPAIGN_ONLY) {
       for (let players = 2; players <= 5; players++) {
         for (let missionId = 0; missionId <= 8; missionId++) { await bombScenario(players, missionId); scenarios++; }
       }
       await legacyScenario('toy-battle', 2);await legacyScenario('no-touch-kraken', 3);scenarios+=2;
+      await fellowshipScenario(); scenarios++;
     }
-    if(!process.env.TRAINING_ONLY) for(let id=9;id<=66;id++) {
+    if(!process.env.TRAINING_ONLY && !process.env.FELLOWSHIP_ONLY) for(let id=9;id<=66;id++) {
       if(process.env.NON_AUDIO_ONLY&&[19,30,42,54,66].includes(id))continue;
       await campaignSetupScenario(id);scenarios++;
     }

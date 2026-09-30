@@ -1,0 +1,177 @@
+.fellowship-game {
+  --fg-ink: #2d2921;
+  --fg-muted: #6c6351;
+  --fg-gold: #b7924c;
+  --fg-border: #d8c9a9;
+  min-height: 100vh;
+  padding: 24px clamp(14px, 3vw, 48px) 56px;
+  color: var(--fg-ink);
+  background: radial-gradient(circle at 50% -20%, #fbf4db 0, #f0e7d3 38%, #e9dfc8 100%);
+  font-family: Georgia, 'Noto Serif KR', 'Malgun Gothic', serif;
+}
+
+.fellowship-game *, .fellowship-game *::before, .fellowship-game *::after { box-sizing: border-box; }
+.fellowship-game button, .fellowship-game select { font: inherit; }
+.fellowship-game button { cursor: pointer; }
+.fellowship-game button:disabled { cursor: not-allowed; }
+.fellowship-game button:focus-visible, .fellowship-game select:focus-visible { outline: 3px solid #336f76; outline-offset: 2px; }
+.fellowship-game h1, .fellowship-game h2, .fellowship-game h3, .fellowship-game p { margin-top: 0; }
+
+.fellowship-header { max-width: 1440px; margin: 0 auto 20px; display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.fellowship-eyebrow, .fellowship-small-label { color: #856b3d; font: 700 11px/1.35 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: .17em; text-transform: uppercase; }
+.fellowship-header h1 { margin: 5px 0 0; font-size: clamp(31px, 4.3vw, 56px); font-weight: 700; letter-spacing: -.045em; line-height: 1.1; }
+.fellowship-header p { margin: 8px 0 0; font-size: 17px; color: var(--fg-muted); }
+.fellowship-header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.fellowship-phase-chip { padding: 8px 12px; color: #55401c; background: #f8e8bf; border: 1px solid #d6bc7b; border-radius: 20px; font-size: 13px; font-weight: bold; }
+.fellowship-leave { padding: 8px 14px; color: #514735; background: #fffaf0; border: 1px solid #c7b89c; border-radius: 7px; font-size: 13px; }
+.fellowship-leave:hover { background: #f6ebd2; }
+
+.fellowship-journey { max-width: 1440px; margin: 0 auto 18px; display: flex; align-items: center; gap: 12px; color: #655535; font: 600 12px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-journey-track { flex: 1; height: 7px; overflow: hidden; border-radius: 10px; background: #d5c6a6; }
+.fellowship-journey-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #786539, #c6a864); }
+.fellowship-notice { max-width: 1440px; margin: 0 auto 18px; padding: 12px 15px; border-radius: 8px; color: #314742; background: #e6f0e6; border: 1px solid #b7d3c4; font: 500 14px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-notice.error { color: #813e35; background: #f9e8e3; border-color: #e6b8aa; }
+
+.fellowship-chapter-intro { max-width: 1440px; margin: 0 auto 18px; padding: 22px clamp(18px, 3vw, 32px); display: flex; align-items: center; justify-content: space-between; gap: 20px; background: #fffaf0; border: 1px solid var(--fg-border); border-top: 4px solid #af8e49; border-radius: 11px; box-shadow: 0 8px 28px #63552e12; }
+.fellowship-chapter-intro h2 { margin: 4px 0 5px; font-size: clamp(20px, 2.4vw, 28px); }
+.fellowship-chapter-intro p { margin: 0; color: var(--fg-muted); font-size: 14px; line-height: 1.6; }
+.fellowship-chapter-stats { display: flex; flex: none; flex-wrap: wrap; gap: 8px; }
+.fellowship-chapter-stats span { min-width: 75px; padding: 9px 12px; display: flex; flex-direction: column; gap: 2px; border: 1px solid #e5d7b8; border-radius: 8px; color: #7d6c4f; background: #f7f0e1; font: 12px/1.3 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-chapter-stats strong { color: #3c3426; font-size: 15px; }
+.fellowship-public-notes { max-width: 1440px; margin: 0 auto 18px; display: flex; flex-wrap: wrap; gap: 7px; }
+.fellowship-public-notes span { padding: 8px 11px; border: 1px solid #d8c79f; border-radius: 7px; background: #f8efd9; color: #5b4b2c; font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+.fellowship-layout { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(285px, 350px); gap: 18px; align-items: start; }
+.fellowship-table, .fellowship-panel, .fellowship-hand-section { background: #fffdf7; border: 1px solid var(--fg-border); border-radius: 11px; box-shadow: 0 6px 24px #63552e0e; }
+.fellowship-table { padding: clamp(17px, 2.3vw, 27px); }
+.fellowship-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 17px; }
+.fellowship-section-heading h2 { margin: 3px 0 0; font-size: 23px; }
+.fellowship-turn-badge { padding: 7px 11px; border-radius: 99px; background: #e8f1eb; color: #326049; font: 700 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-turn-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; margin-bottom: 16px; padding: 13px 16px; border: 2px solid #a58139; border-radius: 9px; background: #fff1cd; color: #3b2c12; }
+.fellowship-turn-banner.is-mine { border-color: #3e765b; background: #e4f2e8; color: #214a36; }
+.fellowship-turn-banner-label { padding: 4px 8px; border-radius: 4px; background: #6d5226; color: #fff7e5; font: 700 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-turn-banner.is-mine .fellowship-turn-banner-label { background: #326049; }
+.fellowship-turn-banner strong { font-size: 20px; }
+.fellowship-turn-banner-detail { flex-basis: 100%; font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+.fellowship-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: 10px; }
+.fellowship-player { min-height: 100px; padding: 13px; border: 1px solid #e5dac4; border-radius: 9px; background: #faf7ef; }
+.fellowship-player.is-turn { border: 2px solid #997734; background: #fff5dd; box-shadow: 0 0 0 3px #e8d3a1; }
+.fellowship-player.is-turn.is-mine { border-color: #3e765b; background: #eaf5ed; box-shadow: 0 0 0 3px #b8dac4; }
+.fellowship-player.is-mine { border-left: 4px solid #55817a; }
+.fellowship-player-name { display: flex; align-items: center; gap: 9px; }
+.fellowship-player-avatar { display: flex; width: 32px; height: 32px; flex: none; align-items: center; justify-content: center; border-radius: 50%; color: #fffdf2; background: #675d41; font-size: 18px; }
+.fellowship-player-name strong { display: block; font-size: 15px; }
+.fellowship-player-name small { display: block; margin-top: 2px; color: var(--fg-muted); font: 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-player-turn { display: inline-block; margin-top: 8px; padding: 4px 7px; border-radius: 4px; background: #725320; color: #fff8e9; font: 700 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-player.is-turn.is-mine .fellowship-player-turn { background: #326049; }
+.fellowship-player-counts { display: flex; gap: 11px; margin-top: 10px; color: #594f3b; font: 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-objective-status { display: inline-block; margin-top: 8px; padding: 4px 7px; border-radius: 4px; font: 700 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-objective-status.is-pending { background: #eee7d7; color: #5c5341; }
+.fellowship-objective-status.is-complete { background: #d8eddd; color: #265639; }
+.fellowship-objective-status.is-failed { background: #f8ded8; color: #873d34; }
+.fellowship-player-objective { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid #e3d7bf; color: #71644d; font-size: 12px; line-height: 1.5; }
+.fellowship-player-detail { display: block; margin-top: 5px; color: #635234; font: 12px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-public-cards { display: flex; gap: 4px; overflow-x: auto; margin-top: 8px; }
+
+.fellowship-trick-area { min-height: 235px; margin-top: 19px; padding: 18px; border-radius: 10px; background: radial-gradient(circle at 50% 40%, #41614c, #2d4a3c 80%); color: #f8f0da; box-shadow: inset 0 0 0 3px #d0b77e, inset 0 0 0 6px #385643; }
+.fellowship-trick-heading { display: flex; justify-content: space-between; gap: 10px; color: #e9dbaf; font: 700 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-trick-heading small { font-size: 12px; opacity: .85; }
+.fellowship-trick-cards { min-height: 170px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: clamp(9px, 2vw, 23px); padding: 16px 0 2px; }
+.fellowship-trick-play { display: flex; align-items: center; flex-direction: column; gap: 6px; }
+.fellowship-trick-play > span:last-child { font: 600 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-empty-trick { min-height: 168px; display: flex; align-items: center; justify-content: center; color: #d2decf; font-size: 14px; }
+.fellowship-lost-area { display: flex; align-items: center; gap: 13px; margin-top: 17px; color: #685c46; font-size: 13px; }
+.fellowship-lost-area > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.fellowship-event-cards, .fellowship-history { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 15px; padding-top: 13px; border-top: 1px solid #e4d9c3; color: #675b43; font-size: 13px; }
+.fellowship-event-cards > div { display: flex; align-items: center; gap: 7px; }
+.fellowship-event-cards > div > span { display: flex; gap: 4px; }
+.fellowship-history > div { display: flex; gap: 4px; }
+
+.fellowship-card-face { position: relative; display: flex; width: 74px; height: 109px; flex: none; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #ead8ad; border-radius: 8px; background: #fdf8ed; box-shadow: 0 3px 8px #15261b33; color: #5f4d32; user-select: none; }
+.fellowship-card-face.compact { width: 39px; height: 56px; border-radius: 5px; border-width: 1px; }
+.fellowship-card-rank { position: absolute; left: 6px; top: 3px; font: 700 20px Georgia, serif; }
+.fellowship-card-sigil { font-size: 36px; line-height: 1; }
+.fellowship-card-suit { position: absolute; bottom: 7px; font-size: 11px; font-weight: bold; }
+.fellowship-card-face.compact .fellowship-card-rank { left: 3px; top: 2px; font-size: 11px; }
+.fellowship-card-face.compact .fellowship-card-sigil { font-size: 18px; }
+.fellowship-card-face.compact .fellowship-card-suit { bottom: 3px; font-size: 7px; }
+.fellowship-suit-hills { color: #9d602e; background: #fff2dc; }
+.fellowship-suit-mountains { color: #57748a; background: #eaf3f6; }
+.fellowship-suit-shadows { color: #665a7c; background: #eeeaf2; }
+.fellowship-suit-forests { color: #3b7650; background: #e7f2e9; }
+.fellowship-suit-rings { color: #a27022; background: #fff6cf; }
+.fellowship-suit-rivers { color: #2784a7; background: #e6f5f8; }
+.fellowship-card-back { background: repeating-linear-gradient(45deg, #514835 0 7px, #6d6044 7px 14px); border-color: #b49c6c; color: #f7e7bd; }
+.fellowship-card-back-mark { font-size: 32px; }
+.fellowship-card-covered { box-shadow: 0 3px 8px #15261b33, inset 0 0 0 3px #ad9f82; }
+
+.fellowship-sidebar { display: grid; gap: 14px; }
+.fellowship-panel { padding: 19px; }
+.fellowship-panel h2 { margin: 4px 0 8px; font-size: 21px; }
+.fellowship-panel p { margin-bottom: 10px; color: #5f5748; font-size: 13px; line-height: 1.65; }
+.fellowship-character-list, .fellowship-option-list { display: grid; gap: 8px; }
+.fellowship-character-choice { width: 100%; padding: 11px 12px; text-align: left; border: 1px solid #dbcba9; border-radius: 7px; background: #fffaf0; color: #302a20; }
+.fellowship-character-choice:hover:not(:disabled), .fellowship-option-list button:hover:not(:disabled) { border-color: #9d7c37; background: #f6edd6; }
+.fellowship-character-choice:disabled { opacity: .5; }
+.fellowship-character-name { display: block; font-weight: bold; font-size: 15px; }
+.fellowship-character-name em { margin-left: 6px; padding: 2px 5px; border-radius: 3px; color: #8b6131; background: #f9e7c3; font: 700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.fellowship-character-objective, .fellowship-character-setup { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; }
+.fellowship-character-setup { color: #766a52; }
+.fellowship-option-list button { padding: 10px 12px; text-align: left; color: #3b3021; background: #fff8e8; border: 1px solid #d9c7a1; border-radius: 7px; font-size: 13px; }
+.fellowship-field { display: grid; gap: 5px; margin: 9px 0; color: #524b3c; font-size: 12px; font-weight: bold; }
+.fellowship-field select { width: 100%; padding: 8px; border: 1px solid #c7b792; border-radius: 6px; background: white; color: #342d21; font-size: 13px; }
+.fellowship-action-help { color: #6b674c !important; }
+.fellowship-tucked-card { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.fellowship-tucked-card button { padding: 9px 11px; color: #3b3021; background: #fff8e8; border: 1px solid #d9c7a1; border-radius: 7px; font-size: 12px; }
+.fellowship-rule-note { background: #f4f1e6; }
+.fellowship-result.success { border-top: 4px solid #537f5a; }
+.fellowship-result.failure { border-top: 4px solid #b65d48; }
+.fellowship-result-objectives { margin: 14px 0; padding: 0; list-style: none; }
+.fellowship-result-objectives li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; padding: 7px 0; border-bottom: 1px solid #e8decc; font-size: 13px; }
+.fellowship-result-objectives small { color: var(--fg-muted); }
+.fellowship-primary { display: inline-block; width: 100%; padding: 11px 14px; color: #fff8e8; background: #456d59; border: 1px solid #365c49; border-radius: 7px; font-size: 14px; font-weight: bold; }
+.fellowship-primary:hover { background: #385c4a; }
+
+.fellowship-hand-section { max-width: 1440px; margin: 18px auto 0; padding: 20px clamp(17px, 2.5vw, 27px); }
+.fellowship-hand-section .fellowship-section-heading { margin-bottom: 8px; }
+.fellowship-hand-count { color: var(--fg-muted); font-size: 14px; }
+.fellowship-hand-group + .fellowship-hand-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e8dec9; }
+.fellowship-hand-group h3 { margin-bottom: 9px; font-size: 14px; color: #51462f; }
+.fellowship-hand-cards { display: flex; flex-wrap: wrap; gap: 7px; }
+.fellowship-hand-card { padding: 0; border: none; border-radius: 8px; background: transparent; transition: transform .12s ease, filter .12s ease; }
+.fellowship-hand-card:hover:not(:disabled) { transform: translateY(-7px); }
+.fellowship-hand-card:disabled { filter: saturate(.6); opacity: .66; }
+.fellowship-empty-hand { display: block; padding: 10px 0; color: var(--fg-muted); font-size: 13px; }
+
+.fellowship-modal-backdrop { position: fixed; z-index: 1000; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: #1d231dcc; }
+.fellowship-modal { width: min(100%, 410px); padding: 24px; border: 3px solid #b99f61; border-radius: 12px; background: #fffaf0; box-shadow: 0 22px 70px #0006; text-align: center; }
+.fellowship-modal-card { display: flex; justify-content: center; margin-bottom: 12px; }
+.fellowship-modal h2 { font-size: 22px; }
+.fellowship-modal p { color: #5d5342; font-size: 13px; line-height: 1.6; }
+.fellowship-modal-actions { display: flex; gap: 8px; margin: 20px 0 10px; }
+.fellowship-modal-actions button { flex: 1; padding: 10px; border: 1px solid #c7b79a; border-radius: 7px; background: #fff; font-size: 13px; }
+.fellowship-modal-actions .fellowship-primary { color: #fff; border-color: #365c49; background: #456d59; }
+.fellowship-modal-cancel { padding: 6px 12px; color: #655b49; border: none; background: transparent; font-size: 12px; }
+
+@media (max-width: 850px) {
+  .fellowship-layout { grid-template-columns: 1fr; }
+  .fellowship-sidebar { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+}
+@media (max-width: 600px) {
+  .fellowship-game { padding: 16px 12px 36px; }
+  .fellowship-header { align-items: start; }
+  .fellowship-header-actions { flex-direction: column; align-items: flex-end; }
+  .fellowship-header p { font-size: 14px; }
+  .fellowship-chapter-intro { display: block; }
+  .fellowship-chapter-stats { margin-top: 14px; }
+  .fellowship-chapter-stats span { min-width: 69px; }
+  .fellowship-players { grid-template-columns: 1fr 1fr; }
+  .fellowship-player { padding: 10px; }
+  .fellowship-player-name strong { font-size: 13px; }
+  .fellowship-player-counts { gap: 5px; font-size: 11px; }
+  .fellowship-trick-area { padding: 14px; }
+  .fellowship-card-face { width: 62px; height: 93px; }
+  .fellowship-card-sigil { font-size: 29px; }
+  .fellowship-hand-cards { gap: 5px; }
+}

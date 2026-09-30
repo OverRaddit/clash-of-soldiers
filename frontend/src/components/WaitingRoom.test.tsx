@@ -38,3 +38,18 @@ test('respects mission-specific minimum player count', () => {
   expect(screen.getByRole('button', { name: '게임 시작' })).toBeDisabled();
   expect(screen.getByText('게임을 시작하려면 최소 3명의 플레이어가 필요합니다.')).toBeInTheDocument();
 });
+
+test('lets a solo fellowship host pick a chapter from the server catalog', () => {
+  const onFellowshipChapterChange = jest.fn();
+  const fellowshipRoom: GameRoom = {
+    ...room, gameType: 'fellowship', maxPlayers: 1, players: [room.players[0]], selectedFellowshipChapter: 1,
+    fellowshipChapters: [
+      { number: 1, title: '뜻밖의 파티', mode: 'short', characters: ['프로도', '빌보'], required: ['프로도'] },
+      { number: 2, title: '샤이어에서', mode: 'long', characters: ['프로도', '샘'], required: ['샘'] },
+    ],
+  };
+  render(<WaitingRoom {...props} room={fellowshipRoom} onFellowshipChapterChange={onFellowshipChapterChange} />);
+  expect(screen.getByRole('button', { name: '게임 시작' })).toBeEnabled();
+  fireEvent.change(screen.getByRole('combobox', { name: '반지 원정대 챕터 선택' }), { target: { value: '2' } });
+  expect(onFellowshipChapterChange).toHaveBeenCalledWith(2);
+});

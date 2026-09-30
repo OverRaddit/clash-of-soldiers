@@ -27,9 +27,11 @@ export class GameRoomController {
   createRoom(@Body() createRoomDto: CreateRoomDto) {
     try {
       const room = this.gameRoomService.createRoom(createRoomDto);
+      const sessionToken = this.gameRoomService.getInitialPrivateSessionToken(room.id, createRoomDto.hostId);
       return {
         success: true,
         data: this.gameRoomService.serializeRoom(room),
+        ...(sessionToken ? { sessionToken } : {}),
         message: '방이 성공적으로 생성되었습니다.',
       };
     } catch (error) {
@@ -113,7 +115,7 @@ export class GameRoomController {
       this.gameRoomService.assertBombSession(roomId, body.hostId, sessionToken);
       const room = this.gameRoomService.startGame(roomId, body.hostId, body.missionId);
 
-      if (room.gameType === 'bomb-busters') {
+      if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship') {
         return {
           success: true,
           data: this.gameRoomService.serializeRoom(room),

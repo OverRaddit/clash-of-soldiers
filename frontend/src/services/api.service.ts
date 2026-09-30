@@ -14,6 +14,7 @@ const api = axios.create({
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
+  sessionToken?: string;
   message?: string;
   count?: number;
 }

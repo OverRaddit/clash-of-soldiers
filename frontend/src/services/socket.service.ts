@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { BombBustersAction } from '../types/bomb-busters.types';
+import { FellowshipAction } from '../types/fellowship.types';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -12,7 +13,7 @@ class SocketService {
       });
       this.socket.on('join_room_success', (data: { room: { id: string }; playerId: string; sessionToken?: string }) => {
         if (data.sessionToken) {
-          sessionStorage.setItem(`bomb-resume:${data.room.id}:${data.playerId}`, data.sessionToken);
+          sessionStorage.setItem(`game-resume:${data.room.id}:${data.playerId}`, data.sessionToken);
         }
       });
     }
@@ -33,7 +34,10 @@ class SocketService {
   // --- 공통 이벤트 ---
 
   joinRoom(roomId: string, playerId: string, playerName: string): void {
-    const sessionToken = sessionStorage.getItem(`bomb-resume:${roomId}:${playerId}`) || undefined;
+    const key = `game-resume:${roomId}:${playerId}`;
+    const oldKey = `bomb-resume:${roomId}:${playerId}`;
+    const sessionToken = sessionStorage.getItem(key) || sessionStorage.getItem(oldKey) || undefined;
+    if (sessionToken && !sessionStorage.getItem(key)) sessionStorage.setItem(key, sessionToken);
     this.socket?.emit('join_room', { roomId, playerId, playerName, sessionToken });
   }
 
@@ -67,6 +71,24 @@ class SocketService {
 
   onBombBustersError(callback: (data: { message: string }) => void): void {
     this.socket?.on('bomb_busters_error', callback);
+  }
+
+  // --- 반지 원정대 이벤트 ---
+
+  selectFellowshipChapter(roomId: string, playerId: string, chapter: number): void {
+    this.socket?.emit('select_fellowship_chapter', { roomId, playerId, chapter });
+  }
+
+  fellowshipAction(roomId: string, playerId: string, action: FellowshipAction): void {
+    this.socket?.emit('fellowship_action', { roomId, playerId, action });
+  }
+
+  onFellowshipStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('fellowship_state_updated', callback);
+  }
+
+  onFellowshipError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('fellowship_error', callback);
   }
 
   // --- 토이배틀 이벤트 ---

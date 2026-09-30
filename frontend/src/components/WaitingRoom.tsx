@@ -13,6 +13,7 @@ interface WaitingRoomProps {
   missionId?: number;
   missions?: BombMissionCatalogEntry[];
   onMissionChange?: (missionId: number) => void;
+  onFellowshipChapterChange?: (chapter: number) => void;
 }
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
@@ -26,18 +27,21 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   missionId = 1,
   missions = [],
   onMissionChange,
+  onFellowshipChapterChange,
 }) => {
   const currentPlayer = room.players.find((p) => p.id === playerId);
   const isHost = currentPlayer?.isHost || false;
   const isReady = currentPlayer?.isReady || false;
   const selectedMission = missions.find((mission) => mission.id === missionId);
-  const minPlayers = room.gameType === 'no-touch-kraken' ? 3 : selectedMission?.minPlayers ?? 2;
-  const maxPlayers = selectedMission?.maxPlayers ?? room.maxPlayers;
+  const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : selectedMission?.minPlayers ?? 2;
+  const maxPlayers = room.gameType === 'bomb-busters' ? selectedMission?.maxPlayers ?? room.maxPlayers : room.maxPlayers;
   const cannotStart = room.players.length < minPlayers || room.players.length > maxPlayers
     || !room.players.every((player) => player.isReady || player.isHost)
-    || (room.gameType === 'bomb-busters' && (!selectedMission || selectedMission.supported === false));
+    || (room.gameType === 'bomb-busters' && (!selectedMission || selectedMission.supported === false))
+    || (room.gameType === 'fellowship' && !room.fellowshipChapters?.some((chapter) => chapter.number === room.selectedFellowshipChapter));
 
-  const gameTypeLabel = room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : '토이배틀';
+  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : '토이배틀';
+  const fellowshipChapter = room.fellowshipChapters?.find((chapter) => chapter.number === room.selectedFellowshipChapter);
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
@@ -118,6 +122,36 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           {missionId === 0 && <p style={{ fontSize: '13px', color: '#865a30' }}>룰북의 기본 규칙으로 구성한 웹 자유 연습입니다. 공식 번호 임무가 아니며, 파란 전선 1–12와 노란·빨간 전선, 공용 장비를 사용합니다.</p>}
           <p style={{ marginBottom: 0, fontSize: '14px' }}>기본 규칙에서는 내 전선만 보이고, 동료의 전선은 작은 수부터 정렬되어 있습니다. 파란 전선에 첫 단서를 놓은 뒤 같은 값의 전선을 함께 잘라보세요. 전선 배치와 단서가 달라지는 미션은 위의 개별 안내를 따릅니다.</p>
           <p style={{ marginBottom: 0, fontSize: '13px', color: '#865a30' }}>전선의 숫자와 위치를 말하거나 암시하지 마세요. 화면에 공개된 단서와 정해진 행동으로만 정보를 나눕니다. 2–3인 게임은 일부 대원이 받침대 2개를 사용합니다.</p>
+        </section>
+      )}
+
+      {room.gameType === 'fellowship' && (
+        <section className="fellowship-waiting-chapter" aria-label="반지 원정대 챕터 선택" style={{ padding: '18px', marginBottom: '20px', background: '#faf6e9', border: '1px solid #d9c494', borderRadius: '10px', lineHeight: 1.6 }}>
+          <h3 style={{ margin: '0 0 8px', color: '#53411d' }}>원정대의 여정</h3>
+          {isHost ? (
+            <label style={{ display: 'block', fontWeight: 600 }}>
+              챕터 선택
+              <select
+                aria-label="반지 원정대 챕터 선택"
+                value={room.selectedFellowshipChapter ?? ''}
+                disabled={!room.fellowshipChapters?.length}
+                onChange={(event) => onFellowshipChapterChange?.(Number(event.target.value))}
+                style={{ display: 'block', padding: '10px', marginTop: '6px', width: '100%', fontSize: '14px', borderRadius: '6px', border: '1px solid #bba66f', background: 'white' }}
+              >
+                {!room.fellowshipChapters?.length && <option value="">챕터 목록 불러오는 중…</option>}
+                {room.fellowshipChapters?.map((chapter) => (
+                  <option key={chapter.number} value={chapter.number}>챕터 {chapter.number} · {chapter.title}</option>
+                ))}
+              </select>
+            </label>
+          ) : <p style={{ margin: '6px 0' }}>방장이 챕터를 선택합니다. 준비를 마치면 함께 시작할 수 있습니다.</p>}
+          {fellowshipChapter && <div style={{ marginTop: '12px', padding: '12px', background: '#fffdf6', borderRadius: '8px' }}>
+            <strong>챕터 {fellowshipChapter.number} · {fellowshipChapter.title}</strong>
+            <p style={{ margin: '5px 0', fontSize: '13px' }}>{fellowshipChapter.mode === 'short' ? '한 라운드' : fellowshipChapter.mode === 'long' ? '여러 라운드' : '특별 진행'} · 캐릭터 {fellowshipChapter.characters.length}명</p>
+            {!!fellowshipChapter.summary && <p style={{ margin: '5px 0', fontSize: '13px' }}>{fellowshipChapter.summary}</p>}
+            <p style={{ margin: '5px 0', fontSize: '13px' }}>필수 캐릭터: {fellowshipChapter.required.length ? fellowshipChapter.required.join(', ') : '없음'}</p>
+          </div>}
+          <p style={{ marginBottom: 0, fontSize: '13px', color: '#67542d' }}>라운드마다 비공개 손패로 협력하며 캐릭터별 목표를 달성하세요. 2인 게임에서는 더미 플레이어의 피라미드 패가 추가됩니다.</p>
         </section>
       )}
 

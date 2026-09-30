@@ -16,6 +16,7 @@ import { GameRoom, GameType } from './entities/game-room-memory.entity';
 import { BombBustersLogicService } from './bomb-busters-logic.service';
 import { BombBustersAction } from './entities/bomb-busters-game-state.entity';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { applyFellowshipAction } from './fellowship/engine';
 
 interface ClientInfo {
   playerId: string;
@@ -108,7 +109,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
       if (!existingRoom || !this.isBoundMember(info, existingRoom)) return;
       const room = this.gameRoomService.leaveRoom(info.roomId, info.playerId);
       if (room) {
-        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters'
+        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters' || room.gameType === 'fellowship'
           ? '플레이어가 재연결하지 않아 대기실로 돌아왔습니다.'
           : '플레이어가 연결 해제되어 나갔습니다.');
       }
@@ -184,7 +185,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       // 방이 존재하면 다른 플레이어들에게 알림
       if (room) {
-        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters'
+        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters' || room.gameType === 'fellowship'
           ? '플레이어가 나가 대기실로 돌아왔습니다.'
           : '플레이어가 나갔습니다.');
       }
@@ -232,6 +233,20 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('select_fellowship_chapter')
+  handleSelectFellowshipChapter(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; chapter: number },
+  ) {
+    try {
+      this.requireMember(client, data?.roomId, data?.playerId, 'fellowship');
+      const room = this.gameRoomService.selectFellowshipChapter(data.roomId, data.playerId, data.chapter);
+      this.emitRoomUpdate(room, 'chapter_changed', '챕터가 변경되었습니다. 목표를 확인하고 준비해 주세요.');
+    } catch (error) {
+      client.emit('fellowship_error', { message: error.message });
+    }
+  }
+
   @SubscribeMessage('start_game')
   handleStartGame(
     @ConnectedSocket() client: Socket,
@@ -246,6 +261,8 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       if (room.gameType === 'bomb-busters') {
         this.emitBombBustersStateToAll(room, '게임이 시작되었습니다!', 'game_started');
+      } else if (room.gameType === 'fellowship') {
+        this.emitFellowshipStateToAll(room, '챕터가 시작되었습니다!', 'game_started');
       } else if (room.gameType === 'no-touch-kraken') {
         // 크라켄 게임 초기화
         const krakenState = this.krakenLogicService.initializeGame(playerIds, playerNames);
@@ -629,8 +646,9 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       this.emitRoomUpdate(room, 'returned_to_room', '방으로 돌아왔습니다.');
     } catch (error) {
-      client.emit(this.gameRoomService.getRoom(data?.roomId)?.gameType === 'bomb-busters'
-        ? 'bomb_busters_error' : 'kraken_error', { message: error.message });
+      const type = this.gameRoomService.getRoom(data?.roomId)?.gameType;
+      client.emit(type === 'bomb-busters' ? 'bomb_busters_error'
+        : type === 'fellowship' ? 'fellowship_error' : 'kraken_error', { message: error.message });
     }
   }
 
@@ -728,6 +746,31 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('fellowship_action')
+  handleFellowshipAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; action: Record<string, unknown> },
+  ) {
+    try {
+      const room = this.requireMember(client, data?.roomId, data?.playerId, 'fellowship');
+      if (room.status !== 'playing' || !room.gameState) {
+        throw new Error('진행 중인 반지 원정대 챕터가 없습니다.');
+      }
+      if (!data.action || typeof data.action !== 'object' || Array.isArray(data.action)) {
+        throw new Error('올바른 행동을 선택해주세요.');
+      }
+      // The engine returns a complete next state; rejected actions leave the room untouched.
+      const nextState = applyFellowshipAction(room.gameState, data.playerId, data.action as any);
+      room.gameState = nextState;
+      const finished = nextState.phase === 'chapter_complete';
+      if (finished) room.finishGame();
+      this.emitFellowshipStateToAll(room, nextState.result?.message ?? '게임 상태가 변경되었습니다.',
+        finished ? 'game_ended' : 'fellowship_state_updated');
+    } catch (error) {
+      client.emit('fellowship_error', { message: error.message });
+    }
+  }
+
   // --- 헬퍼 메서드 ---
 
   private tickBombRoom(room: GameRoom): void {
@@ -784,6 +827,19 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   private emitBombBustersStateToAll(room: GameRoom, message: string, event = 'bomb_busters_state_updated'): void {
+    for (const [socketId, info] of this.clients) {
+      if (this.isBoundMember(info, room)) {
+        const playerRoom = this.gameRoomService.serializeRoom(room, info.playerId);
+        this.server.to(socketId).emit(event, {
+          room: playerRoom,
+          gameState: playerRoom.gameState,
+          message,
+        });
+      }
+    }
+  }
+
+  private emitFellowshipStateToAll(room: GameRoom, message: string, event = 'fellowship_state_updated'): void {
     for (const [socketId, info] of this.clients) {
       if (this.isBoundMember(info, room)) {
         const playerRoom = this.gameRoomService.serializeRoom(room, info.playerId);

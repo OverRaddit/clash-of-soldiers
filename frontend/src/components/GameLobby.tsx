@@ -35,6 +35,14 @@ const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; ma
     bgColor: '#fff7e6',
     borderColor: '#f4bd61',
   },
+  fellowship: {
+    label: '반지 원정대',
+    minPlayers: 1,
+    maxPlayers: 4,
+    color: '#665322',
+    bgColor: '#faf2d8',
+    borderColor: '#c5a96a',
+  },
 };
 
 const GameLobby: React.FC<GameLobbyProps> = ({
@@ -89,6 +97,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         selectedGameType
       );
       if (response.success && response.data) {
+        if (response.sessionToken) {
+          sessionStorage.setItem(`game-resume:${response.data.id}:${playerId}`, response.sessionToken);
+        }
         const socket = socketService.getSocket();
         if (!socket || !socket.connected) {
           socketService.connect();
@@ -208,6 +219,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
         {selectedGameType === 'bomb-busters' && (
           <p className="bomb-lobby-description">2–5명이 함께 전선을 해체하는 협력 추리 게임. 내 전선과 동료의 단서를 연결해 폭탄을 해체하세요.</p>
+        )}
+        {selectedGameType === 'fellowship' && (
+          <p className="bomb-lobby-description">1–4명이 각자 캐릭터의 목표를 함께 달성하며 18개 챕터를 여행하는 협력 트릭테이킹 게임입니다.</p>
         )}
 
         <div className="create-room-form">

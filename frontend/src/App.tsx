@@ -8,7 +8,8 @@ import socketService from './services/socket.service';
 // A separate identity per tab also allows friends to test a room on one device.
 const SESSION_PLAYER = 'board-game-player';
 const SESSION_NAME = 'board-game-name';
-const SESSION_ROOM = 'bomb-busters-room';
+const SESSION_ROOM = 'private-card-game-room';
+const LEGACY_BOMB_ROOM = 'bomb-busters-room';
 
 function App() {
   const [playerId] = useState(() => {
@@ -19,12 +20,12 @@ function App() {
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem(SESSION_NAME) || '');
   const [currentRoom, setCurrentRoom] = useState<GameRoomType | null>(null);
   const [isNameSet, setIsNameSet] = useState(() => !!sessionStorage.getItem(SESSION_NAME));
-  const [restoring, setRestoring] = useState(() => !!sessionStorage.getItem(SESSION_ROOM) && !!sessionStorage.getItem(SESSION_NAME));
+  const [restoring, setRestoring] = useState(() => !!(sessionStorage.getItem(SESSION_ROOM) || sessionStorage.getItem(LEGACY_BOMB_ROOM)) && !!sessionStorage.getItem(SESSION_NAME));
   const [restoreMessage, setRestoreMessage] = useState('');
 
   useEffect(() => {
     if (!restoring) return;
-    const roomId = sessionStorage.getItem(SESSION_ROOM);
+    const roomId = sessionStorage.getItem(SESSION_ROOM) || sessionStorage.getItem(LEGACY_BOMB_ROOM);
     if (!roomId) { setRestoring(false); return; }
     const socket = socketService.connect();
     const rejoin = () => socketService.joinRoom(roomId, playerId, playerName);
@@ -34,6 +35,7 @@ function App() {
     };
     const failed = (data: { message?: string }) => {
       sessionStorage.removeItem(SESSION_ROOM);
+      sessionStorage.removeItem(LEGACY_BOMB_ROOM);
       setRestoreMessage(data.message || '이전 방에 다시 연결하지 못했습니다. 새 방에 참여해주세요.');
       setRestoring(false);
     };
@@ -61,8 +63,9 @@ function App() {
 
   // 방 입장
   const handleJoinRoom = (room: GameRoomType) => {
-    if (room.gameType === 'bomb-busters') sessionStorage.setItem(SESSION_ROOM, room.id);
+    if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship') sessionStorage.setItem(SESSION_ROOM, room.id);
     else sessionStorage.removeItem(SESSION_ROOM);
+    sessionStorage.removeItem(LEGACY_BOMB_ROOM);
     setRestoreMessage('');
     setCurrentRoom(room);
   };
@@ -70,6 +73,7 @@ function App() {
   // 방 나가기
   const handleLeaveRoom = () => {
     sessionStorage.removeItem(SESSION_ROOM);
+    sessionStorage.removeItem(LEGACY_BOMB_ROOM);
     setCurrentRoom(null);
   };
 
@@ -95,10 +99,11 @@ function App() {
 
   if (restoring) {
     return <main className="main-screen"><div className="main-screen-container">
-      <h1>해체반에 다시 연결 중</h1>
-      <p>이전 봄버스터즈 방과 내 전선을 불러오고 있습니다.</p>
+      <h1>게임에 다시 연결 중</h1>
+      <p>이전 방과 개인 게임 상태를 불러오고 있습니다.</p>
       <button className="start-game-btn" onClick={() => {
         sessionStorage.removeItem(SESSION_ROOM);
+        sessionStorage.removeItem(LEGACY_BOMB_ROOM);
         setRestoring(false);
       }}>로비로 이동</button>
     </div></main>;
