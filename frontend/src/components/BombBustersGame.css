@@ -6,6 +6,17 @@
 .bb-own-dock { position: sticky; bottom: 0; z-index: 5; min-height: 0; min-width: 0; max-height: 43vh; max-height: 43dvh; overflow-y: auto; scrollbar-width: thin; background: #fbfdff; border: 1px solid #bed1e1; border-radius: 12px; box-shadow: 0 -3px 14px #273e5015; }
 .bb-own-dock .bb-player { padding: 10px 14px; border: 0; border-radius: 10px; }
 .bb-own-dock .bb-player-heading { gap: 6px; margin-bottom: 8px; }
+.bb-own-dock .bb-player-heading-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+.bb-player-heading-actions .bb-player-name { grid-column: 1; min-width: 0; flex-wrap: nowrap; }
+.bb-player-heading-actions h3 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-player-heading-actions .bb-avatar, .bb-player-heading-actions .bb-small-tag, .bb-player-heading-actions .bb-turn-tag { flex-shrink: 0; }
+.bb-player-heading-actions .bb-player-meta { grid-column: 1; }
+.bb-cut-actions { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 6px; }
+.bb-cut-action { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 44px; height: 44px; padding: 3px; border: 1px solid #ca6626; border-radius: 8px; background: #d96b28; color: #fff; }
+.bb-cut-action svg { width: 19px; height: 19px; }
+.bb-cut-action span { font-size: 10px; line-height: 1; font-weight: 700; }
+.bb-cut-action:disabled { border-color: #d7dfe7; background: #edf1f5; color: #7b8999; }
+.bb-cut-action:not(:disabled):hover { background: #ba5315; }
 .bb-own-dock .bb-avatar { width: 23px; height: 23px; }
 .bb-own-dock .bb-racks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
 .bb-own-dock .bb-rack { min-width: 0; }
@@ -233,7 +244,6 @@
   .bb-action-panel, .bb-player { padding: 17px 14px; }
   .bb-action-heading h2 { font-size: 16px; }
   .bb-action-tabs button { font-size: 12px; padding: 9px 10px; }
-  .bb-dual-controls > .bb-button { width: 100%; }
   .bb-wire { flex-basis: 43px; width: 43px; height: 72px; }
   .bb-wire-row { gap: 6px; }
   .bb-bottom-grid { grid-template-columns: 1fr; }

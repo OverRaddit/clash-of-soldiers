@@ -83,6 +83,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
   const valueTotal = ownWire?.value === 'yellow' ? state.mission.yellowCount : 4;
   const canSolo = !!ownWire && ownWire.value !== null && !hasReversedRemaining && !isRedValue(ownWire.value) && (sameValueMine.length === 2 || sameValueMine.length === 4)
     && (hideCutCounts || sameValueMine.length + (state.cutCounts[String(ownWire.value)] || 0) === valueTotal);
+  const showCutActions = state.phase === 'playing' && !detector && !exchange && !relationEquipmentId && !campaignPending && !campaignControl && mode !== 'reveal_red';
 
   useEffect(() => {
     setOwnWireId(null);
@@ -193,7 +194,8 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
         setOwnWireId(ownWireId === wire.id ? null : wire.id);
         if (wire.value === 'yellow' || wire.value === 'red' || wire.excluded) { setUseDetector(false); setTarget(null); }
       }
-    } else if (!isSetup && mode === 'dual') {
+    } else if (!isSetup && mode !== 'reveal_red') {
+      setMode('dual');
       if (target?.playerId === player.id && target.rackId === rackId && target.wireIds.includes(wire.id)) {
         setTarget({ ...target, wireIds: target.wireIds.filter((id) => id !== wire.id) });
       } else if ((useDetector || state.tripleDetectorActive) && target?.playerId === player.id && target.rackId === rackId && target.wireIds.length < (state.tripleDetectorActive ? 3 : 2)) {
@@ -221,20 +223,28 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
     if (!isMyTurn) return false;
     if (isSetup) return player.id === playerId && typeof wire.value === 'number' && !isRedValue(wire.value);
     if (mode === 'reveal_red') return false;
-    return player.id === playerId ? !isRedValue(wire.value) && (!wire.reversed || !armedEquipment) && (!wire.excluded || !(armedEquipment || useDetector)) && (!(state.superDetectorActive || state.tripleDetectorActive || useDetector) || typeof wire.value === 'number') : mode === 'dual' && (!wire.excluded || !(armedEquipment || useDetector));
+    return player.id === playerId ? !isRedValue(wire.value) && (!wire.reversed || !armedEquipment) && (!wire.excluded || !(armedEquipment || useDetector)) && (!(state.superDetectorActive || state.tripleDetectorActive || useDetector) || typeof wire.value === 'number') : !wire.excluded || !(armedEquipment || useDetector);
   };
 
   const renderPlayer = (player: BombClientPlayer) => {
     const mine = player.id === playerId;
     const active = player.id === state.currentPlayerId && !isFinished;
     return <section key={player.id} className={`bb-player ${mine ? 'bb-player-mine' : ''} ${active ? 'bb-player-active' : ''}`}>
-      <div className="bb-player-heading">
+      <div className={`bb-player-heading ${mine && showCutActions ? 'bb-player-heading-actions' : ''}`}>
         <div className="bb-player-name"><span className="bb-avatar">{state.players.findIndex((p) => p.id === player.id) + 1}</span>
           <h3>{player.name} {mine && <span className="bb-small-tag">나</span>}</h3>
           {player.id === state.captainId && <span className="bb-small-tag">대장</span>}
           {active && <span className="bb-turn-tag">{isSetup ? '단서 배치' : '현재 차례'}</span>}
         </div>
         <span className="bb-player-meta">{isSetup ? player.initialHintPlaced ? '단서 배치 완료' : '단서 배치 전' : `${personalLabel(player.personalEquipmentId)} ${player.detectorUsed ? '사용 완료' : '1회'}`}</span>
+        {mine && showCutActions && <div className="bb-cut-actions" role="group" aria-label="전선 해체">
+          <button type="button" className="bb-cut-action" aria-label="협력 해체 실행" title="협력 해체 · 내 전선과 동료 전선 선택" disabled={!dualReady} onClick={() => ownWire && target && send({ type: 'dual', ownWireId: ownWire.id, targetPlayerId: target.playerId, targetWireIds: target.wireIds, useDetector, ...(state.xyRayActive && alternativeWireId ? { alternativeWireId } : {}), ...(ownWire.reversed ? { guess: reversedGuess === 'yellow' ? 'yellow' as const : Number(reversedGuess) } : {}) })}>
+            <StatusIcon kind="cut" /><span>협력</span>
+          </button>
+          <button type="button" className="bb-cut-action" aria-label="단독 해체 실행" title={canSolo ? `단독 해체 · ${valueLabel(ownWire?.value ?? null)} 전선 ${sameValueMine.length}개` : '단독 해체 · 같은 값의 남은 전선을 모두 가진 경우 선택'} disabled={!canAct || !canSolo || !!armedEquipment} onClick={() => ownWire?.value !== null && ownWire && send({ type: 'solo', value: ownWire.value })}>
+            <StatusIcon kind="cut" /><span>단독</span>
+          </button>
+        </div>}
       </div>
       <div className="bb-racks">{player.racks.map((rack, rackIndex) => <div key={rack.id} className="bb-rack">
         <div className="bb-rack-label"><span>{player.racks.length > 1 ? `받침대 ${rackIndex + 1}` : '전선 받침대'}</span><span>작은 수 → 큰 수</span></div>
@@ -380,10 +390,10 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
             </select><small>틀린 값으로 자기 역방향 전선을 절단하면 즉시 폭발합니다.</small>
           </label>}
           <div className="bb-dual-controls">{(me?.personalEquipmentId ?? 0) === 0 ? <label className={`bb-detector-control ${me?.detectorUsed ? 'used' : ''}`}><input type="checkbox" checked={useDetector} disabled={!canAct || me?.detectorUsed || ownWire?.value === 'yellow' || state.superDetectorActive || state.tripleDetectorActive || (state.xyRayActive && alternativeWire?.value === 'yellow') || ownWire?.reversed || ownWire?.excluded || (me?.personalEquipmentId ?? 0) !== 0} onChange={(e) => { setUseDetector(e.target.checked); setTarget(null); }} />더블 탐지기 <small>{me?.detectorUsed ? '사용 완료' : state.mission.id === 58 ? '이 미션에서는 매 차례 사용 가능' : '게임당 1회 · 파란 전선만 선언'}</small></label> : <span className="bb-private-note">{personalLabel(me?.personalEquipmentId)}는 아래 장비에서 사용합니다.</span>}
-          <button className="bb-button bb-button-primary" disabled={!dualReady} onClick={() => ownWire && target && send({ type: 'dual', ownWireId: ownWire.id, targetPlayerId: target.playerId, targetWireIds: target.wireIds, useDetector, ...(state.xyRayActive && alternativeWireId ? { alternativeWireId } : {}), ...(ownWire.reversed ? { guess: reversedGuess === 'yellow' ? 'yellow' as const : Number(reversedGuess) } : {}) })}>{sending ? '확인 중…' : '협력 해체 실행'}</button></div>
+          </div>
           <p className="bb-selection-summary">{ownWire ? `내 ${ownWire.reversed ? reversedGuess ? valueLabel(reversedGuess === 'yellow' ? 'yellow' : Number(reversedGuess)) : '역방향 ?' : valueLabel(ownWire.value)}${state.xyRayActive ? alternativeWire ? ` / ${valueLabel(alternativeWire.value)}` : ' / 두 번째 값 선택' : ''} 전선` : state.xyRayActive ? '내 전선 2개 선택' : '내 전선 선택'} <span>→</span> {target?.wireIds.length ? `${targetName} 님의 전선 ${target.wireIds.length}개 선택` : '동료 전선 선택'}</p>
         </>}
-        {mode === 'solo' && <><p>어떤 값의 남은 전선을 <strong>전부 내가 가지고 있다면</strong>, 그 값의 전선 2개 또는 4개를 한 번에 해체합니다. 아래에서 해당하는 내 전선을 선택하세요.</p>{hasReversedRemaining && <p>내 역방향 전선이 남아 있습니다. 위 미션 패널의 단독 해체에서 전선 위치와 예상 값을 직접 선택하세요.</p>}{hideCutCounts && <p>값별 해체 수를 볼 수 없습니다. 기억한 정보를 바탕으로, 남은 같은 값의 전선을 모두 가지고 있는지 확인한 뒤 해체하세요.</p>}<button className="bb-button bb-button-primary" disabled={!canAct || !canSolo} onClick={() => ownWire?.value !== null && ownWire && send({ type: 'solo', value: ownWire.value })}>{canSolo ? `${valueLabel(ownWire?.value ?? null)} 전선 ${sameValueMine.length}개 해체` : '단독 해체 가능한 내 전선을 선택하세요'}</button></>}
+        {mode === 'solo' && <><p>어떤 값의 남은 전선을 <strong>전부 내가 가지고 있다면</strong>, 그 값의 전선 2개 또는 4개를 한 번에 해체합니다. 아래에서 해당하는 내 전선을 선택하세요.</p>{hasReversedRemaining && <p>내 역방향 전선이 남아 있습니다. 위 미션 패널의 단독 해체에서 전선 위치와 예상 값을 직접 선택하세요.</p>}{hideCutCounts && <p>값별 해체 수를 볼 수 없습니다. 기억한 정보를 바탕으로, 남은 같은 값의 전선을 모두 가지고 있는지 확인한 뒤 해체하세요.</p>}</>}
         {mode === 'reveal_red' && <><p>내게 남은 전선이 <strong>모두 빨간색일 때만</strong> 안전하게 전부 공개할 수 있습니다. 빨간 전선을 자르는 행동이 아닙니다. {!!state.campaign?.redValues?.length && <strong> 이번 미션에서는 {state.campaign.redValues.map(valueLabel).join(' · ')}번도 빨강으로 취급합니다.</strong>} {state.mission.id === 13 && <strong> 이 미션에서는 일반 공개 대신 미션 행동의 빨강 세 개 동시 절단을 사용하세요.</strong>} {remainingMine.some((wire) => wire.reversed) && <strong>내 역방향 전선도 모두 빨강이라고 선언합니다. 빨강이 아닌 역방향 전선이 포함되면 즉시 폭발합니다.</strong>}</p><button className="bb-button bb-button-red" disabled={!canAct || !hasOnlyRed || state.mission.id === 13} onClick={() => send({ type: 'reveal_red' })}>남은 빨간 전선 안전 공개</button></>}
       </>}
     </section>}

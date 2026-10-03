@@ -52,6 +52,8 @@ test('keeps teammate wires hidden while exposing their public clues', () => {
 test('requires both own and teammate selections and submits wire IDs', () => {
   show();
   const submit = screen.getByRole('button', { name: '협력 해체 실행' });
+  expect(screen.getByLabelText('내 전선 받침대')).toContainElement(submit);
+  expect(screen.getByRole('region', { name: '내 행동' })).not.toContainElement(submit);
   expect(submit).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
   expect(submit).toBeDisabled();
@@ -73,8 +75,28 @@ test('double detector requires two wires on the same teammate rack', () => {
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', expect.objectContaining({ useDetector: true, targetWireIds: ['other-b', 'other-a'] }));
 });
 
+test('selecting a teammate wire after solo instructions enables cooperation in the dock', () => {
+  show();
+  fireEvent.click(screen.getByRole('button', { name: '단독 해체' }));
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }));
+  expect(screen.getByRole('button', { name: '협력 해체' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: '협력 해체 실행' }));
+  expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', expect.objectContaining({ type: 'dual', ownWireId: 'own-a', targetWireIds: ['other-b'] }));
+});
+
+test('dock solo cannot bypass prepared cooperative equipment', () => {
+  show(makeState({ stabilizerActive: true }));
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  const solo = screen.getByRole('button', { name: '단독 해체 실행' });
+  expect(solo).toBeDisabled();
+  fireEvent.click(solo);
+  expect(socketService.bombBustersAction).not.toHaveBeenCalled();
+});
+
 test('setup places a clue without issuing a cut', () => {
   show(makeState({ phase: 'setup' }));
+  expect(screen.queryByRole('group', { name: '전선 해체' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '2 단서 놓기' }));
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', { type: 'hint', wireId: 'own-b' });
@@ -83,6 +105,7 @@ test('setup places a clue without issuing a cut', () => {
 test('detector choice is available only for the target player and eligible wire', () => {
   const state = makeState({ pendingDetector: { actorId: 'friend', targetPlayerId: 'me', targetWireIds: ['own-a', 'own-b'], guess: 2, eligibleWireIds: ['own-b'] } });
   show(state);
+  expect(screen.queryByRole('group', { name: '전선 해체' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '선택한 전선 확정' }));
@@ -98,6 +121,7 @@ test('post-it equipment can reveal an own blue clue outside my turn', () => {
 
 test('shows the finished mission and disables wire actions', () => {
   show(makeState({ phase: 'finished', outcome: 'won', endReason: '모든 전선을 해체했습니다.' }));
+  expect(screen.queryByRole('group', { name: '전선 해체' })).not.toBeInTheDocument();
   expect(screen.getByRole('heading', { name: '폭탄 해체 성공!' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: '대기실로 돌아가기' })).toBeEnabled();
   expect(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' })).toBeDisabled();
@@ -105,6 +129,7 @@ test('shows the finished mission and disables wire actions', () => {
 
 test('exchange participants privately select their own uncut wire', () => {
   show(makeState({ currentPlayerId: 'friend', pendingExchange: { actorId: 'friend', targetPlayerId: 'me', selectedPlayerIds: [] } }));
+  expect(screen.queryByRole('group', { name: '전선 해체' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '교환할 내 전선 확정' }));
@@ -140,6 +165,7 @@ test('relation labels finish selecting after the server applies an adjacent pair
   state.players[0].racks[0].wires[0].cut = true;
   const { rerender } = show(state);
   fireEvent.click(screen.getByRole('button', { name: '표식 위치 고르기' }));
+  expect(screen.queryByRole('group', { name: '전선 해체' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 해체됨 2' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '선택한 위치에 = 표식 놓기' }));
@@ -440,9 +466,11 @@ test('hidden cut totals do not display invented zero counts or prevent a remembe
   expect(screen.queryByText('검증 토큰')).not.toBeInTheDocument();
   expect(screen.queryByTitle('2번 전선 0/4 해체')).not.toBeInTheDocument();
   expect(screen.getByText('빨간 전선 후보')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: '단독 해체' }));
+  const submit = screen.getByRole('button', { name: '단독 해체 실행' });
+  expect(screen.getByLabelText('내 전선 받침대')).toContainElement(submit);
+  expect(submit).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
-  fireEvent.click(screen.getByRole('button', { name: '2 전선 2개 해체' }));
+  fireEvent.click(submit);
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', { type: 'solo', value: 2 });
 });
 
@@ -452,7 +480,7 @@ test('any remaining reversed wire routes solo declarations to explicit mission s
   show(state);
   fireEvent.click(screen.getByRole('button', { name: '단독 해체' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
-  expect(screen.getByRole('button', { name: '단독 해체 가능한 내 전선을 선택하세요' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '단독 해체 실행' })).toBeDisabled();
   expect(screen.getByText(/전선 위치와 예상 값을 직접 선택하세요/)).toBeInTheDocument();
 });
 
