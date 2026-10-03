@@ -244,10 +244,14 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
           <button type="button" className="bb-cut-action" aria-label="단독 해체 실행" title={canSolo ? `단독 해체 · ${valueLabel(ownWire?.value ?? null)} 전선 ${sameValueMine.length}개` : '단독 해체 · 같은 값의 남은 전선을 모두 가진 경우 선택'} disabled={!canAct || !canSolo || !!armedEquipment} onClick={() => ownWire?.value !== null && ownWire && send({ type: 'solo', value: ownWire.value })}>
             <StatusIcon kind="cut" /><span>단독</span>
           </button>
+          {(me?.personalEquipmentId ?? 0) === 0 && <button type="button" className="bb-cut-action bb-detector-toggle" aria-label="더블 탐지기" aria-pressed={useDetector} title={me?.detectorUsed ? '더블 탐지기 · 사용 완료' : `더블 탐지기 ${useDetector ? 'ON' : 'OFF'} · ${state.mission.id === 58 ? '매 차례 사용 가능' : '남은 횟수 1회'} · 파란 전선만 선언`} disabled={!canAct || me?.detectorUsed || ownWire?.value === 'yellow' || state.superDetectorActive || state.tripleDetectorActive || (state.xyRayActive && alternativeWire?.value === 'yellow') || ownWire?.reversed || ownWire?.excluded} onClick={() => { setUseDetector(!useDetector); setTarget(null); setMode('dual'); }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><path d="m12 12 7-7" /></svg>
+            <span>{me?.detectorUsed ? '소진' : `더블 ${useDetector ? 'ON' : 'OFF'}`}</span>
+          </button>}
         </div>}
       </div>
       <div className="bb-racks">{player.racks.map((rack, rackIndex) => <div key={rack.id} className="bb-rack">
-        <div className="bb-rack-label"><span>{player.racks.length > 1 ? `받침대 ${rackIndex + 1}` : '전선 받침대'}</span><span>작은 수 → 큰 수</span></div>
+        <div className="bb-rack-label"><span>{player.racks.length > 1 ? `받침대 ${rackIndex + 1}` : '전선 받침대'}</span></div>
         <div className="bb-wire-row">
           {rack.wires.map((wire, index) => {
             if (state.campaign?.audio?.removedCutWireIds?.includes(wire.id)) return <span key={wire.id} className="bb-wire-empty" aria-label={`${player.name} 받침대 ${rackIndex + 1}, ${index + 1}번 빈자리`}><span>{index + 1}</span></span>;
@@ -389,8 +393,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
               <option value="">값을 추론해 선택하세요</option>{Array.from({ length: state.mission.blueMax }, (_, index) => index + 1).map((value) => <option key={value} value={value}>{value}</option>)}{state.mission.yellowCount > 0 && <option value="yellow">노랑</option>}
             </select><small>틀린 값으로 자기 역방향 전선을 절단하면 즉시 폭발합니다.</small>
           </label>}
-          <div className="bb-dual-controls">{(me?.personalEquipmentId ?? 0) === 0 ? <label className={`bb-detector-control ${me?.detectorUsed ? 'used' : ''}`}><input type="checkbox" checked={useDetector} disabled={!canAct || me?.detectorUsed || ownWire?.value === 'yellow' || state.superDetectorActive || state.tripleDetectorActive || (state.xyRayActive && alternativeWire?.value === 'yellow') || ownWire?.reversed || ownWire?.excluded || (me?.personalEquipmentId ?? 0) !== 0} onChange={(e) => { setUseDetector(e.target.checked); setTarget(null); }} />더블 탐지기 <small>{me?.detectorUsed ? '사용 완료' : state.mission.id === 58 ? '이 미션에서는 매 차례 사용 가능' : '게임당 1회 · 파란 전선만 선언'}</small></label> : <span className="bb-private-note">{personalLabel(me?.personalEquipmentId)}는 아래 장비에서 사용합니다.</span>}
-          </div>
+          {(me?.personalEquipmentId ?? 0) !== 0 && <p className="bb-private-note">{personalLabel(me?.personalEquipmentId)}는 아래 장비에서 사용합니다.</p>}
           <p className="bb-selection-summary">{ownWire ? `내 ${ownWire.reversed ? reversedGuess ? valueLabel(reversedGuess === 'yellow' ? 'yellow' : Number(reversedGuess)) : '역방향 ?' : valueLabel(ownWire.value)}${state.xyRayActive ? alternativeWire ? ` / ${valueLabel(alternativeWire.value)}` : ' / 두 번째 값 선택' : ''} 전선` : state.xyRayActive ? '내 전선 2개 선택' : '내 전선 선택'} <span>→</span> {target?.wireIds.length ? `${targetName} 님의 전선 ${target.wireIds.length}개 선택` : '동료 전선 선택'}</p>
         </>}
         {mode === 'solo' && <><p>어떤 값의 남은 전선을 <strong>전부 내가 가지고 있다면</strong>, 그 값의 전선 2개 또는 4개를 한 번에 해체합니다. 아래에서 해당하는 내 전선을 선택하세요.</p>{hasReversedRemaining && <p>내 역방향 전선이 남아 있습니다. 위 미션 패널의 단독 해체에서 전선 위치와 예상 값을 직접 선택하세요.</p>}{hideCutCounts && <p>값별 해체 수를 볼 수 없습니다. 기억한 정보를 바탕으로, 남은 같은 값의 전선을 모두 가지고 있는지 확인한 뒤 해체하세요.</p>}</>}

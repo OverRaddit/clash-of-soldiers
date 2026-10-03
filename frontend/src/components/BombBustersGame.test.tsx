@@ -66,13 +66,62 @@ test('requires both own and teammate selections and submits wire IDs', () => {
 
 test('double detector requires two wires on the same teammate rack', () => {
   show();
-  fireEvent.click(screen.getByRole('checkbox', { name: /더블 탐지기/ }));
+  fireEvent.click(screen.getByRole('button', { name: '더블 탐지기' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }));
   expect(screen.getByRole('button', { name: '협력 해체 실행' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 1번 전선: 비공개, 공개 단서 3' }));
   fireEvent.click(screen.getByRole('button', { name: '협력 해체 실행' }));
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', expect.objectContaining({ useDetector: true, targetWireIds: ['other-b', 'other-a'] }));
+});
+
+test('dock detector toggles clear selected targets and restore a normal one-wire cut', () => {
+  show();
+  const detector = screen.getByRole('button', { name: '더블 탐지기' });
+  const submit = screen.getByRole('button', { name: '협력 해체 실행' });
+  const firstTarget = screen.getByRole('button', { name: '동료 받침대 1, 1번 전선: 비공개, 공개 단서 3' });
+  const secondTarget = screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' });
+  expect(screen.getByLabelText('내 전선 받침대')).toContainElement(detector);
+  expect(screen.getByRole('region', { name: '내 행동' })).not.toContainElement(detector);
+  expect(detector).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
+  fireEvent.click(firstTarget);
+  expect(submit).toBeEnabled();
+  fireEvent.click(detector);
+  expect(detector).toHaveAttribute('aria-pressed', 'true');
+  expect(firstTarget).toHaveAttribute('aria-pressed', 'false');
+  expect(submit).toBeDisabled();
+  fireEvent.click(firstTarget);
+  expect(submit).toBeDisabled();
+  fireEvent.click(secondTarget);
+  expect(submit).toBeEnabled();
+  fireEvent.click(detector);
+  expect(detector).toHaveAttribute('aria-pressed', 'false');
+  expect(firstTarget).toHaveAttribute('aria-pressed', 'false');
+  expect(secondTarget).toHaveAttribute('aria-pressed', 'false');
+  expect(submit).toBeDisabled();
+  fireEvent.click(secondTarget);
+  fireEvent.click(submit);
+  expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', {
+    type: 'dual', ownWireId: 'own-a', targetPlayerId: 'friend', targetWireIds: ['other-b'], useDetector: false,
+  });
+});
+
+test('spent detector stays disabled until recharged and activates cooperation from solo mode', () => {
+  const state = makeState();
+  state.players[0].detectorUsed = true;
+  const { rerender } = show(state);
+  const detector = screen.getByRole('button', { name: '더블 탐지기' });
+  expect(detector).toBeDisabled();
+  fireEvent.click(detector);
+  expect(detector).toHaveAttribute('aria-pressed', 'false');
+  const recharged = { ...state, players: state.players.map((player) => player.id === 'me' ? { ...player, detectorUsed: false } : player) };
+  rerender(<BombBustersGame room={room} playerId="me" state={recharged} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
+  expect(detector).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: '단독 해체' }));
+  fireEvent.click(detector);
+  expect(detector).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: '협력 해체' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('selecting a teammate wire after solo instructions enables cooperation in the dock', () => {
@@ -325,7 +374,7 @@ test('personal radar uses its own charge without consuming a public card', () =>
   const state = makeState();
   state.players[0].personalEquipmentId = 8;
   show(state);
-  expect(screen.queryByRole('checkbox', { name: /더블 탐지기/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '더블 탐지기' })).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole('combobox', { name: '개인 전체 레이더로 찾을 숫자' }), { target: { value: '3' } });
   fireEvent.click(screen.getByRole('button', { name: '장비 사용' }));
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', expect.objectContaining({ type: 'equipment', equipmentId: 8, personal: true, value: 3 }));
@@ -531,7 +580,7 @@ test.each(['double', 'triple', 'super'] as const)('XY ray combines with the %s d
   const state = makeState({ xyRayActive: true, tripleDetectorActive: detectorKind === 'triple', superDetectorActive: detectorKind === 'super' });
   state.players[0].racks[0].wires[1].value = 5;
   show(state);
-  if (detectorKind === 'double') fireEvent.click(screen.getByRole('checkbox', { name: /더블 탐지기/ }));
+  if (detectorKind === 'double') fireEvent.click(screen.getByRole('button', { name: '더블 탐지기' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 1번 전선: 2' }));
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 5' }));
   fireEvent.click(screen.getByRole('button', { name: '동료 받침대 1, 2번 전선: 비공개' }));
@@ -552,7 +601,7 @@ test('XY plus a detector cannot declare a yellow value in either selection order
   const state = makeState({ xyRayActive: true });
   state.players[0].racks[0].wires[1].value = 'yellow';
   show(state);
-  const detector = screen.getByRole('checkbox', { name: /더블 탐지기/ });
+  const detector = screen.getByRole('button', { name: '더블 탐지기' });
   const yellow = screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 노랑' });
   fireEvent.click(detector);
   expect(yellow).toBeDisabled();
@@ -567,9 +616,9 @@ test('preparing XY preserves an already selected personal double detector', () =
   const state = makeState();
   state.players[0].racks[0].wires[1].value = 5;
   const { rerender } = show(state);
-  fireEvent.click(screen.getByRole('checkbox', { name: /더블 탐지기/ }));
+  fireEvent.click(screen.getByRole('button', { name: '더블 탐지기' }));
   rerender(<BombBustersGame room={room} playerId="me" state={{ ...state, xyRayActive: true }} message="" messageType="info" onLeaveRoom={jest.fn()} onReturnToRoom={jest.fn()} />);
-  expect(screen.getByRole('checkbox', { name: /더블 탐지기/ })).toBeChecked();
+  expect(screen.getByRole('button', { name: '더블 탐지기' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('last successful cuts remain highlighted after their animation ends', () => {
