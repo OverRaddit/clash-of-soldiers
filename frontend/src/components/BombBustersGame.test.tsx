@@ -145,10 +145,25 @@ test('dock solo cannot bypass prepared cooperative equipment', () => {
 
 test('setup places a clue without issuing a cut', () => {
   show(makeState({ phase: 'setup' }));
-  expect(screen.queryByRole('group', { name: '전선 해체' })).not.toBeInTheDocument();
+  const submit = screen.getByRole('button', { name: '단서 배치 실행' });
+  expect(screen.getByLabelText('내 전선 받침대')).toContainElement(submit);
+  expect(screen.getByRole('region', { name: '내 행동' })).not.toContainElement(submit);
+  expect(screen.queryByRole('button', { name: '협력 해체 실행' })).not.toBeInTheDocument();
+  expect(submit).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '나 받침대 1, 2번 전선: 2' }));
-  fireEvent.click(screen.getByRole('button', { name: '2 단서 놓기' }));
+  expect(submit).toBeEnabled();
+  fireEvent.click(submit);
   expect(socketService.bombBustersAction).toHaveBeenCalledWith('room', 'me', { type: 'hint', wireId: 'own-b' });
+  expect(submit).toBeDisabled();
+});
+
+test('dock clue button remains visible but disabled during another player setup turn', () => {
+  show(makeState({ phase: 'setup', currentPlayerId: 'friend' }));
+  const submit = screen.getByRole('button', { name: '단서 배치 실행' });
+  expect(screen.getByLabelText('내 전선 받침대')).toContainElement(submit);
+  expect(submit).toBeDisabled();
+  fireEvent.click(submit);
+  expect(socketService.bombBustersAction).not.toHaveBeenCalled();
 });
 
 test('detector choice is available only for the target player and eligible wire', () => {

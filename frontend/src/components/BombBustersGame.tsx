@@ -84,6 +84,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
   const canSolo = !!ownWire && ownWire.value !== null && !hasReversedRemaining && !isRedValue(ownWire.value) && (sameValueMine.length === 2 || sameValueMine.length === 4)
     && (hideCutCounts || sameValueMine.length + (state.cutCounts[String(ownWire.value)] || 0) === valueTotal);
   const showCutActions = state.phase === 'playing' && !detector && !exchange && !relationEquipmentId && !campaignPending && !campaignControl && mode !== 'reveal_red';
+  const showHintAction = isSetup && !detector && !exchange && !relationEquipmentId && !campaignPending && !campaignControl;
 
   useEffect(() => {
     setOwnWireId(null);
@@ -230,13 +231,19 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
     const mine = player.id === playerId;
     const active = player.id === state.currentPlayerId && !isFinished;
     return <section key={player.id} className={`bb-player ${mine ? 'bb-player-mine' : ''} ${active ? 'bb-player-active' : ''}`}>
-      <div className={`bb-player-heading ${mine && showCutActions ? 'bb-player-heading-actions' : ''}`}>
+      <div className={`bb-player-heading ${mine && (showCutActions || showHintAction) ? 'bb-player-heading-actions' : ''}`}>
         <div className="bb-player-name"><span className="bb-avatar">{state.players.findIndex((p) => p.id === player.id) + 1}</span>
           <h3>{player.name} {mine && <span className="bb-small-tag">나</span>}</h3>
           {player.id === state.captainId && <span className="bb-small-tag">대장</span>}
           {active && <span className="bb-turn-tag">{isSetup ? '단서 배치' : '현재 차례'}</span>}
         </div>
         <span className="bb-player-meta">{isSetup ? player.initialHintPlaced ? '단서 배치 완료' : '단서 배치 전' : `${personalLabel(player.personalEquipmentId)} ${player.detectorUsed ? '사용 완료' : '1회'}`}</span>
+        {mine && showHintAction && <div className="bb-cut-actions">
+          <button type="button" className="bb-cut-action" aria-label="단서 배치 실행" title={ownWire ? state.campaign ? '선택한 전선에 단서 놓기' : `${valueLabel(ownWire.value)} 단서 놓기` : '내 파란 전선을 선택한 뒤 단서를 놓으세요'} disabled={!ownWire || !canAct} onClick={() => ownWire && send({ type: 'hint', wireId: ownWire.id })}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M4 3h16v12l-6 6H4zM14 21v-6h6M8 8h8M8 12h4" /></svg>
+            <span>단서</span>
+          </button>
+        </div>}
         {mine && showCutActions && <div className="bb-cut-actions" role="group" aria-label="전선 해체">
           <button type="button" className="bb-cut-action" aria-label="협력 해체 실행" title="협력 해체 · 내 전선과 동료 전선 선택" disabled={!dualReady} onClick={() => ownWire && target && send({ type: 'dual', ownWireId: ownWire.id, targetPlayerId: target.playerId, targetWireIds: target.wireIds, useDetector, ...(state.xyRayActive && alternativeWireId ? { alternativeWireId } : {}), ...(ownWire.reversed ? { guess: reversedGuess === 'yellow' ? 'yellow' as const : Number(reversedGuess) } : {}) })}>
             <StatusIcon kind="cut" /><span>협력</span>
@@ -379,7 +386,6 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
         {isDetectorChooser && <button className="bb-button bb-button-primary" disabled={!detectorChoice || sending || !connected} onClick={() => detectorChoice && send({ type: 'resolve_detector', wireId: detectorChoice })}>선택한 전선 확정</button>}
       </> : isSetup ? <>
         <p>{state.campaign ? <>위 미션 규칙에 따라 내 전선을 골라 시작 단서를 공개하세요. 미션에 따라 정확한 숫자 대신 홀짝·개수·부정 단서가 놓입니다.</> : <>대장부터 차례대로, 내 받침대에서 <strong>파란 전선 1개</strong>를 골라 같은 숫자의 단서를 공개합니다. 전선은 자르지 않습니다.</>}</p>
-        {isMyTurn && <button className="bb-button bb-button-primary" disabled={!ownWire || !canAct} onClick={() => ownWire && send({ type: 'hint', wireId: ownWire.id })}>{ownWire ? state.campaign ? '선택한 전선에 단서 놓기' : `${valueLabel(ownWire.value)} 단서 놓기` : '아래에서 내 파란 전선을 선택하세요'}</button>}
       </> : <>
         <div className="bb-action-tabs" aria-label="해체 방법">
           {([{ id: 'dual', label: '협력 해체' }, { id: 'solo', label: '단독 해체' }, { id: 'reveal_red', label: '빨간 전선 공개' }] as { id: ActionMode; label: string }[]).map((item) => <button key={item.id} className={mode === item.id ? 'active' : ''} aria-pressed={mode === item.id} onClick={() => { setMode(item.id); setTarget(null); if (item.id !== 'dual') setUseDetector(false); }} disabled={!canAct || (!!armedEquipment && item.id !== 'dual')}>{item.label}</button>)}
