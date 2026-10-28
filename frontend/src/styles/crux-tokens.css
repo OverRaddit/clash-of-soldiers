@@ -1,0 +1,88 @@
+/* Crux — generated from the Crux design system tokens.json. Do not hand-edit values; change the design system and regenerate. */
+:root, [data-theme="day"] {
+  --wall-000: #f3e5cf;
+  --wall-100: #fbf5ea;
+  --wall-200: #e8d6bb;
+  --hairline: #cdb493;
+  --ink: #3a2418;
+  --ink-muted: #6f5240;
+  --chalk: #fffaf0;
+  --hoodie: #b7572a;
+  --hoodie-deep: #8e3f1b;
+  --on-hoodie: #fff8ee;
+  --fur: #4a2c1c;
+  --on-fur: #f7ead6;
+  --code: #286f78;
+  --code-tint: #cfe9ec;
+  --hardware: #5c6067;
+  --hardware-deep: #43474d;
+  --hardware-shine: #c7cbd1;
+  --hold-blue: #2d72c9;
+  --hold-green: #27804a;
+  --hold-orange: #e2731f;
+  --hold-purple: #6f49b8;
+  --hold-pink: #cc2b68;
+  --hold-yellow: #efc132;
+  --hold-red: #c5302b;
+  --hold-lime: #9bc43a;
+  --on-hold: #fffaf0;
+  --on-hold-warm: #3a2418;
+  --rope: var(--hold-blue);
+  --rope-strand: var(--chalk);
+  --focus: var(--hold-blue);
+  --shadow-hold: 0 4px 0 #8e3f1b;
+  --shadow-card: 0 2px 0 #cdb493, 0 8px 20px rgba(58, 36, 24, 0.10);
+  --shadow-hardware: 0 2px 0 #43474d;
+}
+[data-theme="night"] {
+  --wall-000: #1e1712;
+  --wall-100: #2a2119;
+  --wall-200: #36291f;
+  --hairline: #4d3b2c;
+  --ink: #f4e9d9;
+  --ink-muted: #c9b39c;
+  --chalk: #f7ecd9;
+  --hoodie: #d9784a;
+  --hoodie-deep: #b85d33;
+  --on-hoodie: #1e1108;
+  --fur: #e6d3bd;
+  --on-fur: #1e1712;
+  --code: #8fd0d8;
+  --code-tint: #1f4a50;
+  --hardware: #aab0b8;
+  --hardware-deep: #7b828b;
+  --hardware-shine: #d6dadf;
+  --hold-blue: #5a9cf0;
+  --hold-green: #5cc47f;
+  --hold-orange: #f59a4f;
+  --hold-purple: #a98be6;
+  --hold-pink: #f06a9a;
+  --hold-yellow: #f5d05a;
+  --hold-red: #f0655e;
+  --hold-lime: #b9dc5e;
+  --on-hold: #1e1712;
+  --on-hold-warm: #1e1712;
+  --rope: var(--hold-blue);
+  --rope-strand: var(--chalk);
+  --focus: var(--hold-blue);
+  --shadow-hold: 0 4px 0 #b85d33;
+  --shadow-card: 0 2px 0 #4d3b2c, 0 8px 20px rgba(0, 0, 0, 0.45);
+  --shadow-hardware: 0 2px 0 #7b828b;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --font-display: "Jua", "Noto Sans KR", system-ui, sans-serif;
+  --font-sans: "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Noto Sans KR", ui-monospace, monospace;
+}

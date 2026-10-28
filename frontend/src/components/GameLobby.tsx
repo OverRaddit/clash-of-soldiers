@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GameRoom, GameType } from '../types/game.types';
 import apiService from '../services/api.service';
 import socketService from '../services/socket.service';
+import Hold, { HoldColor } from './crux/Hold';
 import './GameLobby.css';
 
 interface GameLobbyProps {
@@ -10,39 +11,11 @@ interface GameLobbyProps {
   onJoinRoom: (room: GameRoom) => void;
 }
 
-const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; maxPlayers: number; color: string; bgColor: string; borderColor: string }> = {
-  'toy-battle': {
-    label: '토이배틀',
-    minPlayers: 2,
-    maxPlayers: 2,
-    color: '#1565c0',
-    bgColor: '#e3f2fd',
-    borderColor: '#90caf9',
-  },
-  'no-touch-kraken': {
-    label: '노터치크라켄',
-    minPlayers: 3,
-    maxPlayers: 8,
-    color: '#2e7d32',
-    bgColor: '#e8f5e9',
-    borderColor: '#a5d6a7',
-  },
-  'bomb-busters': {
-    label: '봄버스터즈',
-    minPlayers: 2,
-    maxPlayers: 5,
-    color: '#b45309',
-    bgColor: '#fff7e6',
-    borderColor: '#f4bd61',
-  },
-  fellowship: {
-    label: '반지 원정대',
-    minPlayers: 1,
-    maxPlayers: 4,
-    color: '#665322',
-    bgColor: '#faf2d8',
-    borderColor: '#c5a96a',
-  },
+const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; maxPlayers: number; hold: HoldColor; meta: string; description: string }> = {
+  'toy-battle': { label: '토이배틀', minPlayers: 2, maxPlayers: 2, hold: 'blue', meta: '2인 · 전략', description: ' — 맵 위에서 병정을 움직여 상대 본진을 점령하는 2인 전략 게임.' },
+  'no-touch-kraken': { label: '노터치크라켄', minPlayers: 3, maxPlayers: 8, hold: 'green', meta: '3–8인 · 블러핑', description: ' — 크라켄 카드를 피해 가며 서로를 속이는 카드 게임.' },
+  'bomb-busters': { label: '봄버스터즈', minPlayers: 2, maxPlayers: 5, hold: 'orange', meta: '2–5인 · 협력 추리', description: ' — 내 전선과 동료의 단서를 연결해 폭탄을 해체하는 협력 추리 게임.' },
+  fellowship: { label: '반지 원정대', minPlayers: 1, maxPlayers: 4, hold: 'purple', meta: '1–4인 · 협력 트릭테이킹', description: ' — 각자 캐릭터의 목표를 함께 달성하며 18개 챕터를 여행하는 협력 트릭테이킹.' },
 };
 
 const GameLobby: React.FC<GameLobbyProps> = ({
@@ -155,170 +128,157 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   }, [onJoinRoom]);
 
   const config = GAME_TYPE_CONFIG[selectedGameType];
+  const statusBadge = (room: GameRoom) => {
+    if (room.players.length >= room.maxPlayers) return <span className="crux-badge crux-badge--red">✕ 마감</span>;
+    if (room.status === 'playing') return <span className="crux-badge crux-badge--yellow">▲ 등반 중</span>;
+    if (room.status !== 'waiting') return <span className="crux-badge">종료</span>;
+    return <span className="crux-badge crux-badge--outline">대기 중</span>;
+  };
 
   return (
-    <div className="game-lobby">
-      <h1>게임 로비</h1>
-
-      <div className="player-info">
-        <h3>플레이어 정보</h3>
-        <p>
-          <strong>ID:</strong> {playerId}
-        </p>
-        <p>
-          <strong>이름:</strong> {playerName}
-        </p>
-      </div>
-
-      {/* 방 생성 */}
-      <div className="create-room-section">
-        <h3>새 방 만들기</h3>
-
-        {/* 게임 타입 선택 */}
-        <div className="game-type-selector">
-          {(Object.keys(GAME_TYPE_CONFIG) as GameType[]).map((type) => {
-            const typeConfig = GAME_TYPE_CONFIG[type];
-            const isSelected = selectedGameType === type;
-            return (
-              <button
-                key={type}
-                onClick={() => handleGameTypeChange(type)}
-                className={`game-type-btn ${isSelected ? 'selected' : ''}`}
-                style={{
-                  backgroundColor: isSelected ? typeConfig.bgColor : '#f8f9fa',
-                  color: isSelected ? typeConfig.color : '#666',
-                  borderColor: isSelected ? typeConfig.borderColor : '#ddd',
-                }}
-              >
-                {typeConfig.label}
-              </button>
-            );
-          })}
+    <main className="crux-main crux-lobby">
+      <div className="crux-page-head">
+        <div className="crux-page-head__text">
+          <h1 className="crux-h1">클라이밍장</h1>
+          <p className="crux-lead">열린 루트에 클립인하거나, 새 루트를 세팅해 친구를 불러오세요.</p>
         </div>
-
-        {/* 토이배틀 외 게임은 방 정원을 선택할 수 있습니다. */}
-        {selectedGameType !== 'toy-battle' && (
-          <div className="max-players-selector">
-            <label>인원 설정: </label>
-            <select
-              value={maxPlayers}
-              onChange={(e) => setMaxPlayers(Number(e.target.value))}
-              className="max-players-select"
-            >
-              {Array.from(
-                { length: config.maxPlayers - config.minPlayers + 1 },
-                (_, i) => config.minPlayers + i
-              ).map((n) => (
-                <option key={n} value={n}>
-                  {n}명
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {selectedGameType === 'bomb-busters' && (
-          <p className="bomb-lobby-description">2–5명이 함께 전선을 해체하는 협력 추리 게임. 내 전선과 동료의 단서를 연결해 폭탄을 해체하세요.</p>
-        )}
-        {selectedGameType === 'fellowship' && (
-          <p className="bomb-lobby-description">1–4명이 각자 캐릭터의 목표를 함께 달성하며 18개 챕터를 여행하는 협력 트릭테이킹 게임입니다.</p>
-        )}
-
-        <div className="create-room-form">
-          <input
-            type="text"
-            placeholder="방 이름을 입력하세요"
-            value={newRoomName}
-            onChange={(e) => setNewRoomName(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && createRoom()}
-            className="room-name-input"
-          />
-          <button
-            onClick={createRoom}
-            disabled={creating}
-            className="create-room-btn"
-          >
-            {creating ? '생성 중...' : '방 만들기'}
-          </button>
+        <div className="crux-row">
+          <span className="crux-badge crux-badge--code">{playerId}</span>
+          <span className="crux-badge">클라이머 {playerName}</span>
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
-
-      {/* 방 목록 */}
-      <div className="room-list-section">
-        <div className="room-list-header">
-          <h3>방 목록</h3>
-          <button
-            onClick={loadRooms}
-            disabled={loading}
-            className="refresh-btn"
-          >
-            {loading ? '로딩 중...' : '새로고침'}
-          </button>
-        </div>
-
-        {rooms.length === 0 ? (
-          <div className="empty-rooms">
-            대기 중인 방이 없습니다.
+      <div className="crux-lobby__columns">
+        {/* 새 루트 세팅 */}
+        <section className="crux-panel crux-lobby__setup" aria-labelledby="crux-setup-title">
+          <div className="crux-page-head__text">
+            <h2 id="crux-setup-title" className="crux-h2">새 루트 세팅</h2>
+            <p className="crux-help">홀드를 하나 고르면 그 게임의 방이 열려요.</p>
           </div>
-        ) : (
-          <div className="rooms-grid">
-            {rooms.map((room) => {
-              const roomTypeConfig = GAME_TYPE_CONFIG[room.gameType] || GAME_TYPE_CONFIG['toy-battle'];
+
+          <div className="crux-lobby__games" role="radiogroup" aria-label="게임 선택">
+            {(Object.keys(GAME_TYPE_CONFIG) as GameType[]).map((type) => {
+              const typeConfig = GAME_TYPE_CONFIG[type];
+              const isSelected = selectedGameType === type;
               return (
-                <div key={room.id} className="room-card">
-                  <div className="room-info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <h4 style={{ margin: 0 }}>{room.name}</h4>
-                      <span
-                        className="game-type-badge"
-                        style={{
-                          backgroundColor: roomTypeConfig.bgColor,
-                          color: roomTypeConfig.color,
-                          border: `1px solid ${roomTypeConfig.borderColor}`,
-                        }}
-                      >
-                        {roomTypeConfig.label}
-                      </span>
-                    </div>
-                    <p className="room-details">
-                      플레이어: {room.players.length}/{room.maxPlayers} | 상태:{' '}
-                      {room.status === 'waiting'
-                        ? '대기 중'
-                        : room.status === 'playing'
-                        ? '게임 중'
-                        : '종료'}{' '}
-                      | 방장:{' '}
-                      {room.players.find((p) => p.isHost)?.name || '알 수 없음'}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => joinRoom(room.id)}
-                    disabled={
-                      room.players.length >= room.maxPlayers ||
-                      room.status !== 'waiting'
-                    }
-                    className="join-room-btn"
-                  >
-                    {room.players.length >= room.maxPlayers
-                      ? '가득참'
-                      : room.status !== 'waiting'
-                      ? '진행중'
-                      : '참여'}
-                  </button>
-                </div>
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleGameTypeChange(type)}
+                  className="crux-holdcard crux-holdcard--compact"
+                  aria-pressed={isSelected}
+                >
+                  <Hold color={typeConfig.hold} seed={type} size={48} />
+                  <span>
+                    <h3 className="crux-holdcard__title">{typeConfig.label}</h3>
+                    <p className="crux-holdcard__meta">{typeConfig.meta}</p>
+                  </span>
+                </button>
               );
             })}
           </div>
-        )}
+
+          <div className="crux-banner crux-banner--info" style={{ fontSize: 13, lineHeight: '18px' }}>
+            <Hold color={config.hold} seed={selectedGameType} size={28} style={{ flex: 'none' }} />
+            <span><strong>{config.label}</strong>{config.description}</span>
+          </div>
+
+          <div className="crux-lobby__form">
+            <label className="crux-field" style={{ flex: '2 1 200px' }}>
+              <span className="crux-label">루트 이름</span>
+              <input
+                type="text"
+                placeholder="예: 목요일 저녁 해체반"
+                value={newRoomName}
+                onChange={(e) => setNewRoomName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && createRoom()}
+                className="crux-input"
+              />
+            </label>
+            <label className="crux-field" style={{ flex: '1 1 120px' }}>
+              <span className="crux-label">최대 인원</span>
+              <select
+                value={maxPlayers}
+                onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                className="crux-input"
+                disabled={selectedGameType === 'toy-battle'}
+              >
+                {Array.from(
+                  { length: config.maxPlayers - config.minPlayers + 1 },
+                  (_, i) => config.minPlayers + i
+                ).map((n) => (
+                  <option key={n} value={n}>{n}명</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {error && <div className="crux-banner crux-banner--error" role="alert">✕ {error}</div>}
+
+          <div className="crux-lobby__actions">
+            <span className="crux-help">방을 만들면 바로 벨레이 스테이션으로 이동해요.</span>
+            <button onClick={createRoom} disabled={creating} className="crux-btn crux-btn--primary crux-btn--lg">
+              {creating ? '세팅 중…' : '루트 세팅'}
+            </button>
+          </div>
+        </section>
+
+        {/* 열린 루트 */}
+        <section className="crux-lobby__open" aria-labelledby="crux-open-title">
+          <div className="crux-section-head">
+            <h2 id="crux-open-title" className="crux-h2">열린 루트 <small>{rooms.length}</small></h2>
+            <div className="crux-row">
+              <span className="crux-help">5초마다 새로고침</span>
+              <button onClick={loadRooms} disabled={loading} className="crux-btn crux-btn--secondary crux-btn--sm">
+                {loading ? '불러오는 중…' : '새로고침'}
+              </button>
+            </div>
+          </div>
+          <div className="crux-rope crux-rope--thin" role="presentation" />
+
+          <div className="crux-lobby__routes">
+            {rooms.map((room) => {
+              const roomTypeConfig = GAME_TYPE_CONFIG[room.gameType] || GAME_TYPE_CONFIG['toy-battle'];
+              const host = room.players.find((p) => p.isHost);
+              const others = room.players.length - 1;
+              const full = room.players.length >= room.maxPlayers;
+              return (
+                <article key={room.id} className="crux-route" style={{ ['--route-color' as string]: `var(--hold-${roomTypeConfig.hold})` }}>
+                  <div className="crux-route__head">
+                    <h3 className="crux-route__name">{room.name}</h3>
+                    <span className={`crux-badge crux-badge--${roomTypeConfig.hold}`}>{roomTypeConfig.label}</span>
+                  </div>
+                  <div className="crux-route__meta">
+                    <span className="crux-badge">{room.players.length}/{room.maxPlayers}인</span>
+                    {statusBadge(room)}
+                    <span className="crux-badge crux-badge--code">{room.id.slice(0, 12)}</span>
+                  </div>
+                  <div className="crux-route__foot">
+                    <span className={`crux-climber${host ? ' crux-climber--host' : ''}`}>
+                      <span className="crux-climber__avatar">{(host?.name || '?').slice(0, 1)}</span>
+                      {host?.name || '알 수 없음'}{others > 0 ? ` 외 ${others}명` : ''}
+                    </span>
+                    <button
+                      onClick={() => joinRoom(room.id)}
+                      disabled={full || room.status !== 'waiting'}
+                      className={`crux-btn crux-btn--sm ${full || room.status !== 'waiting' ? 'crux-btn--secondary' : 'crux-btn--primary'}`}
+                    >
+                      {full ? '마감' : room.status !== 'waiting' ? '등반 중' : '클립인'}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+            {rooms.length === 0 && (
+              <div className="crux-empty">
+                <img src="/mascot/dambi-peek.png" alt="" />
+                <span className="crux-help">빈 벽이에요. 새 루트를 세팅해 보세요.</span>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 
