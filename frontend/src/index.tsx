@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import './styles/crux-tokens.css';
+import './styles/crux.css';
+import './styles/crux-app.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

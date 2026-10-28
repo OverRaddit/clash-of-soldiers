@@ -1,0 +1,97 @@
+/* Crux — app-level layout on top of crux.css (page shells, entry screen, lobby, waiting room). */
+
+html, body, #root { min-height: 100%; }
+body { background: var(--wall-000); color: var(--ink); font-family: var(--font-sans); }
+.crux-app { min-height: 100vh; display: flex; flex-direction: column; }
+.crux-main { flex: 1 1 auto; width: 100%; max-width: 1180px; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-16); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-8); }
+
+/* RopeBar in the app */
+.crux-ropebar__row--app { max-width: 1180px; margin: 0 auto; width: 100%; box-sizing: border-box; flex-wrap: wrap; }
+.crux-ropebar__spacer { margin-left: auto; }
+.crux-ropebar--compact .crux-ropebar__row { padding: var(--space-2) var(--space-4); }
+.crux-ropebar--compact .crux-ropebar__brand { font-size: 18px; line-height: 24px; }
+.crux-climber--avatar { padding-left: 2px; }
+.crux-climber--avatar .crux-mascot--avatar { width: 24px; height: 24px; border: 0; }
+.crux-ropebar .crux-btn--ghost { color: var(--on-fur); }
+
+/* headings */
+.crux-h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 42px; }
+.crux-h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 30px; }
+.crux-h2 small { font-family: var(--font-sans); font-size: 15px; color: var(--ink-muted); font-weight: 500; }
+.crux-lead { margin: 0; font-size: 15px; line-height: 24px; color: var(--ink-muted); }
+.crux-page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.crux-page-head__text { display: flex; flex-direction: column; gap: var(--space-1); }
+.crux-row { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.crux-stack { display: flex; flex-direction: column; gap: var(--space-4); }
+.crux-section-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.crux-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- entry (name) screen ---------- */
+.crux-entry { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--space-12) var(--space-4); box-sizing: border-box; }
+.crux-entry__panel { width: 100%; max-width: 1080px; display: flex; flex-wrap: wrap; gap: 40px; align-items: stretch; padding: var(--space-8); box-sizing: border-box; }
+.crux-entry__wall { flex: 1 1 380px; min-width: 0; min-height: 520px; overflow: hidden; }
+.crux-entry__mascot { position: absolute; bottom: -6px; left: 50%; transform: translateX(-44%); height: 460px; width: auto; display: block; }
+.crux-entry__copy { flex: 1 1 400px; display: flex; flex-direction: column; justify-content: center; gap: var(--space-6); min-width: 0; padding: var(--space-2) 0; }
+.crux-entry__title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 56px; line-height: 60px; }
+.crux-entry__form { display: flex; flex-direction: column; gap: var(--space-4); max-width: 420px; }
+.crux-entry__routes { display: flex; flex-direction: column; gap: 10px; padding-top: 20px; border-top: 2px solid var(--hairline); max-width: 420px; }
+.crux-entry__games { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: flex-end; }
+.crux-entry__game { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; }
+.crux-entry__footer { padding: var(--space-2) var(--space-6) var(--space-6); display: flex; justify-content: center; gap: var(--space-4); font-size: 13px; line-height: 18px; color: var(--ink-muted); flex-wrap: wrap; }
+.crux-restore { margin: var(--space-4) auto 0; width: 100%; max-width: 1180px; box-sizing: border-box; padding: 0 var(--space-6); }
+
+/* ---------- lobby ---------- */
+.crux-lobby__columns { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: flex-start; }
+.crux-lobby__setup { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-6); box-sizing: border-box; }
+.crux-lobby__open { flex: 2 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.crux-lobby__games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.crux-lobby__form { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.crux-lobby__actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.crux-lobby__routes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.crux-empty { border: 2px dashed var(--hairline); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--space-2); text-align: center; color: var(--ink-muted); min-height: 180px; grid-column: 1 / -1; }
+.crux-empty img { width: 140px; height: auto; display: block; }
+.crux-holdcard--compact { grid-template-columns: 48px 1fr; padding: var(--space-3); }
+.crux-holdcard--compact .crux-holdcard__title { font-size: 16px; line-height: 22px; }
+
+/* ---------- waiting room (belay station) ---------- */
+.crux-wait__rope { position: relative; padding: var(--space-3) 0; }
+.crux-wait__rope .crux-rope { position: absolute; left: 0; right: 0; top: 50%; margin-top: -3px; }
+.crux-wait__climbers { position: relative; display: flex; gap: var(--space-6); flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 0 var(--space-2); }
+.crux-wait__climbers .crux-climber { background: var(--wall-100); }
+.crux-climber--empty { border-style: dashed; color: var(--ink-muted); }
+.crux-climber--empty .crux-climber__avatar { background: var(--wall-200); color: var(--hardware); }
+.crux-wait__columns { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: flex-start; }
+.crux-wait__options { flex: 2 1 520px; min-width: 0; gap: var(--space-4); padding: var(--space-6) var(--space-6) var(--space-6) var(--space-8); }
+.crux-wait__check { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); }
+.crux-checklist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-2); font-size: 15px; line-height: 24px; }
+.crux-checklist li { display: flex; gap: var(--space-2); align-items: flex-start; }
+.crux-wait__mascot { display: flex; gap: var(--space-3); align-items: flex-end; background: var(--wall-200); border-radius: var(--radius-md); padding: var(--space-3) var(--space-3) 0; }
+.crux-wait__mascot img { height: 150px; width: auto; flex: none; display: block; }
+.crux-wait__mascot p { margin: 0 0 var(--space-4); font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.crux-wait__foot { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding-top: var(--space-6); border-top: 2px solid var(--hairline); }
+.crux-mission-note { margin: 0; font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.crux-mission-info { background: var(--wall-200); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 13px; line-height: 18px; }
+.crux-mission-info p { margin: var(--space-1) 0; }
+.crux-mission-info ul { margin: var(--space-2) 0 0; padding-left: 20px; }
+
+/* ---------- phone ---------- */
+@media (max-width: 640px) {
+  .crux-main { padding: var(--space-6) var(--space-4) 120px; gap: var(--space-6); }
+  .crux-h1 { font-size: 30px; line-height: 36px; }
+  .crux-entry { padding: var(--space-4); align-items: flex-start; }
+  .crux-entry__panel { padding: var(--space-4); gap: var(--space-5, 20px); }
+  .crux-entry__wall { min-height: 280px; flex-basis: 100%; }
+  .crux-entry__mascot { height: 300px; transform: translateX(-50%); }
+  .crux-entry__title { font-size: 36px; line-height: 42px; }
+  .crux-entry__form .crux-btn { justify-content: center; }
+  .crux-entry__games { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+  .crux-entry__game { font-size: 12px; line-height: 16px; text-align: center; }
+  .crux-lobby__routes { grid-template-columns: 1fr; }
+  .crux-lobby__games { grid-template-columns: 1fr; gap: var(--space-2); }
+  .crux-wait__climbers { flex-direction: column; align-items: flex-start; padding-left: 14px; gap: 10px; }
+  .crux-wait__rope .crux-rope { left: 10px; right: auto; top: 0; bottom: 0; width: 4px; height: auto; margin: 0; background-size: 4px 12px; background-image: repeating-linear-gradient(30deg, rgba(0,0,0,0) 0 7px, var(--rope-strand) 7px 10px); }
+  .crux-wait__options { padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6); }
+  .crux-wait__foot { position: fixed; left: 0; right: 0; bottom: 0; background: var(--wall-100); border-top: 2px solid var(--hairline); padding: var(--space-3) var(--space-4); margin: 0; z-index: 5; justify-content: stretch; }
+  .crux-wait__foot .crux-btn--primary { flex: 1 1 auto; justify-content: center; }
+  .crux-wait__foot .crux-help { display: none; }
+}

@@ -16,13 +16,13 @@ beforeEach(() => jest.clearAllMocks());
 test('waits for the server mission catalog before allowing a start', () => {
   render(<WaitingRoom {...props} />);
   expect(screen.getByRole('combobox', { name: '봄버스터즈 임무 선택' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: '게임 시작' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '등반 시작' })).toBeDisabled();
 });
 
 test('shows server-resolved two-player setup and sends only the selected mission ID', () => {
   render(<WaitingRoom {...props} missionId={4} missions={[training, { ...training, id: 8, name: '최종 시험' }]} />);
   expect(screen.getByLabelText('선택한 미션 안내')).toHaveTextContent('노랑 4개 / 후보 4개');
-  expect(screen.getByRole('button', { name: '게임 시작' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '등반 시작' })).toBeEnabled();
   fireEvent.change(screen.getByRole('combobox', { name: '봄버스터즈 임무 선택' }), { target: { value: '8' } });
   expect(props.onMissionChange).toHaveBeenCalledWith(8);
 });
@@ -35,7 +35,7 @@ test('guests see the same selected mission without a selection control', () => {
 
 test('respects mission-specific minimum player count', () => {
   render(<WaitingRoom {...props} missionId={34} missions={[{ ...training, id: 34, minPlayers: 3 }]} />);
-  expect(screen.getByRole('button', { name: '게임 시작' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '등반 시작' })).toBeDisabled();
   expect(screen.getByText('게임을 시작하려면 최소 3명의 플레이어가 필요합니다.')).toBeInTheDocument();
 });
 
@@ -49,7 +49,7 @@ test('lets a solo fellowship host pick a chapter from the server catalog', () =>
     ],
   };
   render(<WaitingRoom {...props} room={fellowshipRoom} onFellowshipChapterChange={onFellowshipChapterChange} />);
-  expect(screen.getByRole('button', { name: '게임 시작' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '등반 시작' })).toBeEnabled();
   fireEvent.change(screen.getByRole('combobox', { name: '반지 원정대 챕터 선택' }), { target: { value: '2' } });
   expect(onFellowshipChapterChange).toHaveBeenCalledWith(2);
 });
