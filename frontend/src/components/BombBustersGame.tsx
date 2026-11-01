@@ -4,6 +4,7 @@ import { BombBustersAction, BombBustersClientState, BombClientPlayer, BombClient
 import socketService from '../services/socket.service';
 import './BombBustersGame.css';
 import './BombBustersRacks.css';
+import './BombBustersTheme.css';
 import BombBustersEquipment from './BombBustersEquipment';
 import BombBustersCampaign from './BombBustersCampaign';
 import BombBustersValidationBoard from './BombBustersValidationBoard';
@@ -371,13 +372,14 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
 
     <div className="bb-game-scroll" role="region" aria-label="작전 보드" tabIndex={0}>
     <header className="bb-header">
-      <div><p className="bb-eyebrow">BOMB BUSTERS · COOPERATIVE MISSION</p><h1>봄버스터즈 <span>해체반 작전실</span></h1><p className="bb-room-name">{room.name} · {state.players.length}인 협력 · 대장 {captain?.name}</p></div>
-      <button className="bb-button bb-button-quiet" onClick={onLeaveRoom}>방 나가기</button>
+      <div><p className="bb-eyebrow">BOMB BUSTERS · COOPERATIVE MISSION</p><h1>해체반 작전실 <span>봄버스터즈</span></h1><p className="bb-room-name">{room.name} · {state.players.length}인 협력 · 대장 {captain?.name}</p></div>
+      <button className="bb-button bb-button-quiet" onClick={onLeaveRoom}>로프 풀기 <span style={{ fontWeight: 400, opacity: .8 }}>(방 나가기)</span></button>
     </header>
 
     {!connected && <div className="bb-notice bb-notice-error" role="alert">연결이 끊어졌습니다. 다시 연결되면 작전 상태를 복구합니다.</div>}
     {message && <div className={`bb-notice ${messageType === 'error' ? 'bb-notice-error' : ''}`} role={messageType === 'error' ? 'alert' : 'status'}>{message}</div>}
 
+    <div className="bb-columns"><div className="bb-col-main">
     <div className="bb-mission-context">
       <details className="bb-mission-details"><summary>미션 안내</summary><p>{state.mission.description}</p></details>
       {state.mission.id !== 50 && <>
@@ -414,6 +416,8 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       })}</ul><p>교환 완료 시점의 위치이며, 전선의 값은 새 소유자에게만 보입니다.</p></div>}
     </section>}
 
+    <div className="bb-players">{orderedPlayers.filter((player) => player.id !== playerId).map(renderPlayer)}</div>
+    </div><div className="bb-col-side">
     {isFinished ? <section className={`bb-result ${state.outcome === 'won' ? 'bb-result-won' : ''}`} role="status">
       <span className="bb-eyebrow">MISSION {state.outcome === 'won' ? 'COMPLETE' : 'FAILED'}</span>
       <h2>{state.outcome === 'won' ? '폭탄 해체 성공!' : '작전 실패'}</h2><p>{state.endReason}</p>
@@ -456,7 +460,6 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       </>}
     </section>}
 
-    <div className="bb-players">{orderedPlayers.filter((player) => player.id !== playerId).map(renderPlayer)}</div>
 
     <BombBustersEquipment state={state} playerId={playerId} disabled={!canUseEquipment || !!relationEquipmentId} onAction={send} onSelectRelation={(equipmentId) => { setRelationEquipmentId(equipmentId); setRelationWireIds([]); setOwnWireId(null); setTarget(null); }} />
 
@@ -470,6 +473,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       <li>숫자·색깔·위치에 관한 비공개 정보를 말하거나 몸짓으로 암시하지 마세요. 게임이 허용한 선언과 공개 단서로만 추리합니다.</li>
     </ol><p>빨간 전선을 제외한 모든 전선을 해체하면 함께 승리합니다. 기폭 한도에 도달하거나 빨간 전선을 자르면 함께 패배합니다.</p></details>
     <section className="bb-log"><h2>작전 기록</h2><ol aria-live="polite">{state.log.slice(-8).reverse().map((entry, index) => <li key={`${state.log.length - index}-${entry}`}>{entry}</li>)}</ol></section></div>
+    </div></div>
     </div>
     {me && <footer className="bb-own-dock" aria-label="내 전선 받침대">
       {campaignControl?.wireSelection && <div className="bb-wire-selection-tray"><span>{campaignControl.label} · <strong>{campaignWireIds.length}/{campaignControl.wireSelection.max}개 선택</strong></span><button className="bb-button bb-button-primary" onClick={() => campaignRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })}>미션 선택 확인하기 ↑</button></div>}
