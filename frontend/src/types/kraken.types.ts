@@ -20,9 +20,10 @@ export interface LastRevealedCardInfo {
   cardIndex: number;
 }
 
+/** Seat colours = the Crux hold palette (blue, orange, green, purple, yellow, red, teal, pink). */
 export const PLAYER_COLORS = [
-  '#4fc3f7', '#ff7043', '#66bb6a', '#ab47bc',
-  '#ffd54f', '#ef5350', '#26c6da', '#ec407a',
+  '#2d72c9', '#e2731f', '#27804a', '#6f49b8',
+  '#efc132', '#c5302b', '#286f78', '#cc2b68',
 ];
 
 export interface ChatMessage {

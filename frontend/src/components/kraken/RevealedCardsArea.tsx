@@ -6,12 +6,11 @@ interface RevealedCardsAreaProps {
   currentRound: number;
 }
 
-const getCardEmoji = (type: KrakenCardType): string => {
+const getCardImage = (type: KrakenCardType): string => {
   switch (type) {
-    case 'treasure': return '💎';
-    case 'kraken': return '🐙';
-    case 'empty': return '📦';
-    default: return '❓';
+    case 'treasure': return '/kraken/card-treasure.png';
+    case 'kraken': return '/kraken/card-kraken.png';
+    default: return '/kraken/card-empty.png';
   }
 };
 
@@ -51,6 +50,11 @@ const RevealedCardsArea: React.FC<RevealedCardsAreaProps> = ({
       <div className="revealed-header">
         공개된 카드 ({revealedCards.length}장)
       </div>
+      <div className="revealed-tally" aria-label="종류별 공개 수">
+        <span className="crux-badge crux-badge--yellow">◆ 보물 {revealedCards.filter((card) => card.cardType === 'treasure').length}</span>
+        <span className="crux-badge">빈 상자 {revealedCards.filter((card) => card.cardType === 'empty').length}</span>
+        <span className={`crux-badge ${revealedCards.some((card) => card.cardType === 'kraken') ? 'crux-badge--red' : 'crux-badge--outline'}`}>크라켄 {revealedCards.filter((card) => card.cardType === 'kraken').length}</span>
+      </div>
       <div className="revealed-rounds-container">
         {rounds.map((round) => (
           <div key={round} className="revealed-round-group">
@@ -61,7 +65,7 @@ const RevealedCardsArea: React.FC<RevealedCardsAreaProps> = ({
                   key={idx}
                   className={`revealed-card-item ${card.cardType}`}
                 >
-                  <span className="revealed-card-emoji">{getCardEmoji(card.cardType)}</span>
+                  <img src={getCardImage(card.cardType)} alt="" />
                   <span className="revealed-card-label">{getCardLabel(card.cardType)}</span>
                 </div>
               ))}

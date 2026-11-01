@@ -9,6 +9,7 @@ import CardRevealAnimation from './kraken/CardRevealAnimation';
 import RoundEndOverlay from './kraken/RoundEndOverlay';
 import GameEndOverlay from './kraken/GameEndOverlay';
 import './KrakenGame.css';
+import './KrakenTheme.css';
 
 interface KrakenGameProps {
   room: GameRoomType;
@@ -219,21 +220,39 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
           <span className="kraken-room-name">{room.name}</span>
         </div>
         <button onClick={onLeaveRoom} className="leave-room-btn">
-          나가기
+          로프 풀기
         </button>
       </div>
 
       {/* Status Bar */}
       <div className="kraken-status-bar">
         <span className="status-item">라운드 {krakenState.currentRound}/4</span>
-        <span className="status-divider">|</span>
-        <span className="status-item">액션 {krakenState.actionsThisRound}/{krakenState.totalActionsPerRound}</span>
-        <span className="status-divider">|</span>
+        <div className="kr-track" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={krakenState.currentRound} aria-label="라운드 진행">
+          <div className="kr-track__rope">
+            <span className="kr-track__done" style={{ width: `${8 + (Math.max(1, krakenState.currentRound) - 1) * 28}%` }} />
+            {[1, 2, 3, 4].map((round) => <span key={round} className={`kr-track__pin ${round < krakenState.currentRound ? 'kr-track__pin--done' : round === krakenState.currentRound ? 'kr-track__pin--now' : ''}`} style={{ left: `${8 + (round - 1) * 28}%` }}>{round}</span>)}
+          </div>
+        </div>
+        <span className="status-item">액션 {krakenState.actionsThisRound}/{krakenState.totalActionsPerRound}
+          <span className="kr-actions" aria-hidden="true">{Array.from({ length: Math.max(0, krakenState.totalActionsPerRound) }, (_, i) => <i key={i} className={i < krakenState.actionsThisRound ? 'on' : ''} />)}</span>
+        </span>
         <span className="status-item phase">{phaseLabel}</span>
       </div>
 
       {/* Main Game Area */}
       <div className="kraken-main-layout">
+        {/* Message */}
+        {message && (
+          <div className={`game-message ${messageType}`}>
+            {message}
+          </div>
+        )}
+        {/* Card table — a night-theme island so the card art sits on a dark surface */}
+        <section className="kraken-table" data-theme="night" aria-label="탐험 카드 테이블">
+        <div className="kraken-table__head">
+          <h3>탐험 카드</h3>
+          <span className="kraken-table__hint">카드를 눌러 고르고, 꾹 누르면(우클릭) 핑을 보내요 · 내 카드는 고를 수 없어요</span>
+        </div>
         {/* All Players' Cards (including self) */}
         <PlayerCardsArea
           otherPlayers={krakenState.otherPlayers}
@@ -258,18 +277,22 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
           onSetClaim={handleSetClaim}
         />
 
-        {/* Confirm Button */}
-        {isMyTurn && krakenState.gamePhase === 'discussing' && hasSelection && (
-          <div className="kraken-confirm-section">
-            <button
-              className="kraken-confirm-btn"
-              onClick={handleConfirmReveal}
-            >
-              확정 (카드 공개)
-            </button>
-          </div>
-        )}
+        {/* Confirm bar */}
+        {isMyTurn && krakenState.gamePhase === 'discussing' && hasSelection && krakenState.selectedCard && (() => {
+          const sel = krakenState.selectedCard;
+          const owner = krakenState.otherPlayers.find(p => p.id === sel.targetPlayerId)?.name || '동료';
+          const pings = activePings.filter(p => p.targetPlayerId === sel.targetPlayerId && p.cardIndex === sel.cardIndex);
+          const count = (type: PingType) => pings.filter(p => p.pingType === type).length;
+          const summary = pings.length ? [count('treasure') && `보물 ${count('treasure')}`, count('kraken') && `크라켄 ${count('kraken')}`, count('avoid') && `빽 ${count('avoid')}`].filter(Boolean).join(' · ') + ' 핑' : '이 카드에 온 핑은 없어요';
+          return <div className="kraken-confirm-section" role="status">
+            <img className="kraken-confirm-cap" src="/kraken/card-back.png" alt="" />
+            <div className="kraken-confirm-text"><strong>{owner}의 {sel.cardIndex + 1}번째 카드</strong><small>{summary} · 확정하면 모두에게 공개돼요</small></div>
+            <button className="kraken-confirm-btn" onClick={handleConfirmReveal}>확정 · 카드 공개</button>
+          </div>;
+        })()}
+        </section>
 
+        <div className="kraken-side">
         {/* Revealed Cards */}
         <RevealedCardsArea
           revealedCards={krakenState.revealedCards}
@@ -282,13 +305,7 @@ const KrakenGame: React.FC<KrakenGameProps> = ({
           onSendMessage={handleSendChat}
           playerId={playerId}
         />
-
-        {/* Message */}
-        {message && (
-          <div className={`game-message ${messageType}`}>
-            {message}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Card Reveal Animation */}
