@@ -1,0 +1,168 @@
+/* No Touch Kraken — Crux theme. Loaded after KrakenGame.css; overrides by specificity (.kraken-game …).
+   The card table is a night-theme island ([data-theme="night"]); the rest of the screen stays on the day theme. */
+
+.kraken-game { height: auto; max-height: none; min-height: 0; overflow: visible; background: none; color: var(--ink); font-family: var(--font-sans); width: 100%; max-width: 1232px; margin: 0 auto; padding: 12px 24px 24px; box-sizing: border-box; gap: 12px; }
+.kraken-game *, .kraken-game *::before, .kraken-game *::after { box-sizing: border-box; }
+.kraken-game button { font: inherit; }
+.kraken-game button:focus-visible, .kraken-game input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* header strip */
+.kraken-game .kraken-header { padding: 0 2px; background: none; border: 0; }
+.kraken-game .kraken-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 28px; color: var(--ink); }
+.kraken-game .kraken-room-name { font-size: 13px; color: var(--ink-muted); }
+.kraken-game .leave-room-btn { padding: 8px 14px; border: 2px solid var(--hardware); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); font-size: 13px; font-weight: 700; box-shadow: 0 2px 0 var(--hardware-deep); cursor: pointer; }
+.kraken-game .leave-room-btn:hover { background: var(--wall-200); }
+
+/* status: round track + action dots */
+.kraken-game .kraken-status-bar { justify-content: flex-start; flex-wrap: wrap; gap: 10px 14px; padding: 12px 16px; border: 2px solid var(--hairline); border-radius: var(--radius-lg); background: var(--wall-100); box-shadow: var(--shadow-card); font-size: 13px; color: var(--ink); }
+.kraken-game .status-divider { display: none; }
+.kraken-game .status-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--wall-200); font-weight: 500; }
+.kraken-game .status-item.phase { background: var(--hold-orange); color: var(--on-hold-warm); font-weight: 700; }
+.kraken-game .kr-track { flex: 1 1 220px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kraken-game .kr-track__rope { position: relative; flex: 1; height: 6px; border-radius: 999px; background: var(--hairline); }
+.kraken-game .kr-track__done { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--rope); background-image: repeating-linear-gradient(-60deg, rgba(0,0,0,0) 0 7px, var(--rope-strand) 7px 10px); }
+.kraken-game .kr-track__pin { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--wall-100); border: 2px solid var(--hardware); color: var(--ink-muted); }
+.kraken-game .kr-track__pin--done { background: var(--hold-green); border-color: var(--hold-green); color: var(--on-hold); }
+.kraken-game .kr-track__pin--now { background: var(--hoodie); border-color: var(--hoodie); color: var(--on-hoodie); box-shadow: 0 0 0 3px var(--wall-100), 0 0 0 5px var(--hoodie); }
+.kraken-game .kr-actions { display: inline-flex; gap: 4px; }
+.kraken-game .kr-actions i { width: 10px; height: 10px; border-radius: 999px; background: var(--hairline); }
+.kraken-game .kr-actions i.on { background: var(--hold-blue); }
+
+/* two columns */
+.kraken-game .kraken-main-layout { overflow: visible; padding: 0; display: flex; flex-direction: row; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.kraken-game .kraken-table { flex: 999 1 600px; min-width: 0; display: grid; gap: 10px; padding: 14px; border: 2px solid var(--hairline); border-radius: var(--radius-lg); background: var(--wall-100); color: var(--ink); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.kraken-game .kraken-table__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kraken-game .kraken-table__head h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 18px; line-height: 24px; }
+.kraken-game .kraken-table__hint { font-size: 12px; color: var(--ink-muted); }
+.kraken-game .kraken-side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.kraken-game .kraken-main-layout > .game-message { flex-basis: 100%; order: -1; margin: 0; border-radius: var(--radius-md); background: var(--code-tint); color: var(--ink); border: 0; box-shadow: none; animation: none; padding: 10px 14px; font-size: 14px; font-weight: 500; text-align: left; }
+.kraken-game .kraken-main-layout > .game-message.error { background: var(--hold-red); color: var(--on-hold); }
+
+/* player rows */
+.kraken-game .kraken-players-area { gap: 8px; }
+.kraken-game .player-row { background: var(--wall-200); border: 2px solid var(--hairline); border-radius: 12px; }
+.kraken-game .player-row--self { background: var(--wall-000); }
+.kraken-game .player-row--active { border-color: var(--hoodie); box-shadow: 0 0 0 3px rgba(217,120,74,.25); background: var(--wall-200); }
+.kraken-game .player-stripe { width: 6px; border-radius: 999px; margin: 8px 0 8px 8px; }
+.kraken-game .player-content { padding: 10px 12px 10px 10px; display: grid; gap: 8px; flex: 1; min-width: 0; }
+.kraken-game .player-identity { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.kraken-game .player-identity-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kraken-game .player-nickname { font-size: 14px; font-weight: 700; color: var(--ink); }
+.kraken-game .player-me-tag { margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--wall-100); color: var(--ink-muted); font-size: 11px; font-weight: 700; }
+.kraken-game .action-marker { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--hoodie); color: var(--on-hoodie); font-size: 11px; font-weight: 700; }
+.kraken-game .action-marker-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--on-hoodie); animation: kr-pulse 1.4s infinite; }
+@keyframes kr-pulse { 50% { opacity: .35; } }
+.kraken-game .player-role-badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--wall-100); color: var(--ink); }
+.kraken-game .player-role-badge.explorer { background: var(--hold-blue); color: var(--on-hold); }
+.kraken-game .player-role-badge.skeleton { background: var(--hold-red); color: var(--on-hold); }
+.kraken-game .player-composition, .kraken-game .player-claim-chips { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+.kraken-game .comp-chip, .kraken-game .player-claim-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 3px; border-radius: 999px; background: var(--wall-100); border: 2px solid var(--hairline); color: var(--ink); font-size: 12px; font-weight: 700; line-height: 16px; }
+.kraken-game .comp-chip img, .kraken-game .player-claim-chip img, .kraken-game .claim-value img, .kraken-game .claim-toggle img { width: 14px; height: 20px; border-radius: 3px; object-fit: cover; }
+.kraken-game .comp-chip-treasure, .kraken-game .player-claim-chip.treasure { border-color: var(--hold-yellow); }
+.kraken-game .comp-chip-kraken, .kraken-game .player-claim-chip.kraken { border-color: var(--hold-red); }
+.kraken-game .comp-chip-empty, .kraken-game .player-claim-chip.no-kraken { color: var(--ink-muted); }
+
+/* cards */
+.kraken-game .player-cards-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; min-height: 0; }
+.kraken-game .card-slot { width: 52px; height: 73px; border-radius: 6px; transition: transform .12s; }
+.kraken-game .card-slot-img { width: 100%; height: 100%; border-radius: 6px; object-fit: cover; box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 6px 12px rgba(0,0,0,.35); }
+.kraken-game .card-slot--self .card-slot-img { outline: 2px solid var(--card-accent, var(--hold-blue)); outline-offset: -2px; }
+.kraken-game .card-slot--clickable { cursor: pointer; }
+.kraken-game .card-slot--clickable:hover { transform: translateY(-6px); }
+.kraken-game .card-slot--selected { transform: translateY(-8px); }
+.kraken-game .card-slot--selected .card-slot-img { outline: 3px solid var(--hoodie); outline-offset: 2px; }
+.kraken-game .card-slot--selector-open { z-index: 30; }
+.kraken-game .no-cards-text { font-size: 12px; color: var(--ink-muted); }
+
+/* pings */
+.kraken-game .ping-indicators { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); display: flex; gap: 2px; z-index: 2; }
+.kraken-game .ping-indicator { width: 18px; height: 18px; border-radius: 999px; display: grid; place-items: center; padding: 0; border: 2px solid var(--wall-100) !important; background: var(--wall-200); font-size: 10px; font-weight: 700; line-height: 1; }
+.kraken-game .ping-indicator .ping-dot, .kraken-game .ping-indicator .ping-name { display: none; }
+.kraken-game .ping-indicator .ping-emoji { font-size: 10px; }
+.kraken-game .ping-indicator.treasure { background: var(--hold-yellow); color: var(--on-hold-warm); }
+.kraken-game .ping-indicator.kraken { background: var(--hold-red); color: var(--on-hold); }
+.kraken-game .ping-indicator.avoid { background: var(--hardware); color: var(--wall-100); }
+.kraken-game .ping-selector { position: absolute; left: 50%; bottom: calc(100% + 10px); top: auto; transform: translateX(-50%); z-index: 40; display: flex; gap: 4px; padding: 6px; border-radius: 12px; background: var(--wall-100); border: 2px solid var(--hoodie); box-shadow: 0 8px 20px rgba(0,0,0,.4); width: auto; min-width: 0; }
+.kraken-game .ping-selector::after { content: ""; position: absolute; top: 100%; left: 50%; width: 12px; height: 12px; transform: translate(-50%, -7px) rotate(45deg); background: var(--wall-100); border-right: 2px solid var(--hoodie); border-bottom: 2px solid var(--hoodie); }
+.kraken-game .ping-selector-title { display: none; }
+.kraken-game .ping-option { display: grid; justify-items: center; gap: 2px; width: 52px; padding: 6px 4px; border: 0; border-radius: 8px; background: var(--wall-200); color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; }
+.kraken-game .ping-option:hover { background: var(--hairline); }
+.kraken-game .ping-option-emoji { width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; font-size: 12px; font-weight: 700; line-height: 1; }
+.kraken-game .ping-option-treasure .ping-option-emoji { background: var(--hold-yellow); color: var(--on-hold-warm); }
+.kraken-game .ping-option-kraken .ping-option-emoji { background: var(--hold-red); color: var(--on-hold); }
+.kraken-game .ping-option-avoid .ping-option-emoji { background: var(--hardware); color: var(--wall-100); }
+
+/* claim + mark */
+.kraken-game .player-claim-area { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.kraken-game .claim-label { color: var(--ink-muted); font-weight: 700; }
+.kraken-game .claim-controls { display: inline-flex; align-items: center; border-radius: 999px; background: var(--wall-100); border: 2px solid var(--hairline); overflow: hidden; }
+.kraken-game .claim-btn { width: 28px; height: 26px; border: 0; border-radius: 0; background: none; color: var(--ink); font-weight: 700; cursor: pointer; }
+.kraken-game .claim-btn:hover { background: var(--wall-200); }
+.kraken-game .claim-value { min-width: 56px; text-align: center; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--ink); }
+.kraken-game .claim-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 4px; border-radius: 999px; border: 2px solid var(--hairline); background: var(--wall-100); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+.kraken-game .claim-toggle.active { border-color: var(--hold-red); background: var(--hold-red); color: var(--on-hold); }
+.kraken-game .player-mark-btn { align-self: center; margin: 0 10px 0 0; width: 40px; height: 40px; border-radius: 999px; border: 2px dashed var(--hardware); background: none; color: var(--ink-muted); font-size: 11px; font-weight: 700; cursor: pointer; display: grid; place-items: center; line-height: 1; }
+.kraken-game .player-mark-btn.explorer { border-style: solid; border-color: var(--hold-blue); background: var(--hold-blue); color: var(--on-hold); }
+.kraken-game .player-mark-btn.skeleton { border-style: solid; border-color: var(--hold-red); background: var(--hold-red); color: var(--on-hold); }
+
+/* confirm bar */
+.kraken-game .kraken-confirm-section { position: sticky; bottom: 12px; z-index: 5; justify-content: flex-start; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--wall-100); border: 2px solid var(--hoodie); box-shadow: var(--shadow-hold); }
+.kraken-game .kraken-confirm-section .kraken-confirm-cap { width: 36px; height: 50px; border-radius: 5px; object-fit: cover; flex: none; }
+.kraken-game .kraken-confirm-text { display: grid; gap: 2px; min-width: 0; flex: 1; font-size: 13px; }
+.kraken-game .kraken-confirm-text small { color: var(--ink-muted); font-size: 12px; }
+.kraken-game .kraken-confirm-btn { padding: 10px 16px; border: 0; border-radius: var(--radius-md); background: var(--hoodie); color: var(--on-hoodie); font-size: 14px; font-weight: 700; box-shadow: 0 3px 0 var(--hoodie-deep); cursor: pointer; }
+.kraken-game .kraken-confirm-btn:hover { background: var(--hoodie-deep); }
+.kraken-game .kraken-confirm-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--hoodie-deep); }
+
+/* revealed cards */
+.kraken-game .kraken-revealed-area { padding: 14px 16px; background: var(--wall-100); border: 2px solid var(--hairline); border-radius: var(--radius-md); box-shadow: var(--shadow-card); display: grid; gap: 10px; }
+.kraken-game .revealed-header { font-family: var(--font-display); font-size: 18px; line-height: 24px; color: var(--ink); margin: 0; padding: 0; border: 0; }
+.kraken-game .revealed-tally { display: flex; gap: 6px; flex-wrap: wrap; }
+.kraken-game .revealed-empty { color: var(--ink-muted); font-size: 13px; }
+.kraken-game .revealed-rounds-container { display: grid; gap: 8px; }
+.kraken-game .revealed-round-group { display: grid; gap: 4px; }
+.kraken-game .revealed-round-label { font-size: 11px; line-height: 14px; font-weight: 700; color: var(--ink-muted); }
+.kraken-game .revealed-cards-list { display: flex; gap: 4px; flex-wrap: wrap; }
+.kraken-game .revealed-card-item { width: 34px; height: 48px; padding: 0; border: 0; border-radius: 4px; background: none; overflow: hidden; box-shadow: 0 2px 0 var(--hairline); }
+.kraken-game .revealed-card-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kraken-game .revealed-card-item.kraken { outline: 2px solid var(--hold-red); outline-offset: 1px; }
+.kraken-game .revealed-card-item.treasure { outline: 2px solid var(--hold-yellow); outline-offset: 1px; }
+.kraken-game .revealed-card-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* chat */
+.kraken-game .kraken-chat-panel { padding: 14px 16px; background: var(--wall-100); border: 2px solid var(--hairline); border-radius: var(--radius-md); box-shadow: var(--shadow-card); min-height: 0; gap: 8px; }
+.kraken-game .kraken-chat-panel::before { content: "토론"; font-family: var(--font-display); font-size: 18px; line-height: 24px; color: var(--ink); }
+.kraken-game .chat-messages { padding: 0; max-height: 260px; gap: 6px; font-size: 13px; line-height: 18px; }
+.kraken-game .chat-message { display: flex; gap: 6px; align-items: baseline; color: var(--ink); background: none; padding: 0; }
+.kraken-game .chat-sender { font-weight: 700; flex: none; }
+.kraken-game .chat-message.system, .kraken-game .system-text { color: var(--ink-muted); font-size: 12px; }
+.kraken-game .chat-input-row { display: flex; gap: 6px; padding: 0; border: 0; background: none; }
+.kraken-game .chat-input { flex: 1; min-width: 0; font-family: var(--font-sans); font-size: 14px; padding: 8px 12px; border-radius: var(--radius-sm); border: 2px solid var(--hairline); background: var(--wall-200); color: var(--ink); }
+.kraken-game .chat-input::placeholder { color: var(--ink-muted); }
+.kraken-game .chat-send-btn { padding: 6px 12px; border: 2px solid var(--hardware); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); font-size: 13px; font-weight: 700; box-shadow: 0 2px 0 var(--hardware-deep); cursor: pointer; }
+
+/* overlays */
+.kraken-overlay { background: rgba(30, 23, 18, .7); }
+.kraken-overlay-content { background: var(--wall-100); border: 2px solid var(--hairline); border-radius: var(--radius-lg); color: var(--ink); font-family: var(--font-sans); box-shadow: var(--shadow-card); }
+.kraken-overlay-content h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink); }
+.kraken-overlay-content p { color: var(--ink-muted); }
+.kraken-overlay-content .overlay-btn { border: 2px solid var(--hardware); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); font-weight: 700; box-shadow: 0 2px 0 var(--hardware-deep); cursor: pointer; }
+.kraken-overlay-content .overlay-btn.primary { background: var(--hoodie); color: var(--on-hoodie); border-color: var(--hoodie); box-shadow: 0 3px 0 var(--hoodie-deep); }
+.kraken-overlay-content .role-badge.explorer { background: var(--hold-blue); color: var(--on-hold); }
+.kraken-overlay-content .role-badge.skeleton { background: var(--hold-red); color: var(--on-hold); }
+
+@media (max-width: 640px) {
+  .kraken-game { padding: 8px 12px 12px; }
+  .kraken-game .kraken-title { font-size: 18px; line-height: 24px; }
+  .kraken-game .kraken-status-bar { padding: 10px 12px; gap: 8px; }
+  .kraken-game .kraken-table { padding: 10px; gap: 8px; }
+  .kraken-game .player-content { padding: 8px 8px 8px 6px; gap: 6px; }
+  .kraken-game .card-slot { width: 46px; height: 64px; }
+  .kraken-game .player-cards-row { gap: 5px; }
+  .kraken-game .player-mark-btn { width: 36px; height: 36px; font-size: 10px; margin-right: 6px; }
+  .kraken-game .kraken-confirm-section { bottom: 8px; padding: 8px 10px; }
+  .kraken-game .kraken-confirm-btn { padding: 8px 12px; font-size: 13px; }
+  .kraken-game .chat-messages { max-height: 160px; }
+}
+.kraken-game .status-item { color: var(--ink); }
+.kraken-game .player-claim-chips { justify-content: flex-end; }

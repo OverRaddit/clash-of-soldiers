@@ -2,10 +2,11 @@ import React, { useRef, useCallback } from 'react';
 import { KrakenOtherPlayer, KrakenGamePhase, KrakenCardType, KrakenRole, CardPing, PingType, PlayerClaim } from '../../types/kraken.types';
 
 const PING_EMOJI: Record<PingType, string> = {
-  treasure: '💎',
-  kraken: '🐙',
-  avoid: '🚫',
+  treasure: '◆',
+  kraken: 'K',
+  avoid: '✕',
 };
+const CARD_IMG: Record<KrakenCardType, string> = { treasure: '/kraken/card-treasure.png', kraken: '/kraken/card-kraken.png', empty: '/kraken/card-empty.png' };
 
 const PING_LABEL: Record<PingType, string> = {
   treasure: '보물',
@@ -43,10 +44,10 @@ const getCompositionChips = (types: KrakenCardType[]) => {
   for (const t of types) {
     counts[t] = (counts[t] || 0) + 1;
   }
-  const chips: { type: KrakenCardType; count: number; emoji: string }[] = [];
-  if (counts['treasure']) chips.push({ type: 'treasure', count: counts['treasure'], emoji: '💎' });
-  if (counts['kraken']) chips.push({ type: 'kraken', count: counts['kraken'], emoji: '🐙' });
-  if (counts['empty']) chips.push({ type: 'empty', count: counts['empty'], emoji: '📦' });
+  const chips: { type: KrakenCardType; count: number }[] = [];
+  if (counts['treasure']) chips.push({ type: 'treasure', count: counts['treasure'] });
+  if (counts['kraken']) chips.push({ type: 'kraken', count: counts['kraken'] });
+  if (counts['empty']) chips.push({ type: 'empty', count: counts['empty'] });
   return chips;
 };
 
@@ -135,7 +136,7 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
     return (
       <div className="ping-indicators">
         {pings.map((ping, i) => (
-          <div key={i} className="ping-indicator" style={{ borderColor: ping.color, boxShadow: `0 0 6px ${ping.color}44` }}>
+          <div key={i} className={`ping-indicator ${ping.pingType}`} title={`${ping.pingerName} · ${PING_LABEL[ping.pingType]}`} style={{ boxShadow: `0 0 0 2px ${ping.color}` }}>
             <span className="ping-dot" style={{ backgroundColor: ping.color }} />
             <span className="ping-emoji">{PING_EMOJI[ping.pingType]}</span>
             <span className="ping-name" style={{ color: ping.color }}>{ping.pingerName}</span>
@@ -218,15 +219,15 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
               </span>
               {(isSelf || role) && (
                 <span className={`player-role-badge ${isSelf ? myRole : role}`}>
-                  {(isSelf ? myRole : role) === 'explorer' ? '⛵ 탐험대' : '🏴‍☠️ 스켈레톤'}
+                  {(isSelf ? myRole : role) === 'explorer' ? '탐험대' : '스켈레톤'}
                 </span>
               )}
             </div>
             {isSelf && composition && composition.length > 0 && (
               <div className="player-composition">
                 {getCompositionChips(composition).map((chip) => (
-                  <span key={chip.type} className={`comp-chip comp-chip-${chip.type}`}>
-                    {chip.emoji}{chip.count}
+                  <span key={chip.type} className={`comp-chip comp-chip-${chip.type}`} title={chip.type === 'treasure' ? '보물' : chip.type === 'kraken' ? '크라켄' : '빈 상자'}>
+                    <img src={CARD_IMG[chip.type]} alt="" />{chip.count}
                   </span>
                 ))}
               </div>
@@ -265,22 +266,22 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
               <span className="claim-label">주장:</span>
               <div className="claim-controls">
                 <button className="claim-btn" onClick={() => handleClaimTreasure(-1)}>−</button>
-                <span className="claim-value">💎{myClaim?.treasureCount ?? 0}</span>
+                <span className="claim-value"><img src={CARD_IMG.treasure} alt="보물" />{myClaim?.treasureCount ?? 0}</span>
                 <button className="claim-btn" onClick={() => handleClaimTreasure(1)}>+</button>
               </div>
               <button
                 className={`claim-toggle ${myClaim?.hasKraken ? 'active' : ''}`}
                 onClick={handleClaimKraken}
               >
-                🐙{myClaim?.hasKraken ? '있음' : '없음'}
+                <img src={CARD_IMG.kraken} alt="" />크라켄 {myClaim?.hasKraken ? '있음' : '없음'}
               </button>
             </div>
           )}
           {!isSelf && claim && (
             <div className="player-claim-chips">
-              <span className="player-claim-chip">💎{claim.treasureCount} 주장</span>
+              <span className="player-claim-chip treasure"><img src={CARD_IMG.treasure} alt="보물" />{claim.treasureCount} 주장</span>
               <span className={`player-claim-chip ${claim.hasKraken ? 'kraken' : 'no-kraken'}`}>
-                🐙{claim.hasKraken ? '있음' : '없음'} 주장
+                <img src={CARD_IMG.kraken} alt="크라켄" />{claim.hasKraken ? '있음' : '없음'} 주장
               </span>
             </div>
           )}
@@ -290,9 +291,10 @@ const PlayerCardsArea: React.FC<PlayerCardsAreaProps> = ({
           <button
             className={`player-mark-btn ${playerMarks[pid] || ''}`}
             onClick={(e) => { e.stopPropagation(); onToggleMark(pid); }}
-            title="역할 추리 마크"
+            title="역할 추리 마크 (눌러서 바꾸기)"
+            aria-label={`${name} 역할 추리: ${playerMarks[pid] === 'explorer' ? '탐험대' : playerMarks[pid] === 'skeleton' ? '스켈레톤' : '미정'}`}
           >
-            {playerMarks[pid] === 'explorer' ? '⛵' : playerMarks[pid] === 'skeleton' ? '💀' : '◯'}
+            {playerMarks[pid] === 'explorer' ? '탐험' : playerMarks[pid] === 'skeleton' ? '해골' : '?'}
           </button>
         )}
       </div>
