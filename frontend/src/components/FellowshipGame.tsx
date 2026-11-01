@@ -7,6 +7,7 @@ import {
 } from '../types/fellowship.types';
 import socketService from '../services/socket.service';
 import './FellowshipGame.css';
+import './FellowshipTheme.css';
 
 interface FellowshipGameProps {
   room: GameRoom;
@@ -158,12 +159,12 @@ const FellowshipGame: React.FC<FellowshipGameProps> = ({
       </div>
       <div className="fellowship-header-actions">
         <span className="fellowship-phase-chip">{phaseLabel[state.phase]}</span>
-        <button type="button" className="fellowship-leave" onClick={onLeaveRoom}>방 나가기</button>
+        <button type="button" className="fellowship-leave" onClick={onLeaveRoom}>로프 풀기</button>
       </div>
     </header>
 
     <div className="fellowship-journey" aria-label="챕터 진행도">
-      <span>여정</span>
+      <span>루트</span>
       <div className="fellowship-journey-track" role="progressbar" aria-valuemin={1} aria-valuemax={18} aria-valuenow={chapter.number}>
         <span style={{ width: `${Math.min(100, Math.max(0, chapter.number / 18 * 100))}%` }} />
       </div>
@@ -366,8 +367,8 @@ const FellowshipGame: React.FC<FellowshipGameProps> = ({
 
     {(state.phase === 'play' || state.phase === 'setup' || state.phase === 'character_selection' || state.phase === 'event_selection') && <section className="fellowship-hand-section" aria-label="볼 수 있는 카드">
       <div className="fellowship-section-heading">
-        <div><span className="fellowship-small-label">VISIBLE CARDS</span><h2>내 손패와 공개 카드</h2></div>
-        <span className="fellowship-hand-count">{totalCards}장</span>
+        <div><span className="fellowship-small-label">VISIBLE CARDS</span><h2>내 손패</h2></div>
+        <span className="fellowship-hand-count">{totalCards}장{state.phase === 'play' && canAct && legalCards.size > 0 ? ` · 낼 수 있음 ${legalCards.size}` : ''}</span>
       </div>
       {visibleHands.length ? visibleHands.map(([seatId, cards]) => {
         const owner = state.players.find((player) => player.id === seatId);

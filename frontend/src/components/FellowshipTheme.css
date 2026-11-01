@@ -1,0 +1,167 @@
+/* Fellowship — Crux theme. Loaded after FellowshipGame.css; overrides by specificity (.fellowship-game …).
+   UX changes carried by CSS: the hand becomes a sticky bottom dock, legal cards stand out (illegal ones sink),
+   suits take the hold palette, the chapter track becomes a rope. */
+
+.fellowship-game { --fg-ink: var(--ink); --fg-muted: var(--ink-muted); --fg-gold: var(--hoodie); --fg-border: var(--hairline);
+  min-height: 0; padding: 12px 24px 0; background: none; font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column; }
+.fellowship-game > * { width: 100%; max-width: 1232px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+.fellowship-game h1, .fellowship-game h2, .fellowship-game h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
+.fellowship-game button:focus-visible, .fellowship-game select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.fellowship-game .fellowship-eyebrow, .fellowship-game .fellowship-small-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--code); text-transform: none; }
+
+/* header */
+.fellowship-game .fellowship-header { margin-bottom: 10px; align-items: center; }
+.fellowship-game .fellowship-header .fellowship-eyebrow { display: none; }
+.fellowship-game .fellowship-header h1 { font-size: 22px; line-height: 28px; margin: 0; }
+.fellowship-game .fellowship-header p { margin: 2px 0 0; font-size: 13px; color: var(--ink-muted); }
+.fellowship-game .fellowship-phase-chip { padding: 4px 10px; border: 0; border-radius: 999px; background: var(--hold-purple); color: var(--on-hold); font-size: 12px; font-weight: 700; }
+.fellowship-game .fellowship-leave { padding: 8px 14px; border: 2px solid var(--hardware); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); font-size: 13px; font-weight: 700; box-shadow: 0 2px 0 var(--hardware-deep); }
+.fellowship-game .fellowship-leave:hover { background: var(--wall-200); }
+
+/* journey → rope */
+.fellowship-game .fellowship-journey { margin-bottom: 10px; color: var(--ink-muted); font: 500 12px/16px var(--font-sans); }
+.fellowship-game .fellowship-journey-track { height: 6px; background: var(--hairline); overflow: visible; position: relative; }
+.fellowship-game .fellowship-journey-track > span { background: var(--rope); background-image: repeating-linear-gradient(-60deg, rgba(0,0,0,0) 0 7px, var(--rope-strand) 7px 10px); position: relative; }
+.fellowship-game .fellowship-journey-track > span::after { content: ""; position: absolute; right: 0; top: 50%; width: 14px; height: 14px; border-radius: 999px; transform: translate(50%, -50%); background: var(--hoodie); box-shadow: 0 0 0 3px var(--wall-000), 0 0 0 5px var(--hoodie); }
+.fellowship-game .fellowship-journey strong { color: var(--ink); font-family: var(--font-display); font-weight: 400; font-size: 14px; }
+
+/* notices, chapter intro, public notes */
+.fellowship-game .fellowship-notice { margin-bottom: 10px; border: 0; border-radius: var(--radius-md); background: var(--code-tint); color: var(--ink); font: 500 14px/20px var(--font-sans); padding: 10px 14px; }
+.fellowship-game .fellowship-notice.error { background: var(--hold-red); color: var(--on-hold); }
+.fellowship-game .fellowship-notice.success { background: var(--hold-green); color: var(--on-hold); }
+.fellowship-game .fellowship-chapter-intro { margin-bottom: 12px; padding: 12px 16px; background: var(--wall-100); border: 2px solid var(--hairline); border-top-width: 2px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.fellowship-game .fellowship-chapter-intro h2 { font-size: 20px; line-height: 26px; margin: 2px 0 4px; }
+.fellowship-game .fellowship-chapter-intro p { font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.fellowship-game .fellowship-chapter-stats span { min-width: 0; padding: 4px 10px; flex-direction: row; gap: 6px; align-items: center; border: 0; border-radius: 999px; background: var(--wall-200); color: var(--ink-muted); font: 500 12px/18px var(--font-sans); }
+.fellowship-game .fellowship-chapter-stats strong { color: var(--ink); font-size: 13px; }
+.fellowship-game .fellowship-public-notes { margin-bottom: 12px; }
+.fellowship-game .fellowship-public-notes span { border: 0; border-radius: 999px; background: var(--code-tint); color: var(--ink); font: 500 12px/18px var(--font-sans); padding: 4px 10px; }
+
+/* layout */
+.fellowship-game .fellowship-layout { gap: 16px; }
+.fellowship-game .fellowship-table, .fellowship-game .fellowship-panel { background: var(--wall-100); border: 2px solid var(--hairline); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+.fellowship-game .fellowship-table { padding: 16px; border-radius: var(--radius-lg); }
+.fellowship-game .fellowship-section-heading { margin-bottom: 12px; }
+.fellowship-game .fellowship-section-heading h2 { font-size: 20px; line-height: 26px; }
+.fellowship-game .fellowship-turn-badge { background: var(--wall-200); color: var(--ink-muted); font: 700 11px/14px var(--font-sans); padding: 4px 8px; }
+.fellowship-game .fellowship-turn-banner { position: relative; margin-bottom: 12px; padding: 10px 14px 10px 22px; border: 2px solid var(--hairline); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); }
+.fellowship-game .fellowship-turn-banner::before { content: ""; position: absolute; left: 6px; top: 10px; bottom: 10px; width: 6px; border-radius: 999px; background: var(--hold-purple); background-image: repeating-linear-gradient(-60deg, rgba(0,0,0,0) 0 7px, var(--rope-strand) 7px 10px); }
+.fellowship-game .fellowship-turn-banner.is-mine { border-color: var(--hoodie); background: var(--wall-100); color: var(--ink); box-shadow: var(--shadow-hold); }
+.fellowship-game .fellowship-turn-banner.is-mine::before { background-color: var(--hold-orange); }
+.fellowship-game .fellowship-turn-banner-label { border-radius: 999px; background: var(--wall-200); color: var(--ink-muted); font: 700 11px/14px var(--font-sans); }
+.fellowship-game .fellowship-turn-banner.is-mine .fellowship-turn-banner-label { background: var(--hold-orange); color: var(--on-hold-warm); }
+.fellowship-game .fellowship-turn-banner strong { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.fellowship-game .fellowship-turn-banner-detail { font: 13px/18px var(--font-sans); color: var(--ink-muted); }
+
+/* seats */
+.fellowship-game .fellowship-players { gap: 10px; }
+.fellowship-game .fellowship-player { padding: 10px 12px; border: 2px solid var(--hairline); border-radius: 12px; background: var(--wall-200); display: grid; gap: 6px; min-height: 0; }
+.fellowship-game .fellowship-player.is-turn { border: 2px solid var(--hoodie); background: var(--wall-100); box-shadow: var(--shadow-hold); }
+.fellowship-game .fellowship-player.is-mine { background: var(--wall-200); }
+.fellowship-game .fellowship-player.is-turn.is-mine { border-color: var(--hoodie); background: var(--wall-100); box-shadow: var(--shadow-hold); }
+.fellowship-game .fellowship-player-avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--fur); color: var(--on-fur); font-family: var(--font-display); font-size: 15px; }
+.fellowship-game .fellowship-player.is-mine .fellowship-player-avatar { background: var(--hoodie); color: var(--on-hoodie); }
+.fellowship-game .fellowship-player-name strong { font-family: var(--font-display); font-weight: 400; font-size: 16px; line-height: 20px; }
+.fellowship-game .fellowship-player-name small { font-size: 11px; color: var(--ink-muted); }
+.fellowship-game .fellowship-player-turn { display: inline-block; align-self: start; padding: 2px 8px; border-radius: 999px; background: var(--hold-orange); color: var(--on-hold-warm); font: 700 11px/16px var(--font-sans); }
+.fellowship-game .fellowship-player-counts { display: flex; gap: 6px; font: 500 12px/18px var(--font-sans); }
+.fellowship-game .fellowship-player-counts span { padding: 1px 8px; border-radius: 999px; background: var(--wall-100); border: 0; }
+.fellowship-game .fellowship-player.is-turn .fellowship-player-counts span { background: var(--wall-200); }
+.fellowship-game .fellowship-objective-status { display: inline-block; justify-self: start; padding: 2px 8px; border-radius: 999px; font: 700 11px/16px var(--font-sans); border: 2px solid var(--hardware); background: var(--wall-100); color: var(--ink); }
+.fellowship-game .fellowship-objective-status.is-complete { background: var(--hold-green); border-color: var(--hold-green); color: var(--on-hold); }
+.fellowship-game .fellowship-objective-status.is-failed { background: var(--hold-red); border-color: var(--hold-red); color: var(--on-hold); }
+.fellowship-game .fellowship-player-objective { margin: 0; font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.fellowship-game .fellowship-player-detail { font-size: 12px; color: var(--ink-muted); }
+
+/* trick */
+.fellowship-game .fellowship-trick-area { margin-top: 12px; position: relative; border-radius: 12px; background: var(--wall-200); border: 2px dashed var(--hairline); padding: 10px 12px 14px; }
+.fellowship-game .fellowship-trick-heading { font: 700 11px/14px var(--font-sans); color: var(--ink-muted); }
+.fellowship-game .fellowship-trick-heading small { padding: 1px 8px; border-radius: 999px; background: var(--wall-100); color: var(--ink); font-size: 11px; }
+.fellowship-game .fellowship-trick-cards { min-height: 150px; padding: 12px 0 0; }
+.fellowship-game .fellowship-trick-play > span:last-child { font: 700 12px/16px var(--font-sans); color: var(--ink); display: flex; align-items: center; gap: 4px; }
+.fellowship-game .fellowship-trick-play:first-child > span:last-child::before { content: "선"; font-size: 9px; padding: 1px 4px; border-radius: 999px; background: var(--code-tint); color: var(--code); }
+.fellowship-game .fellowship-empty-trick { color: var(--ink-muted); font: 13px/18px var(--font-sans); padding: 36px 0; text-align: center; }
+.fellowship-game .fellowship-event-cards, .fellowship-game .fellowship-history, .fellowship-game .fellowship-lost-area { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--wall-200); font: 13px/18px var(--font-sans); }
+.fellowship-game .fellowship-history > span { color: var(--hold-green); font-weight: 700; }
+
+/* cards → hold palette */
+.fellowship-game .fellowship-card-face { --fc-color: var(--hardware); width: 72px; height: 104px; border: 2px solid var(--hairline); border-radius: 10px; background: var(--wall-100); box-shadow: 0 3px 0 var(--hardware-shine), 0 6px 14px rgba(58,36,24,.12); color: var(--fc-color); overflow: hidden; font-family: var(--font-sans); }
+.fellowship-game .fellowship-card-face::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--fc-color); }
+.fellowship-game .fellowship-card-rank { left: 7px; top: 12px; font: 400 22px/1 var(--font-display); }
+.fellowship-game .fellowship-card-sigil { font-size: 34px; margin-top: 10px; }
+.fellowship-game .fellowship-card-suit { bottom: 7px; font-size: 11px; font-weight: 700; }
+.fellowship-game .fellowship-card-face.compact { width: 44px; height: 62px; border-radius: 7px; border-width: 2px; }
+.fellowship-game .fellowship-card-face.compact::before { height: 5px; }
+.fellowship-game .fellowship-card-face.compact .fellowship-card-rank { left: 4px; top: 7px; font-size: 13px; }
+.fellowship-game .fellowship-card-face.compact .fellowship-card-sigil { font-size: 20px; margin-top: 6px; }
+.fellowship-game .fellowship-card-face.compact .fellowship-card-suit { bottom: 4px; font-size: 8px; }
+.fellowship-game .fellowship-suit-hills { --fc-color: var(--hold-orange); background: var(--wall-100); color: var(--fc-color); }
+.fellowship-game .fellowship-suit-mountains { --fc-color: var(--hold-blue); background: var(--wall-100); color: var(--fc-color); }
+.fellowship-game .fellowship-suit-shadows { --fc-color: var(--hold-purple); background: var(--wall-100); color: var(--fc-color); }
+.fellowship-game .fellowship-suit-forests { --fc-color: var(--hold-green); background: var(--wall-100); color: var(--fc-color); }
+.fellowship-game .fellowship-suit-rings { --fc-color: #b08900; background: var(--wall-100); color: var(--fc-color); }
+.fellowship-game .fellowship-suit-rings::before { background: var(--hold-yellow); }
+.fellowship-game .fellowship-suit-rivers { --fc-color: var(--code); background: var(--wall-100); color: var(--fc-color); }
+.fellowship-game .fellowship-card-back { background: var(--fur); border-color: var(--fur); color: var(--on-fur); }
+.fellowship-game .fellowship-card-back::before { display: none; }
+.fellowship-game .fellowship-card-back-mark { font-size: 28px; opacity: .8; }
+.fellowship-game .fellowship-card-covered { box-shadow: 0 3px 0 var(--hardware-shine), inset 0 0 0 3px var(--hardware); opacity: .7; }
+
+/* sidebar panels */
+.fellowship-game .fellowship-sidebar { display: flex; flex-direction: column; gap: 12px; }
+.fellowship-game .fellowship-panel { padding: 14px 16px; }
+.fellowship-game .fellowship-panel h2 { font-size: 18px; line-height: 24px; margin: 2px 0 6px; }
+.fellowship-game .fellowship-panel p { font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.fellowship-game .fellowship-action-help { color: var(--ink); background: var(--code-tint); border-radius: 10px; padding: 8px 10px; }
+.fellowship-game .fellowship-character-choice, .fellowship-game .fellowship-option-list button { border: 2px solid var(--hardware); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); font: 700 13px/18px var(--font-sans); padding: 8px 12px; box-shadow: 0 2px 0 var(--hardware-deep); text-align: left; }
+.fellowship-game .fellowship-character-choice:hover:not(:disabled), .fellowship-game .fellowship-option-list button:hover:not(:disabled) { background: var(--wall-200); transform: none; }
+.fellowship-game .fellowship-character-choice:disabled, .fellowship-game .fellowship-option-list button:disabled { background: var(--wall-200); color: var(--hardware); border-color: var(--hairline); box-shadow: none; }
+.fellowship-game .fellowship-character-name { font-family: var(--font-display); font-weight: 400; font-size: 16px; }
+.fellowship-game .fellowship-character-name em { font-style: normal; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--hold-yellow); color: var(--on-hold-warm); margin-left: 6px; }
+.fellowship-game .fellowship-character-objective, .fellowship-game .fellowship-character-setup { font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.fellowship-game .fellowship-primary { background: var(--hoodie) !important; color: var(--on-hoodie) !important; border-color: var(--hoodie) !important; box-shadow: 0 3px 0 var(--hoodie-deep) !important; }
+.fellowship-game .fellowship-field { font: 700 13px/18px var(--font-sans); display: grid; gap: 4px; }
+.fellowship-game .fellowship-field select { border: 2px solid var(--hairline); border-radius: var(--radius-sm); background: var(--wall-200); color: var(--ink); font: 400 14px/20px var(--font-sans); padding: 8px 10px; }
+.fellowship-game .fellowship-result { border-color: var(--hold-green); }
+.fellowship-game .fellowship-result.failure { border-color: var(--hold-red); }
+.fellowship-game .fellowship-result h2 { font-size: 22px; }
+.fellowship-game .fellowship-result.success h2 { color: var(--hold-green); }
+.fellowship-game .fellowship-result.failure h2 { color: var(--hold-red); }
+.fellowship-game .fellowship-result-objectives { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 4px; font-size: 13px; }
+.fellowship-game .fellowship-tucked-card { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+
+/* hand → sticky dock */
+.fellowship-game .fellowship-hand-section { position: sticky; bottom: 0; z-index: 5; margin-top: 16px; max-width: none; width: auto; margin-left: -24px; margin-right: -24px; padding: 10px 24px 12px; border: 0; border-top: 2px solid var(--hairline); border-radius: var(--radius-lg) var(--radius-lg) 0 0; background: var(--wall-100); box-shadow: 0 -6px 20px rgba(58,36,24,.12); }
+.fellowship-game .fellowship-hand-section > * { max-width: 1232px; margin-left: auto; margin-right: auto; }
+.fellowship-game .fellowship-hand-section .fellowship-section-heading { margin-bottom: 4px; }
+.fellowship-game .fellowship-hand-section .fellowship-section-heading h2 { font-size: 16px; line-height: 22px; margin: 0; }
+.fellowship-game .fellowship-hand-section .fellowship-small-label { display: none; }
+.fellowship-game .fellowship-hand-count { padding: 2px 8px; border-radius: 999px; background: var(--wall-200); font: 700 12px/18px var(--font-sans); color: var(--ink); }
+.fellowship-game .fellowship-hand-group h3 { font: 500 12px/16px var(--font-sans); color: var(--ink-muted); margin: 6px 0 2px; }
+.fellowship-game .fellowship-hand-cards { flex-wrap: nowrap; overflow-x: auto; padding: 12px 4px 4px; gap: 6px; align-items: flex-end; scrollbar-width: thin; }
+.fellowship-game .fellowship-hand-card { flex: none; border-radius: 10px; }
+.fellowship-game .fellowship-hand-card:hover:not(:disabled), .fellowship-game .fellowship-hand-card:focus-visible { transform: translateY(-8px); }
+.fellowship-game .fellowship-hand-card:not(:disabled) .fellowship-card-face { border-color: var(--hoodie); box-shadow: 0 3px 0 var(--hoodie-deep), 0 6px 14px rgba(58,36,24,.18); }
+.fellowship-game .fellowship-hand-card:disabled { opacity: 1; filter: none; }
+.fellowship-game .fellowship-hand-card:disabled .fellowship-card-face { opacity: .45; filter: saturate(.5); transform: translateY(6px); }
+.fellowship-game .fellowship-empty-hand { font: 13px/18px var(--font-sans); color: var(--ink-muted); }
+
+/* modal */
+.fellowship-game .fellowship-modal { background: var(--wall-100); border: 2px solid var(--hoodie); border-radius: var(--radius-lg); font-family: var(--font-sans); }
+.fellowship-game .fellowship-modal h2 { font-size: 20px; }
+.fellowship-game .fellowship-modal-actions button { border: 2px solid var(--hardware); border-radius: var(--radius-md); background: var(--wall-100); color: var(--ink); font: 700 13px/18px var(--font-sans); padding: 8px 12px; box-shadow: 0 2px 0 var(--hardware-deep); }
+.fellowship-game .fellowship-modal-cancel { color: var(--ink-muted); background: none; border: 0; font: 500 12px/16px var(--font-sans); }
+
+@media (max-width: 850px) { .fellowship-game .fellowship-layout { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .fellowship-game { padding: 8px 12px 0; }
+  .fellowship-game .fellowship-header h1 { font-size: 18px; line-height: 24px; }
+  .fellowship-game .fellowship-leave { padding: 6px 10px; }
+  .fellowship-game .fellowship-chapter-intro { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  .fellowship-game .fellowship-table { padding: 12px; }
+  .fellowship-game .fellowship-players { grid-template-columns: 1fr; gap: 6px; }
+  .fellowship-game .fellowship-card-face { width: 60px; height: 88px; }
+  .fellowship-game .fellowship-card-sigil { font-size: 28px; }
+  .fellowship-game .fellowship-hand-section { margin-left: -12px; margin-right: -12px; padding: 8px 12px 10px; }
+}
+.fellowship-game .fellowship-player.is-turn.is-mine .fellowship-player-turn { background: var(--hold-orange); color: var(--on-hold-warm); }
