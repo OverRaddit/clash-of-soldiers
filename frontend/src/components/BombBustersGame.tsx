@@ -3,6 +3,8 @@ import { GameRoom } from '../types/game.types';
 import { BombBustersAction, BombBustersClientState, BombClientPlayer, BombClientWire, BombWireValue } from '../types/bomb-busters.types';
 import socketService from '../services/socket.service';
 import './BombBustersGame.css';
+import './BombBustersRacks.css';
+import './BombBustersTheme.css';
 import BombBustersEquipment from './BombBustersEquipment';
 import BombBustersCampaign from './BombBustersCampaign';
 import BombBustersValidationBoard from './BombBustersValidationBoard';
@@ -51,6 +53,45 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
   const clueTime = useServerClock(state.serverNow, !!state.campaign?.flashClues?.length, 250);
   const [connected, setConnected] = useState(!!socketService.getSocket()?.connected);
   const feedback = useBombFeedback(state, room.id, connected);
+  // Scrub selection (touch): press-and-hold on a rack, slide to the wire, release to select. A loupe follows the finger.
+  const [scrub, setScrub] = useState<{ wireId: string; rackId: string; playerId: string } | null>(null);
+  const holdTimer = useRef<number | null>(null);
+  const scrubbedRef = useRef(false);
+  const wireIdAt = (x: number, y: number): string | null => {
+    const el = typeof document.elementFromPoint === 'function' ? document.elementFromPoint(x, y) : null;
+    const button = el && typeof el.closest === 'function' ? (el.closest('[data-wire]') as HTMLElement | null) : null;
+    return button?.dataset.wire ?? null;
+  };
+  const clearHold = () => { if (holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; } };
+  const rowScrubHandlers = (player: BombClientPlayer, rack: BombClientPlayer['racks'][number]) => ({
+    onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.pointerType === 'mouse') return;
+      const wireId = wireIdAt(event.clientX, event.clientY);
+      if (!wireId) return;
+      const row = event.currentTarget;
+      const pointerId = event.pointerId;
+      clearHold();
+      holdTimer.current = window.setTimeout(() => {
+        scrubbedRef.current = true;
+        try { row.setPointerCapture(pointerId); } catch { /* unsupported */ }
+        setScrub({ wireId, rackId: rack.id, playerId: player.id });
+      }, 220);
+    },
+    onPointerMove: (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!scrub || scrub.rackId !== rack.id) return;
+      const wireId = wireIdAt(event.clientX, event.clientY);
+      if (wireId && wireId !== scrub.wireId && rack.wires.some((wire) => wire.id === wireId)) setScrub({ ...scrub, wireId });
+    },
+    onPointerUp: () => {
+      clearHold();
+      if (!scrub || scrub.rackId !== rack.id) return;
+      const wire = rack.wires.find((item) => item.id === scrub.wireId);
+      if (wire && wireSelectable(player, wire)) selectWire(player, rack.id, wire);
+      setScrub(null);
+      window.setTimeout(() => { scrubbedRef.current = false; }, 300);
+    },
+    onPointerCancel: () => { clearHold(); setScrub(null); scrubbedRef.current = false; },
+  });
   const campaignControl = state.campaign?.controls.find((control) => control.id === campaignControlId) ?? null;
   const campaignPending = !!state.campaign?.pendingActorId;
   const isRedValue = (value: BombWireValue | null) => value === 'red' || (value !== null && !!state.campaign?.redValues?.includes(value));
@@ -259,7 +300,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       </div>
       <div className="bb-racks">{player.racks.map((rack, rackIndex) => <div key={rack.id} className="bb-rack">
         <div className="bb-rack-label"><span>{player.racks.length > 1 ? `받침대 ${rackIndex + 1}` : '전선 받침대'}</span></div>
-        <div className="bb-wire-row">
+        <div className={`bb-wire-row ${mine ? 'bb-wire-row-mine' : ''} ${scrub?.rackId === rack.id ? 'bb-wire-row-scrubbing' : ''}`} {...rowScrubHandlers(player, rack)}>
           {rack.wires.map((wire, index) => {
             if (state.campaign?.audio?.removedCutWireIds?.includes(wire.id)) return <span key={wire.id} className="bb-wire-empty" aria-label={`${player.name} 받침대 ${rackIndex + 1}, ${index + 1}번 빈자리`}><span>{index + 1}</span></span>;
             const visibleValue = wire.value;
@@ -272,9 +313,10 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
             const selected = wire.id === ownWireId || wire.id === alternativeWireId || target?.wireIds.includes(wire.id) || detectorChoice === wire.id || exchangeChoice === wire.id || relationWireIds.includes(wire.id) || campaignWireIds.includes(wire.id);
             const relation = state.relationMarkers?.find((marker) => marker.rackId === rack.id && marker.wireIds.includes(wire.id) && marker.wireIds.includes(rack.wires[index + 1]?.id));
             const pointed = detector?.targetWireIds.includes(wire.id);
-            return <button key={wire.id} type="button"
-              className={`bb-wire bb-wire-${color} ${wire.cut ? 'bb-wire-cut' : ''} ${lastResult ? `bb-wire-last-${lastResult}` : ''} ${feedback?.wireIds.includes(wire.id) ? 'bb-wire-celebrate' : ''} ${selected ? 'bb-wire-selected' : ''} ${pointed ? 'bb-wire-pointed' : ''} ${wire.reversed ? 'bb-wire-reversed' : ''} ${wire.excluded ? 'bb-wire-excluded' : ''}`}
-              disabled={!wireSelectable(player, wire)} onClick={() => selectWire(player, rack.id, wire)}
+            const scrubbing = scrub?.wireId === wire.id;
+            return <button key={wire.id} type="button" data-wire={wire.id}
+              className={`bb-wire bb-wire-${color} ${wire.cut ? 'bb-wire-cut' : ''} ${lastResult ? `bb-wire-last-${lastResult}` : ''} ${feedback?.wireIds.includes(wire.id) ? 'bb-wire-celebrate' : ''} ${selected ? 'bb-wire-selected' : ''} ${pointed ? 'bb-wire-pointed' : ''} ${wire.reversed ? 'bb-wire-reversed' : ''} ${wire.excluded ? 'bb-wire-excluded' : ''} ${scrubbing ? 'bb-wire-scrub' : ''}`}
+              disabled={!wireSelectable(player, wire)} onClick={() => { if (!scrubbedRef.current) selectWire(player, rack.id, wire); }}
               title={lastResultLabel || undefined}
               aria-label={`${player.name} 받침대 ${rackIndex + 1}, ${index + 1}번 전선: ${wire.cut ? '해체됨 ' : ''}${visibleValue === null ? '비공개' : valueLabel(visibleValue)}${displayedClue !== null ? `, 공개 단서 ${displayedClue}` : ''}${wire.reversed ? ', 역방향 전선' : ''}${wire.excluded ? ', 정렬 제외 전선' : ''}${wire.singleLabel ? ', 받침대에 하나뿐인 값' : ''}${typeof visibleValue === 'number' && isRedValue(visibleValue) ? ', 빨강 취급' : ''}${lastResultLabel ? `, ${lastResultLabel}` : ''}`}
               aria-pressed={!!selected}>
@@ -283,14 +325,22 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
               {(wire.reversed || wire.excluded) && <span className="bb-wire-special">{wire.reversed ? '↶' : 'X'}</span>}
               <span className="bb-wire-value">{valueLabel(visibleValue)}</span>
               {visibleValue !== null && typeof visibleValue !== 'number' && wire.sortValue !== null && <span className="bb-sort-value">{wire.sortValue}</span>}
-              {wire.cut ? <span className="bb-cut-label">해체</span> : <span className="bb-wire-line" />}
+              <span className="bb-wire-line" />{wire.cut && <span className="bb-cut-label">해체</span>}
               {displayedClue !== null && <span className={`bb-hint bb-hint-${wire.clue && wire.clue.kind !== 'value' ? 'variant' : valueColor(wire.clue?.kind === 'value' ? wire.clue.value as BombWireValue : wire.hint)}`}>{displayedClue}</span>}
               {wire.singleLabel && <span className="bb-single-label" title="이 값은 해당 받침대에 하나뿐입니다">×1</span>}
               {relation && <span className="bb-relation-marker" aria-label={`다음 전선과 ${relation.relation === 'equal' ? '같은 값' : '다른 값'}`}>{relation.relation === 'equal' ? '=' : '≠'}</span>}
+              {scrubbing && <span className="bb-loupe" aria-hidden="true">
+                <span className="bb-loupe-who">{mine ? '내 받침대' : `${player.name}${player.racks.length > 1 ? ` · 받침대 ${rackIndex + 1}` : ''}`}</span>
+                <span className="bb-loupe-cap">{valueLabel(visibleValue)}</span>
+                <span className="bb-loupe-idx">{index + 1}번 전선</span>
+                <span className="bb-loupe-clue">{displayedClue !== null ? `공개 단서 ${displayedClue}` : wire.cut ? '해체됨' : visibleValue === null ? '비공개' : ''}</span>
+                <span className="bb-loupe-hint">{wireSelectable(player, wire) ? '손을 떼면 선택' : '선택할 수 없는 전선'}</span>
+              </span>}
             </button>;
           })}
         </div>
       </div>)}</div>
+      {mine && <p className="bb-scrub-tip">전선이 작을 땐 받침대를 꾹 누르고 좌우로 밀어 고르세요. 돋보기가 뜨고, 손을 떼면 선택돼요.</p>}
       {mine && <p className="bb-private-note">{player.racks.some((rack) => rack.wires.some((wire) => wire.reversed)) ? '↶ 역방향 전선은 나에게 숨겨지고 동료에게 보입니다. 역방향 전선의 값을 추론해 선언하세요.' : player.racks.some((rack) => rack.wires.some((wire) => !wire.cut && wire.value === null)) ? '현재 미션 지시에 따라 내 전선이 잠시 가려져 있습니다.' : '내 전선의 값은 나에게만 보입니다.'} 원 안의 단서는 모두에게 공개됩니다.</p>}
       {player.racks.some((rack) => rack.wires.some((wire) => wire.excluded)) && <p className="bb-private-note">X 전선은 숫자 정렬에서 제외되며 장비의 효과를 받지 않습니다.</p>}
     </section>;
@@ -322,13 +372,14 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
 
     <div className="bb-game-scroll" role="region" aria-label="작전 보드" tabIndex={0}>
     <header className="bb-header">
-      <div><p className="bb-eyebrow">BOMB BUSTERS · COOPERATIVE MISSION</p><h1>봄버스터즈 <span>해체반 작전실</span></h1><p className="bb-room-name">{room.name} · {state.players.length}인 협력 · 대장 {captain?.name}</p></div>
-      <button className="bb-button bb-button-quiet" onClick={onLeaveRoom}>방 나가기</button>
+      <div><p className="bb-eyebrow">BOMB BUSTERS · COOPERATIVE MISSION</p><h1>해체반 작전실 <span>봄버스터즈</span></h1><p className="bb-room-name">{room.name} · {state.players.length}인 협력 · 대장 {captain?.name}</p></div>
+      <button className="bb-button bb-button-quiet" onClick={onLeaveRoom}>로프 풀기 <span style={{ fontWeight: 400, opacity: .8 }}>(방 나가기)</span></button>
     </header>
 
     {!connected && <div className="bb-notice bb-notice-error" role="alert">연결이 끊어졌습니다. 다시 연결되면 작전 상태를 복구합니다.</div>}
     {message && <div className={`bb-notice ${messageType === 'error' ? 'bb-notice-error' : ''}`} role={messageType === 'error' ? 'alert' : 'status'}>{message}</div>}
 
+    <div className="bb-columns"><div className="bb-col-main">
     <div className="bb-mission-context">
       <details className="bb-mission-details"><summary>미션 안내</summary><p>{state.mission.description}</p></details>
       {state.mission.id !== 50 && <>
@@ -365,6 +416,8 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       })}</ul><p>교환 완료 시점의 위치이며, 전선의 값은 새 소유자에게만 보입니다.</p></div>}
     </section>}
 
+    <div className="bb-players">{orderedPlayers.filter((player) => player.id !== playerId).map(renderPlayer)}</div>
+    </div><div className="bb-col-side">
     {isFinished ? <section className={`bb-result ${state.outcome === 'won' ? 'bb-result-won' : ''}`} role="status">
       <span className="bb-eyebrow">MISSION {state.outcome === 'won' ? 'COMPLETE' : 'FAILED'}</span>
       <h2>{state.outcome === 'won' ? '폭탄 해체 성공!' : '작전 실패'}</h2><p>{state.endReason}</p>
@@ -407,7 +460,6 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       </>}
     </section>}
 
-    <div className="bb-players">{orderedPlayers.filter((player) => player.id !== playerId).map(renderPlayer)}</div>
 
     <BombBustersEquipment state={state} playerId={playerId} disabled={!canUseEquipment || !!relationEquipmentId} onAction={send} onSelectRelation={(equipmentId) => { setRelationEquipmentId(equipmentId); setRelationWireIds([]); setOwnWireId(null); setTarget(null); }} />
 
@@ -421,6 +473,7 @@ const BombBustersGame: React.FC<Props> = ({ room, playerId, state, message, mess
       <li>숫자·색깔·위치에 관한 비공개 정보를 말하거나 몸짓으로 암시하지 마세요. 게임이 허용한 선언과 공개 단서로만 추리합니다.</li>
     </ol><p>빨간 전선을 제외한 모든 전선을 해체하면 함께 승리합니다. 기폭 한도에 도달하거나 빨간 전선을 자르면 함께 패배합니다.</p></details>
     <section className="bb-log"><h2>작전 기록</h2><ol aria-live="polite">{state.log.slice(-8).reverse().map((entry, index) => <li key={`${state.log.length - index}-${entry}`}>{entry}</li>)}</ol></section></div>
+    </div></div>
     </div>
     {me && <footer className="bb-own-dock" aria-label="내 전선 받침대">
       {campaignControl?.wireSelection && <div className="bb-wire-selection-tray"><span>{campaignControl.label} · <strong>{campaignWireIds.length}/{campaignControl.wireSelection.max}개 선택</strong></span><button className="bb-button bb-button-primary" onClick={() => campaignRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })}>미션 선택 확인하기 ↑</button></div>}

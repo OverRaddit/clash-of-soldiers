@@ -1,0 +1,108 @@
+/* Bomb Busters — racks that always fit on one row.
+   Loaded after BombBustersGame.css; overrides the wire/rack rules with the Crux design-system tokens.
+   Wires are thin vertical strips (cap + line) that flex from 46px down to 18px, so a rack never scrolls sideways.
+   My rack keeps a 36px floor and wraps instead. Mobile adds press-and-hold scrub selection with a loupe. */
+
+.bb-game .bb-racks { display: grid; gap: 10px; }
+@media (min-width: 900px) { .bb-game .bb-player:not(.bb-player-mine) .bb-racks:has(.bb-rack + .bb-rack) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bb-game .bb-rack + .bb-rack { margin-top: 0; }
+.bb-game .bb-rack { min-width: 0; }
+.bb-game .bb-rack-label { font-size: 11px; line-height: 16px; color: var(--ink-muted); margin-bottom: 4px; }
+
+/* the row */
+.bb-game .bb-wire-row { position: relative; display: flex; align-items: flex-end; gap: 3px; overflow: visible; padding: 6px 2px 16px; min-width: 0;
+  background: var(--wall-200); border: 2px solid var(--hairline); border-radius: 10px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.bb-game .bb-wire-row::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 10px; height: 4px; border-radius: 999px; background: var(--hardware-shine); box-shadow: 0 1px 0 var(--hardware); pointer-events: none; }
+.bb-game .bb-wire-row-scrubbing { touch-action: none; }
+.bb-game .bb-wire-row-mine { flex-wrap: wrap; gap: 4px 3px; padding: 8px 6px 14px; background: var(--wall-100); border-color: var(--hoodie); }
+.bb-game .bb-wire-row-mine::after { display: none; }
+
+/* a wire */
+.bb-game .bb-wire { flex: 1 1 0; min-width: 18px; max-width: 46px; width: auto; height: 68px; padding: 0 !important; border: 0; border-radius: 6px; background: none; box-shadow: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: var(--ink); z-index: 1; --bw-color: var(--hold-blue); transition: transform .12s; }
+.bb-game .bb-wire-row-mine .bb-wire { flex: 1 1 36px; max-width: 56px; height: 76px; }
+.bb-game .bb-wire:not(:disabled):hover { transform: translateY(-3px); }
+.bb-game .bb-wire-index { align-self: center; font-size: 9px; line-height: 10px; color: var(--ink-muted); font-variant-numeric: tabular-nums; margin-bottom: 2px; display: flex; gap: 2px; align-items: center; }
+.bb-game .bb-wire-row-mine .bb-wire-index { font-size: 10px; }
+.bb-game .bb-wire-value { width: 100%; max-width: 40px; height: 26px; margin: 0; border-radius: 6px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 400; font-size: 15px; line-height: 1; color: var(--on-hold); background: var(--bw-color); box-shadow: 0 2px 0 var(--hardware-deep); }
+.bb-game .bb-wire-row-mine .bb-wire-value { height: 32px; max-width: 48px; font-size: 18px; }
+.bb-game .bb-wire-line { flex: 1 1 auto; width: 5px; height: auto; margin: 2px 0 0; border: 0; border-radius: 3px; opacity: 1; background: var(--bw-color); }
+.bb-game .bb-cut-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; padding: 0; }
+.bb-game .bb-sort-value { position: absolute; top: 12px; right: -2px; font-size: 9px; line-height: 12px; padding: 0 3px; border-radius: 999px; background: var(--wall-100); color: var(--ink-muted); }
+
+/* colours */
+.bb-game .bb-wire-blue { --bw-color: var(--hold-blue); }
+.bb-game .bb-wire-yellow { --bw-color: var(--hold-yellow); background: none; border: 0; box-shadow: none; }
+.bb-game .bb-wire-yellow .bb-wire-value { color: var(--on-hold-warm); font-size: 13px; }
+.bb-game .bb-wire-red { --bw-color: var(--hold-red); background: none; border: 0; box-shadow: none; }
+.bb-game .bb-wire-red .bb-wire-value { font-size: 13px; }
+.bb-game .bb-wire-hidden { --bw-color: var(--hardware); background: none; border: 0; box-shadow: none; }
+.bb-game .bb-wire-hidden .bb-wire-value { background: repeating-linear-gradient(135deg, var(--hardware-shine) 0 3px, var(--wall-100) 3px 6px); color: var(--hardware); box-shadow: 0 2px 0 var(--hardware); font-size: 12px; font-weight: 400; }
+
+/* states */
+.bb-game .bb-wire-cut { opacity: .55 !important; }
+.bb-game .bb-wire-cut .bb-wire-line { background: linear-gradient(to bottom, var(--bw-color) 0 38%, rgba(0,0,0,0) 38% 62%, var(--bw-color) 62%); }
+.bb-game .bb-wire-cut .bb-wire-value { box-shadow: none; text-decoration: line-through; }
+.bb-game .bb-wire-cut::after { content: "✕"; position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 700; color: var(--hardware-deep); pointer-events: none; }
+.bb-game .bb-wire-selected { outline: 3px solid var(--hoodie); outline-offset: 1px; background: var(--wall-100); transform: translateY(-3px); }
+.bb-game .bb-wire-selected .bb-wire-value { box-shadow: 0 4px 0 var(--hoodie-deep); }
+.bb-game .bb-wire-pointed { border: 0; }
+.bb-game .bb-wire-pointed .bb-wire-value { outline: 2px dashed var(--hoodie); outline-offset: 1px; }
+.bb-game .bb-wire-reversed { border: 0; }
+.bb-game .bb-wire-reversed .bb-wire-line { background: repeating-linear-gradient(to bottom, var(--bw-color) 0 4px, rgba(0,0,0,0) 4px 7px); }
+.bb-game .bb-wire-excluded { outline: 0; }
+.bb-game .bb-wire-excluded .bb-wire-value { opacity: .6; }
+.bb-game .bb-wire-special { top: 12px; right: -2px; font-size: 10px; line-height: 12px; padding: 0 3px; border-radius: 999px; background: var(--wall-100); color: var(--hoodie); }
+.bb-game .bb-wire.bb-wire-cut.bb-wire-last-success { opacity: 1 !important; border: 0; background: none; box-shadow: none; }
+.bb-game .bb-wire-last-success .bb-wire-index { color: var(--hold-green); font-weight: 700; }
+.bb-game .bb-wire-last-success .bb-wire-value { box-shadow: 0 0 0 2px var(--hold-green); }
+.bb-game .bb-wire.bb-wire-last-failure { border: 0; box-shadow: none; }
+.bb-game .bb-wire-last-failure .bb-wire-value { box-shadow: 0 0 0 2px var(--hold-red); }
+.bb-game .bb-wire-last-result { margin-left: 0; line-height: 10px; }
+.bb-game .bb-wire-celebrate { border: 0; }
+.bb-game .bb-cut-flash { border-radius: 8px; }
+
+/* clue bubble, markers */
+.bb-game .bb-hint { bottom: -8px; left: 50%; transform: translateX(-50%); width: auto; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--wall-100); border: 2px solid var(--hold-blue); color: var(--hold-blue); font-size: 11px; line-height: 16px; font-weight: 700; box-shadow: none; white-space: nowrap; z-index: 2; }
+.bb-game .bb-hint-yellow { background: var(--hold-yellow); border-color: var(--hold-yellow); color: var(--on-hold-warm); font-size: 10px; }
+.bb-game .bb-hint-red { background: var(--wall-100); border-color: var(--hold-red); color: var(--hold-red); font-size: 10px; }
+.bb-game .bb-hint-variant { min-width: 24px; border-color: var(--hold-purple); color: var(--hold-purple); }
+.bb-game .bb-wire-last-failure .bb-hint { border-color: var(--hold-red); color: var(--hold-red); background: var(--wall-100); box-shadow: 0 0 0 3px rgba(197, 48, 43, .25); }
+.bb-game .bb-relation-marker { right: -11px; top: 26px; width: 16px; height: 16px; border: 0; border-radius: 999px; background: var(--code-tint); color: var(--code); font-size: 10px; box-shadow: none; z-index: 2; }
+.bb-game .bb-single-label { right: -4px; bottom: 14px; padding: 0 3px; border: 0; border-radius: 999px; background: var(--code-tint); color: var(--code); font-size: 9px; }
+.bb-game .bb-wire-empty { flex: 1 1 0; min-width: 18px; max-width: 46px; width: auto; height: 68px; border: 1px dashed var(--hairline); border-radius: 6px; background: none; }
+.bb-game .bb-wire-empty > span { left: 50%; transform: translateX(-50%); top: 0; font-size: 9px; color: var(--hardware); }
+
+/* own dock overrides from the old stylesheet */
+.bb-game .bb-own-dock .bb-wire, .bb-game .bb-own-dock .bb-wire-empty { height: 76px; }
+.bb-game .bb-own-dock .bb-wire-value { font-size: 18px; }
+.bb-game .bb-own-dock .bb-wire-yellow .bb-wire-value, .bb-game .bb-own-dock .bb-wire-red .bb-wire-value { font-size: 14px; }
+.bb-game .bb-own-dock .bb-racks { gap: 8px; }
+
+/* scrub selection: press-and-hold, slide, release (touch) */
+.bb-game .bb-wire-scrub { transform: translateY(-4px) scale(1.12); z-index: 3; }
+.bb-game .bb-wire-scrub .bb-wire-value { box-shadow: 0 0 0 3px var(--wall-100), 0 0 0 5px var(--hoodie); }
+.bb-game .bb-loupe { position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); z-index: 20; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 76px; padding: 8px 10px 10px; box-sizing: border-box;
+  background: var(--wall-100); border: 2px solid var(--hoodie); border-radius: 12px; box-shadow: 0 8px 20px rgba(58,36,24,.25); font-family: var(--font-sans); }
+.bb-game .bb-loupe::after { content: ""; position: absolute; top: 100%; left: 50%; width: 14px; height: 14px; transform: translate(-50%, -8px) rotate(45deg); background: var(--wall-100); border-right: 2px solid var(--hoodie); border-bottom: 2px solid var(--hoodie); }
+.bb-game .bb-loupe-who { font-size: 11px; line-height: 14px; color: var(--ink-muted); white-space: nowrap; }
+.bb-game .bb-loupe-cap { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-family: var(--font-display); font-size: 24px; color: var(--on-hold); background: var(--bw-color); box-shadow: 0 3px 0 var(--hardware-deep); }
+.bb-game .bb-wire-hidden .bb-loupe-cap { background: repeating-linear-gradient(135deg, var(--hardware-shine) 0 4px, var(--wall-100) 4px 8px); color: var(--hardware); box-shadow: 0 3px 0 var(--hardware); }
+.bb-game .bb-wire-yellow .bb-loupe-cap { color: var(--on-hold-warm); font-size: 18px; }
+.bb-game .bb-wire-red .bb-loupe-cap { font-size: 18px; }
+.bb-game .bb-loupe-idx { font-size: 13px; line-height: 16px; font-weight: 700; white-space: nowrap; color: var(--ink); }
+.bb-game .bb-loupe-clue { font-size: 11px; line-height: 14px; color: var(--hold-blue); font-weight: 700; white-space: nowrap; }
+.bb-game .bb-loupe-hint { font-size: 10px; line-height: 12px; color: var(--ink-muted); white-space: nowrap; }
+.bb-game .bb-scrub-tip { margin: 6px 0 0; font-size: 11px; line-height: 14px; color: var(--ink-muted); }
+@media (hover: hover) and (pointer: fine) { .bb-game .bb-scrub-tip { display: none; } }
+
+@media (max-width: 640px) {
+  .bb-game .bb-wire { min-width: 16px; height: 60px; }
+  .bb-game .bb-wire-value { height: 22px; font-size: 12px; }
+  .bb-game .bb-wire-row { gap: 2px; padding: 5px 2px 14px; }
+  .bb-game .bb-wire-row-mine .bb-wire { flex-basis: 40px; height: 66px; }
+  .bb-game .bb-wire-row-mine .bb-wire-value, .bb-game .bb-own-dock .bb-wire-value { height: 28px; font-size: 16px; }
+  .bb-game .bb-wire-empty { min-width: 16px; height: 60px; }
+}
