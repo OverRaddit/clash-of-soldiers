@@ -12,11 +12,12 @@ import { GameRoomService } from './game-room.service';
 import { GameLogicService } from './game-logic.service';
 import { KrakenLogicService } from './kraken-logic.service';
 import { GameState } from './entities/game-state.entity';
-import { GameRoom, GameType } from './entities/game-room-memory.entity';
+import { GameRoom, GameType, hasPrivateState } from './entities/game-room-memory.entity';
 import { BombBustersLogicService } from './bomb-busters-logic.service';
 import { BombBustersAction } from './entities/bomb-busters-game-state.entity';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { applyFellowshipAction } from './fellowship/engine';
+import { applyWbcAction } from './world-betting-cup/engine';
 
 interface ClientInfo {
   playerId: string;
@@ -109,7 +110,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
       if (!existingRoom || !this.isBoundMember(info, existingRoom)) return;
       const room = this.gameRoomService.leaveRoom(info.roomId, info.playerId);
       if (room) {
-        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters' || room.gameType === 'fellowship'
+        this.emitRoomUpdate(room, 'player_left', hasPrivateState(room.gameType)
           ? '플레이어가 재연결하지 않아 대기실로 돌아왔습니다.'
           : '플레이어가 연결 해제되어 나갔습니다.');
       }
@@ -185,7 +186,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       // 방이 존재하면 다른 플레이어들에게 알림
       if (room) {
-        this.emitRoomUpdate(room, 'player_left', room.gameType === 'bomb-busters' || room.gameType === 'fellowship'
+        this.emitRoomUpdate(room, 'player_left', hasPrivateState(room.gameType)
           ? '플레이어가 나가 대기실로 돌아왔습니다.'
           : '플레이어가 나갔습니다.');
       }
@@ -263,6 +264,8 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.emitBombBustersStateToAll(room, '게임이 시작되었습니다!', 'game_started');
       } else if (room.gameType === 'fellowship') {
         this.emitFellowshipStateToAll(room, '챕터가 시작되었습니다!', 'game_started');
+      } else if (room.gameType === 'world-betting-cup') {
+        this.emitPrivateStateToAll(room, '월드 배팅 컵이 시작되었습니다! 우승팀을 선배팅하세요.', 'game_started');
       } else if (room.gameType === 'no-touch-kraken') {
         // 크라켄 게임 초기화
         const krakenState = this.krakenLogicService.initializeGame(playerIds, playerNames);
@@ -648,7 +651,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     } catch (error) {
       const type = this.gameRoomService.getRoom(data?.roomId)?.gameType;
       client.emit(type === 'bomb-busters' ? 'bomb_busters_error'
-        : type === 'fellowship' ? 'fellowship_error' : 'kraken_error', { message: error.message });
+        : type === 'fellowship' ? 'fellowship_error' : type === 'world-betting-cup' ? 'wbc_error' : 'kraken_error', { message: error.message });
     }
   }
 
@@ -771,6 +774,31 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('wbc_action')
+  handleWbcAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; action: Record<string, unknown> },
+  ) {
+    try {
+      const room = this.requireMember(client, data?.roomId, data?.playerId, 'world-betting-cup');
+      if (room.status !== 'playing' || !room.gameState) {
+        throw new Error('진행 중인 월드 배팅 컵이 없습니다.');
+      }
+      if (!data.action || typeof data.action !== 'object' || Array.isArray(data.action)) {
+        throw new Error('올바른 행동을 선택해주세요.');
+      }
+      // 엔진은 새 상태를 돌려주므로, 거부된 행동은 방 상태를 건드리지 않는다.
+      const nextState = applyWbcAction(room.gameState, data.playerId, data.action as any);
+      room.gameState = nextState;
+      const finished = nextState.phase === 'finished';
+      if (finished) room.finishGame();
+      this.emitPrivateStateToAll(room, nextState.result?.message ?? '게임 상태가 변경되었습니다.',
+        finished ? 'game_ended' : 'wbc_state_updated');
+    } catch (error) {
+      client.emit('wbc_error', { message: error.message });
+    }
+  }
+
   // --- 헬퍼 메서드 ---
 
   private tickBombRoom(room: GameRoom): void {
@@ -827,6 +855,20 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   private emitBombBustersStateToAll(room: GameRoom, message: string, event = 'bomb_busters_state_updated'): void {
+    for (const [socketId, info] of this.clients) {
+      if (this.isBoundMember(info, room)) {
+        const playerRoom = this.gameRoomService.serializeRoom(room, info.playerId);
+        this.server.to(socketId).emit(event, {
+          room: playerRoom,
+          gameState: playerRoom.gameState,
+          message,
+        });
+      }
+    }
+  }
+
+  /** 플레이어마다 다른 비공개 뷰를 보내는 게임 공통 전송 */
+  private emitPrivateStateToAll(room: GameRoom, message: string, event: string): void {
     for (const [socketId, info] of this.clients) {
       if (this.isBoundMember(info, room)) {
         const playerRoom = this.gameRoomService.serializeRoom(room, info.playerId);
