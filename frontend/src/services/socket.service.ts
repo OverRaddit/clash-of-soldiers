@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { BombBustersAction } from '../types/bomb-busters.types';
 import { FellowshipAction } from '../types/fellowship.types';
+import { WbcAction } from '../types/wbc.types';
 import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
@@ -90,6 +91,20 @@ class SocketService {
 
   onFellowshipError(callback: (data: { message: string }) => void): void {
     this.socket?.on('fellowship_error', callback);
+  }
+
+  // --- 월드 배팅 컵 이벤트 ---
+
+  wbcAction(roomId: string, playerId: string, action: WbcAction): void {
+    this.socket?.emit('wbc_action', { roomId, playerId, action });
+  }
+
+  onWbcStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('wbc_state_updated', callback);
+  }
+
+  onWbcError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('wbc_error', callback);
   }
 
   // --- 확보! (멀티피치) 이벤트 ---

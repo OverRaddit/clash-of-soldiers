@@ -6,8 +6,13 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'multipitch';
-export const PRIVATE_HAND_GAMES: GameType[] = ['bomb-busters', 'fellowship', 'multipitch'];
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch';
+
+/** 비공개 정보(손패, 몰래 본 카드)가 있어 플레이어별 뷰와 세션 토큰이 필요한 게임 */
+export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch'];
+export function hasPrivateState(gameType?: GameType): boolean {
+  return !!gameType && PRIVATE_GAME_TYPES.includes(gameType);
+}
 
 export class GameRoom {
   id: string;
@@ -64,7 +69,7 @@ export class GameRoom {
       status: this.status,
       createdAt: this.createdAt,
       // Cooperative card games contain private hands and must use the player-view serializer.
-      gameState: PRIVATE_HAND_GAMES.includes(this.gameType) ? null : this.gameState,
+      gameState: hasPrivateState(this.gameType) ? null : this.gameState,
       gameType: this.gameType,
       ...(this.gameType === 'bomb-busters' ? { selectedMissionId: this.selectedMissionId } : {}),
       ...(this.gameType === 'fellowship' ? { selectedFellowshipChapter: this.selectedFellowshipChapter } : {}),

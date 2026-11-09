@@ -4,7 +4,7 @@ import GameLobby from './components/GameLobby';
 import GameRoom from './components/GameRoom';
 import Hold, { HOLD_SHAPES, HoldColor } from './components/crux/Hold';
 import RopeBar from './components/crux/RopeBar';
-import { GameRoom as GameRoomType } from './types/game.types';
+import { GameRoom as GameRoomType, PRIVATE_GAME_TYPES } from './types/game.types';
 import socketService from './services/socket.service';
 
 // A separate identity per tab also allows friends to test a room on one device.
@@ -18,6 +18,7 @@ const ENTRY_GAMES: { id: string; label: string; color: HoldColor }[] = [
   { id: 'no-touch-kraken', label: '노터치크라켄', color: 'green' },
   { id: 'bomb-busters', label: '봄버스터즈', color: 'orange' },
   { id: 'fellowship', label: '반지 원정대', color: 'purple' },
+  { id: 'world-betting-cup', label: '월드 배팅 컵', color: 'yellow' },
   { id: 'multipitch', label: '확보!', color: 'green' },
 ];
 
@@ -90,7 +91,7 @@ function App() {
 
   // 방 입장
   const handleJoinRoom = (room: GameRoomType) => {
-    if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship' || room.gameType === 'multipitch') sessionStorage.setItem(SESSION_ROOM, room.id);
+    if (PRIVATE_GAME_TYPES.includes(room.gameType)) sessionStorage.setItem(SESSION_ROOM, room.id);
     else sessionStorage.removeItem(SESSION_ROOM);
     sessionStorage.removeItem(LEGACY_BOMB_ROOM);
     setRestoreMessage('');
