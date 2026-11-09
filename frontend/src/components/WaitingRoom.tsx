@@ -17,7 +17,7 @@ interface WaitingRoomProps {
   onFellowshipChapterChange?: (chapter: number) => void;
 }
 
-const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple' };
+const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple', 'world-betting-cup': 'yellow' };
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
   room,
@@ -44,7 +44,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
     || (room.gameType === 'bomb-busters' && (!selectedMission || selectedMission.supported === false))
     || (room.gameType === 'fellowship' && !room.fellowshipChapters?.some((chapter) => chapter.number === room.selectedFellowshipChapter));
 
-  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : '토이배틀';
+  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : room.gameType === 'world-betting-cup' ? '월드 배팅 컵' : '토이배틀';
   const holdColor = GAME_HOLD[room.gameType] || 'orange';
   const fellowshipChapter = room.fellowshipChapters?.find((chapter) => chapter.number === room.selectedFellowshipChapter);
   const hostName = room.players.find((p) => p.isHost)?.name;
@@ -110,10 +110,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           <div className="crux-row" style={{ justifyContent: 'space-between' }}>
             <div className="crux-page-head__text">
               <h2 id="crux-options-title" className="crux-h2">
-                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : '루트 정보'}
+                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : room.gameType === 'world-betting-cup' ? '승부조작단 브리핑' : '루트 정보'}
               </h2>
               <p className="crux-help">
-                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
+                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : room.gameType === 'world-betting-cup' ? '8강 대진은 시작할 때 무작위로 짜여요. 설정할 옵션은 없어요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
               </p>
             </div>
             <Hold color={holdColor} seed={room.gameType} size={48} />
@@ -146,6 +146,14 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
               <p className="crux-mission-note">기본 규칙에서는 내 전선만 보이고, 동료의 전선은 작은 수부터 정렬되어 있습니다. 파란 전선에 첫 단서를 놓은 뒤 같은 값의 전선을 함께 잘라보세요. 전선 배치와 단서가 달라지는 미션은 위의 개별 안내를 따릅니다.</p>
               <p className="crux-mission-note">전선의 숫자와 위치를 말하거나 암시하지 마세요. 화면에 공개된 단서와 정해진 행동으로만 정보를 나눕니다. 2–3인 게임은 일부 대원이 받침대 2개를 사용합니다.</p>
             </>
+          )}
+
+          {room.gameType === 'world-betting-cup' && (
+            <div className="crux-mission-info" aria-label="월드 배팅 컵 안내">
+              <strong>월드 배팅 컵: 뒷세계의 승부조작단</strong>
+              <p>8강부터 결승까지 7경기. 경기마다 숨겨진 스코어 카드 6장을 몰래 보거나 바꿔치기한 뒤, <b>질 것 같은 나라</b>에 토큰을 겁니다.</p>
+              <p>일반 토큰 7개(선배팅 1개 포함) · 승부 조작 토큰 2개 · 승리 배팅 토큰 3개로 시작하고, 마지막에 토큰이 가장 많은 승부사가 이깁니다.</p>
+            </div>
           )}
 
           {room.gameType === 'fellowship' && (

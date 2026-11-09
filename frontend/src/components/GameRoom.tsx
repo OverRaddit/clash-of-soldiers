@@ -3,6 +3,7 @@ import { GameRoom as GameRoomType, GameState } from '../types/game.types';
 import { KrakenClientState } from '../types/kraken.types';
 import { BombBustersClientState } from '../types/bomb-busters.types';
 import { FellowshipClientState } from '../types/fellowship.types';
+import { WbcClientState } from '../types/wbc.types';
 import socketService from '../services/socket.service';
 import './GameRoom.css';
 import WaitingRoom from './WaitingRoom';
@@ -10,6 +11,7 @@ import ToyBattleGame from './ToyBattleGame';
 import KrakenGame from './KrakenGame';
 import BombBustersGame from './BombBustersGame';
 import FellowshipGame from './FellowshipGame';
+import WbcGame from './WbcGame';
 
 interface GameRoomProps {
   room: GameRoomType;
@@ -30,6 +32,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
   );
   const [fellowshipState, setFellowshipState] = useState<FellowshipClientState | null>(
     initialRoom.gameType === 'fellowship' ? initialRoom.gameState || null : null
+  );
+  const [wbcState, setWbcState] = useState<WbcClientState | null>(
+    initialRoom.gameType === 'world-betting-cup' ? initialRoom.gameState || null : null
   );
   const missionId = room.selectedMissionId ?? 1;
   const [message, setMessage] = useState<string>('');
@@ -89,6 +94,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
       if (data.type === 'returned_to_room') {
         setBombState(null);
         setFellowshipState(null);
+        setWbcState(null);
         setKrakenState(null);
         setGameEnded(false);
         setKrakenWinner(null);
@@ -111,6 +117,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setBombState(data.gameState);
       } else if (data.room.gameType === 'fellowship') {
         setFellowshipState(data.gameState);
+      } else if (data.room.gameType === 'world-betting-cup') {
+        setWbcState(data.gameState);
       } else {
         setGameState(data.gameState);
       }
@@ -135,6 +143,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
       } else if (data.room?.gameType === 'fellowship' || initialRoom.gameType === 'fellowship') {
         if (data.room) setRoom(data.room);
         setFellowshipState(data.gameState);
+      } else if (data.room?.gameType === 'world-betting-cup' || initialRoom.gameType === 'world-betting-cup') {
+        if (data.room) setRoom(data.room);
+        setWbcState(data.gameState);
       } else if (data.room?.gameType === 'no-touch-kraken' || initialRoom.gameType === 'no-touch-kraken') {
         setKrakenState(data.gameState);
         setGameEnded(true);
@@ -221,6 +232,16 @@ const GameRoom: React.FC<GameRoomProps> = ({
       }
     };
 
+    const handleWbcStateUpdated = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      setWbcState(data.gameState);
+      if (data.message) {
+        setMessage(data.message);
+        setMessageType(data.type === 'error' ? 'error' : 'info');
+      }
+    };
+
     const handleSnapshot = (data: any) => {
       if (data.room?.id !== initialRoom.id) return;
       setRoom(data.room);
@@ -231,13 +252,16 @@ const GameRoom: React.FC<GameRoomProps> = ({
       } else if (data.room.gameType === 'fellowship') {
         setFellowshipState(state || null);
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
+      } else if (data.room.gameType === 'world-betting-cup') {
+        setWbcState(state || null);
+        if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'no-touch-kraken') {
         if (state) setKrakenState(state);
       } else if (state) setGameState(state);
     };
 
     const handleReconnect = () => {
-      if (initialRoom.gameType !== 'bomb-busters' && initialRoom.gameType !== 'fellowship') return;
+      if (initialRoom.gameType !== 'bomb-busters' && initialRoom.gameType !== 'fellowship' && initialRoom.gameType !== 'world-betting-cup') return;
       const player = initialRoom.players.find((p) => p.id === playerId);
       if (player) socketService.joinRoom(initialRoom.id, playerId, player.name);
     };
@@ -256,6 +280,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
     socketService.onBombBustersError(handleKrakenError);
     socketService.onFellowshipStateUpdated(handleFellowshipStateUpdated);
     socketService.onFellowshipError(handleKrakenError);
+    socketService.onWbcStateUpdated(handleWbcStateUpdated);
+    socketService.onWbcError(handleKrakenError);
     const activeSocket = socketService.getSocket();
     activeSocket?.on('room_state', handleSnapshot);
     activeSocket?.on('join_room_success', handleSnapshot);
@@ -283,6 +309,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('bomb_busters_error', handleKrakenError);
         socket.off('fellowship_state_updated', handleFellowshipStateUpdated);
         socket.off('fellowship_error', handleKrakenError);
+        socket.off('wbc_state_updated', handleWbcStateUpdated);
+        socket.off('wbc_error', handleKrakenError);
         socket.off('room_state', handleSnapshot);
         socket.off('join_room_success', handleSnapshot);
         socket.off('join_room_error', handleKrakenError);
@@ -338,6 +366,21 @@ const GameRoom: React.FC<GameRoomProps> = ({
   if (room.gameType === 'fellowship') {
     return <main className="bomb-loading" role="status">
       <h2>원정대의 여정을 불러오는 중</h2>
+      <p>{message || '잠시만 기다려주세요.'}</p>
+      <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
+      <button onClick={handleLeaveRoom}>로비로 이동</button>
+    </main>;
+  }
+
+  if (room.gameType === 'world-betting-cup' && wbcState) {
+    return <WbcGame room={room} playerId={playerId} state={wbcState}
+      message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
+      onReturnToRoom={handleReturnToRoom} />;
+  }
+
+  if (room.gameType === 'world-betting-cup') {
+    return <main className="bomb-loading" role="status">
+      <h2>승부조작단 리그 정보를 불러오는 중</h2>
       <p>{message || '잠시만 기다려주세요.'}</p>
       <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
       <button onClick={handleLeaveRoom}>로비로 이동</button>
