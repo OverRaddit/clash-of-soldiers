@@ -19,6 +19,7 @@ const ENTRY_GAMES: { id: string; label: string; color: HoldColor }[] = [
   { id: 'bomb-busters', label: '봄버스터즈', color: 'orange' },
   { id: 'fellowship', label: '반지 원정대', color: 'purple' },
   { id: 'world-betting-cup', label: '월드 배팅 컵', color: 'yellow' },
+  { id: 'multipitch', label: '확보!', color: 'green' },
 ];
 
 const WALL_SPOTS: [number, number][] = [[6, 6], [34, 4], [66, 8], [86, 22], [4, 34], [88, 48], [8, 60], [70, 40], [90, 72], [14, 82], [82, 88]];

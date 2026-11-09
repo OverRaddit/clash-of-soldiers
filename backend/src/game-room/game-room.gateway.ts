@@ -18,6 +18,7 @@ import { BombBustersAction } from './entities/bomb-busters-game-state.entity';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { applyFellowshipAction } from './fellowship/engine';
 import { applyWbcAction } from './world-betting-cup/engine';
+import { applyMultipitchAction } from './multipitch/engine';
 
 interface ClientInfo {
   playerId: string;
@@ -36,6 +37,7 @@ interface DisconnectedClient {
   cors: {
     origin: [
       'http://localhost:3000',
+      /^http:\/\/localhost:\d+$/,
       'https://clash-of-soldiers.vercel.app',
       /^https:\/\/.*\.vercel\.app$/
     ],
@@ -266,6 +268,8 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.emitFellowshipStateToAll(room, '챕터가 시작되었습니다!', 'game_started');
       } else if (room.gameType === 'world-betting-cup') {
         this.emitPrivateStateToAll(room, '월드 배팅 컵이 시작되었습니다! 우승팀을 선배팅하세요.', 'game_started');
+      } else if (room.gameType === 'multipitch') {
+        this.emitPrivateStateToAll(room, '등반이 시작되었습니다!', 'game_started');
       } else if (room.gameType === 'no-touch-kraken') {
         // 크라켄 게임 초기화
         const krakenState = this.krakenLogicService.initializeGame(playerIds, playerNames);
@@ -651,7 +655,8 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     } catch (error) {
       const type = this.gameRoomService.getRoom(data?.roomId)?.gameType;
       client.emit(type === 'bomb-busters' ? 'bomb_busters_error'
-        : type === 'fellowship' ? 'fellowship_error' : type === 'world-betting-cup' ? 'wbc_error' : 'kraken_error', { message: error.message });
+        : type === 'fellowship' ? 'fellowship_error' : type === 'world-betting-cup' ? 'wbc_error'
+        : type === 'multipitch' ? 'multipitch_error' : 'kraken_error', { message: error.message });
     }
   }
 
@@ -796,6 +801,31 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         finished ? 'game_ended' : 'wbc_state_updated');
     } catch (error) {
       client.emit('wbc_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('multipitch_action')
+  handleMultipitchAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; action: Record<string, unknown> },
+  ) {
+    try {
+      const room = this.requireMember(client, data?.roomId, data?.playerId, 'multipitch');
+      if (room.status !== 'playing' || !room.gameState) {
+        throw new Error('진행 중인 등반이 없습니다.');
+      }
+      if (!data.action || typeof data.action !== 'object' || Array.isArray(data.action)) {
+        throw new Error('올바른 행동을 선택해주세요.');
+      }
+      // 엔진이 완전한 다음 상태를 돌려준다. 거부된 행동은 방 상태를 건드리지 않는다.
+      const nextState = applyMultipitchAction(room.gameState, data.playerId, data.action as any);
+      room.gameState = nextState;
+      const finished = nextState.phase === 'finished';
+      if (finished) room.finishGame();
+      this.emitPrivateStateToAll(room, nextState.result?.message ?? '게임 상태가 변경되었습니다.',
+        finished ? 'game_ended' : 'multipitch_state_updated');
+    } catch (error) {
+      client.emit('multipitch_error', { message: error.message });
     }
   }
 
