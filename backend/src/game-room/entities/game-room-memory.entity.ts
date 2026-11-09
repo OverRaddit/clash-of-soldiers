@@ -6,10 +6,10 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'three-pigs';
 
 /** 비공개 정보(손패, 몰래 본 카드)가 있어 플레이어별 뷰와 세션 토큰이 필요한 게임 */
-export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup'];
+export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'three-pigs'];
 export function hasPrivateState(gameType?: GameType): boolean {
   return !!gameType && PRIVATE_GAME_TYPES.includes(gameType);
 }

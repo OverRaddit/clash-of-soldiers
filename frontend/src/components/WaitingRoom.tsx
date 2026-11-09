@@ -17,7 +17,7 @@ interface WaitingRoomProps {
   onFellowshipChapterChange?: (chapter: number) => void;
 }
 
-const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple', 'world-betting-cup': 'yellow' };
+const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple', 'world-betting-cup': 'yellow', 'three-pigs': 'pink' };
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
   room,
@@ -44,7 +44,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
     || (room.gameType === 'bomb-busters' && (!selectedMission || selectedMission.supported === false))
     || (room.gameType === 'fellowship' && !room.fellowshipChapters?.some((chapter) => chapter.number === room.selectedFellowshipChapter));
 
-  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : room.gameType === 'world-betting-cup' ? '월드 배팅 컵' : '토이배틀';
+  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : room.gameType === 'world-betting-cup' ? '월드 배팅 컵' : room.gameType === 'three-pigs' ? '아기 돼지 삼형제' : '토이배틀';
   const holdColor = GAME_HOLD[room.gameType] || 'orange';
   const fellowshipChapter = room.fellowshipChapters?.find((chapter) => chapter.number === room.selectedFellowshipChapter);
   const hostName = room.players.find((p) => p.isHost)?.name;
@@ -110,10 +110,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           <div className="crux-row" style={{ justifyContent: 'space-between' }}>
             <div className="crux-page-head__text">
               <h2 id="crux-options-title" className="crux-h2">
-                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : room.gameType === 'world-betting-cup' ? '승부조작단 브리핑' : '루트 정보'}
+                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : room.gameType === 'world-betting-cup' ? '승부조작단 브리핑' : room.gameType === 'three-pigs' ? '공사 안내판' : '루트 정보'}
               </h2>
               <p className="crux-help">
-                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : room.gameType === 'world-betting-cup' ? '8강 대진은 시작할 때 무작위로 짜여요. 설정할 옵션은 없어요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
+                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : room.gameType === 'world-betting-cup' ? '8강 대진은 시작할 때 무작위로 짜여요. 설정할 옵션은 없어요.' : room.gameType === 'three-pigs' ? '선플레이어는 시작할 때 무작위로 정해요. 설정할 옵션은 없어요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
               </p>
             </div>
             <Hold color={holdColor} seed={room.gameType} size={48} />
@@ -153,6 +153,14 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
               <strong>월드 배팅 컵: 뒷세계의 승부조작단</strong>
               <p>8강부터 결승까지 7경기. 경기마다 숨겨진 스코어 카드 6장을 몰래 보거나 바꿔치기한 뒤, <b>질 것 같은 나라</b>에 토큰을 겁니다.</p>
               <p>일반 토큰 7개(선배팅 1개 포함) · 승부 조작 토큰 2개 · 승리 배팅 토큰 3개로 시작하고, 마지막에 토큰이 가장 많은 승부사가 이깁니다.</p>
+            </div>
+          )}
+
+          {room.gameType === 'three-pigs' && (
+            <div className="crux-mission-info" aria-label="아기 돼지 삼형제 안내">
+              <strong>아기 돼지 삼형제의 아파트 짓기</strong>
+              <p>내 돼지 카드 3장 위에 <b>터 → 철근 → 콘크리트</b> 순서로 아파트를 올리고 정원으로 마무리합니다. 다이너마이트로 이웃의 맨 위층을 날릴 수 있고, 방범 마감재는 그 아래층을 지켜 줍니다.</p>
+              <p>한 사람이 세 채를 모두 완성하면 끝. 아파트마다 <b>터 × 층</b>에 3층 이상 +1, 5층 이상 +2를 더해 가장 높은 점수가 이깁니다.</p>
             </div>
           )}
 

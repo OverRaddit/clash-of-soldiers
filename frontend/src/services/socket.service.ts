@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { BombBustersAction } from '../types/bomb-busters.types';
 import { FellowshipAction } from '../types/fellowship.types';
 import { WbcAction } from '../types/wbc.types';
+import { PigsAction } from '../types/pigs.types';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -104,6 +105,20 @@ class SocketService {
 
   onWbcError(callback: (data: { message: string }) => void): void {
     this.socket?.on('wbc_error', callback);
+  }
+
+  // --- 아기 돼지 삼형제 이벤트 ---
+
+  pigsAction(roomId: string, playerId: string, action: PigsAction): void {
+    this.socket?.emit('pigs_action', { roomId, playerId, action });
+  }
+
+  onPigsStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('pigs_state_updated', callback);
+  }
+
+  onPigsError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('pigs_error', callback);
   }
 
   // --- 토이배틀 이벤트 ---
