@@ -17,6 +17,6 @@ export class CreateRoomDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'three-pigs'])
+  @IsIn(['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs'])
   gameType?: string = 'toy-battle';
 }

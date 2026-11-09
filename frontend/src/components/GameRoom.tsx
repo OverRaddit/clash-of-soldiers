@@ -5,6 +5,7 @@ import { BombBustersClientState } from '../types/bomb-busters.types';
 import { FellowshipClientState } from '../types/fellowship.types';
 import { WbcClientState } from '../types/wbc.types';
 import { PigsClientState } from '../types/pigs.types';
+import { MultipitchClientState } from '../types/multipitch.types';
 import socketService from '../services/socket.service';
 import './GameRoom.css';
 import WaitingRoom from './WaitingRoom';
@@ -14,6 +15,7 @@ import BombBustersGame from './BombBustersGame';
 import FellowshipGame from './FellowshipGame';
 import WbcGame from './WbcGame';
 import PigsGame from './PigsGame';
+import MultipitchGame from './MultipitchGame';
 
 interface GameRoomProps {
   room: GameRoomType;
@@ -40,6 +42,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
   );
   const [pigsState, setPigsState] = useState<PigsClientState | null>(
     initialRoom.gameType === 'three-pigs' ? initialRoom.gameState || null : null
+  );
+  const [multipitchState, setMultipitchState] = useState<MultipitchClientState | null>(
+    initialRoom.gameType === 'multipitch' ? initialRoom.gameState || null : null
   );
   const missionId = room.selectedMissionId ?? 1;
   const [message, setMessage] = useState<string>('');
@@ -101,6 +106,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setFellowshipState(null);
         setWbcState(null);
         setPigsState(null);
+        setMultipitchState(null);
         setKrakenState(null);
         setGameEnded(false);
         setKrakenWinner(null);
@@ -127,6 +133,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setWbcState(data.gameState);
       } else if (data.room.gameType === 'three-pigs') {
         setPigsState(data.gameState);
+      } else if (data.room.gameType === 'multipitch') {
+        setMultipitchState(data.gameState);
       } else {
         setGameState(data.gameState);
       }
@@ -157,6 +165,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
       } else if (data.room?.gameType === 'three-pigs' || initialRoom.gameType === 'three-pigs') {
         if (data.room) setRoom(data.room);
         setPigsState(data.gameState);
+      } else if (data.room?.gameType === 'multipitch' || initialRoom.gameType === 'multipitch') {
+        if (data.room) setRoom(data.room);
+        setMultipitchState(data.gameState);
       } else if (data.room?.gameType === 'no-touch-kraken' || initialRoom.gameType === 'no-touch-kraken') {
         setKrakenState(data.gameState);
         setGameEnded(true);
@@ -252,6 +263,15 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setMessageType(data.type === 'error' ? 'error' : 'info');
       }
     };
+    const handleMultipitchStateUpdated = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      setMultipitchState(data.gameState);
+      if (data.message) {
+        setMessage(data.message);
+        setMessageType(data.type === 'error' ? 'error' : 'info');
+      }
+    };
 
     const handlePigsStateUpdated = (data: any) => {
       if (data.room?.id !== initialRoom.id) return;
@@ -275,6 +295,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'world-betting-cup') {
         setWbcState(state || null);
+      } else if (data.room.gameType === 'multipitch') {
+        setMultipitchState(state || null);
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'three-pigs') {
         setPigsState(state || null);
@@ -308,6 +330,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
     socketService.onWbcError(handleKrakenError);
     socketService.onPigsStateUpdated(handlePigsStateUpdated);
     socketService.onPigsError(handleKrakenError);
+    socketService.onMultipitchStateUpdated(handleMultipitchStateUpdated);
+    socketService.onMultipitchError(handleKrakenError);
     const activeSocket = socketService.getSocket();
     activeSocket?.on('room_state', handleSnapshot);
     activeSocket?.on('join_room_success', handleSnapshot);
@@ -339,6 +363,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('wbc_error', handleKrakenError);
         socket.off('pigs_state_updated', handlePigsStateUpdated);
         socket.off('pigs_error', handleKrakenError);
+        socket.off('multipitch_state_updated', handleMultipitchStateUpdated);
+        socket.off('multipitch_error', handleKrakenError);
         socket.off('room_state', handleSnapshot);
         socket.off('join_room_success', handleSnapshot);
         socket.off('join_room_error', handleKrakenError);
@@ -405,10 +431,23 @@ const GameRoom: React.FC<GameRoomProps> = ({
       message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
       onReturnToRoom={handleReturnToRoom} />;
   }
+  if (room.gameType === 'multipitch' && multipitchState) {
+    return <MultipitchGame room={room} playerId={playerId} state={multipitchState}
+      message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
+      onReturnToRoom={handleReturnToRoom} />;
+  }
 
   if (room.gameType === 'world-betting-cup') {
     return <main className="bomb-loading" role="status">
       <h2>승부조작단 리그 정보를 불러오는 중</h2>
+      <p>{message || '잠시만 기다려주세요.'}</p>
+      <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
+      <button onClick={handleLeaveRoom}>로비로 이동</button>
+    </main>;
+  }
+  if (room.gameType === 'multipitch') {
+    return <main className="bomb-loading" role="status">
+      <h2>로프 팀 상태를 불러오는 중</h2>
       <p>{message || '잠시만 기다려주세요.'}</p>
       <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
       <button onClick={handleLeaveRoom}>로비로 이동</button>

@@ -1,0 +1,82 @@
+/* 확보! (멀티피치) — Crux 토큰 위에 얹은 간소한 레이아웃 */
+.mp-game { display: flex; flex-direction: column; gap: 16px; padding-bottom: 32px; }
+.mp-head { align-items: flex-start; }
+.mp-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .mp-layout { grid-template-columns: 1fr; } }
+.mp-side { display: flex; flex-direction: column; gap: 16px; }
+.mp-game .crux-panel { padding: 16px; }
+.mp-game .crux-label { display: block; margin-bottom: 10px; }
+
+/* 루트 보드 */
+.mp-cells { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mp-cell { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--hairline); border-radius: var(--radius-md); background: var(--wall-100); }
+.mp-cell.is-safe { background: var(--code-tint); border-color: var(--code); }
+.mp-cell__index { font-family: var(--font-mono); font-weight: 700; color: var(--ink-muted); text-align: center; }
+.mp-cell__info { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.mp-cell__climbers { display: flex; gap: 4px; min-width: 40px; justify-content: flex-end; }
+.mp-climber { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--hoodie); color: var(--on-hoodie); font-weight: 700; font-size: 13px; box-shadow: var(--shadow-hold); }
+.mp-climber.is-me { background: var(--hold-blue); color: var(--on-hold); }
+.mp-climber.has-tension { outline: 2px solid var(--hold-yellow); outline-offset: 1px; }
+
+/* 칩 */
+.mp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-pill); border: 1px solid var(--hairline); background: var(--chalk); color: var(--ink); font-size: 12px; white-space: nowrap; }
+.mp-chip--ok { border-color: var(--hold-green); color: var(--hold-green); }
+.mp-chip--diff { border-color: var(--ink); background: var(--ink); color: var(--chalk); font-weight: 700; }
+.mp-next { font-size: 13px; color: var(--ink-muted); }
+.mp-next strong { color: var(--ink); }
+.mp-chip--gear { border-color: var(--hardware); background: var(--hardware-shine); color: var(--hardware-deep); }
+.mp-chip--fall { border-color: var(--hold-red); color: var(--hold-red); }
+.mp-chip--crimp { border-color: var(--hold-red); }
+.mp-chip--sloper { border-color: var(--hold-blue); }
+.mp-chip--jug { border-color: var(--hold-green); }
+.mp-chip--crack { border-color: var(--hold-orange); }
+
+/* 카드 */
+.mp-card { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 64px; height: 88px; border-radius: var(--radius-md); border: 2px solid var(--hairline); background: var(--chalk); color: var(--ink); box-shadow: var(--shadow-card); font-family: var(--font-display); }
+.mp-card.is-compact { width: 52px; height: 70px; }
+.mp-card__rank { font-size: 24px; line-height: 1; }
+.mp-card.is-compact .mp-card__rank { font-size: 20px; }
+.mp-card__mark { font-size: 16px; line-height: 1; }
+.mp-card__suit { font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted); }
+.mp-card--crimp { border-color: var(--hold-red); }
+.mp-card--sloper { border-color: var(--hold-blue); }
+.mp-card--jug { border-color: var(--hold-green); }
+.mp-card--crack { border-color: var(--hold-orange); }
+.mp-card--fall { border-color: var(--hold-red); background: var(--hold-red); color: var(--on-hold); }
+.mp-card--fall .mp-card__suit { color: var(--on-hold); }
+.mp-card--empty { border-style: dashed; color: var(--ink-muted); font-family: var(--font-sans); font-size: 12px; box-shadow: none; }
+
+/* 트릭 */
+.mp-plays { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mp-play { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px; border-radius: var(--radius-md); border: 1px solid transparent; }
+.mp-play.is-turn { border-color: var(--hold-blue); background: var(--wall-100); }
+.mp-play__seat { font-size: 12px; color: var(--ink-muted); text-align: center; word-break: keep-all; }
+.mp-last { margin-top: 12px; display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--ink); }
+
+/* 좌석 */
+.mp-seats ul, .mp-log ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mp-seat { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--hairline); background: var(--wall-100); }
+.mp-seat.is-me { border-color: var(--hold-blue); }
+.mp-seat__title { display: flex; flex-direction: column; }
+.mp-seat__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.mp-log li { font-size: 12px; color: var(--ink-muted); line-height: 1.4; }
+.mp-log li:first-child { color: var(--ink); font-weight: 600; }
+
+/* 손패 독 */
+.mp-dock { position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 12px; background: var(--wall-100); }
+.mp-dock__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.mp-dock__head .crux-label { margin: 0; }
+.mp-hand { display: flex; flex-wrap: wrap; gap: 8px; }
+.mp-hand__card { padding: 0; border: 0; background: none; border-radius: var(--radius-md); cursor: pointer; opacity: 0.55; transition: transform .12s ease, opacity .12s ease; }
+.mp-hand__card.is-legal { opacity: 1; }
+.mp-hand__card.is-legal:hover { transform: translateY(-4px); }
+.mp-hand__card:disabled { cursor: not-allowed; }
+.mp-hand__card:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.mp-bonus { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border-radius: var(--radius-md); border: 2px solid var(--hold-green); background: var(--chalk); }
+.mp-calls { display: flex; flex-direction: column; gap: 6px; }
+.mp-select { min-width: 110px; padding: 6px 8px; }
+
+/* 결과 */
+.mp-outcome { text-align: center; }
+.mp-outcome.is-victory { border: 2px solid var(--hold-green); }
+.mp-outcome.is-defeat { border: 2px solid var(--hold-red); }

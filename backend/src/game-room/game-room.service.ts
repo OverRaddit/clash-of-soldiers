@@ -10,6 +10,7 @@ import { CHARACTERS, FELLOWSHIP_CHAPTERS } from './fellowship/catalog';
 import { getFellowshipPlayerView, initializeFellowshipGame } from './fellowship/engine';
 import { getWbcPlayerView, initializeWbcGame, MAX_PLAYERS as WBC_MAX_PLAYERS, MIN_PLAYERS as WBC_MIN_PLAYERS } from './world-betting-cup/engine';
 import { getPigsPlayerView, initializePigsGame, MAX_PLAYERS as PIGS_MAX_PLAYERS, MIN_PLAYERS as PIGS_MIN_PLAYERS } from './three-pigs/engine';
+import { getMultipitchPlayerView, initializeMultipitchGame } from './multipitch/engine';
 
 @Injectable()
 export class GameRoomService implements OnModuleDestroy {
@@ -33,15 +34,15 @@ export class GameRoomService implements OnModuleDestroy {
   createRoom(createRoomDto: CreateRoomDto): GameRoom {
     const roomId = this.generateRoomId();
     const gameType = (createRoomDto.gameType || 'toy-battle') as GameType;
-    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'three-pigs'].includes(gameType)) {
+    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs'].includes(gameType)) {
       throw new Error('지원하지 않는 게임입니다.');
     }
-    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'world-betting-cup' || gameType === 'three-pigs' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
+    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'world-betting-cup' || gameType === 'multipitch' || gameType === 'three-pigs' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
     const maxPlayers = createRoomDto.maxPlayers ?? defaultMaxPlayers;
-    const playerLimit = gameType === 'fellowship' ? 4 : gameType === 'bomb-busters' ? 5 : gameType === 'toy-battle' ? 2
+    const playerLimit = gameType === 'fellowship' || gameType === 'multipitch' ? 4 : gameType === 'bomb-busters' ? 5 : gameType === 'toy-battle' ? 2
       : gameType === 'world-betting-cup' ? WBC_MAX_PLAYERS : gameType === 'three-pigs' ? PIGS_MAX_PLAYERS : 8;
     const minimumCapacity = gameType === 'fellowship' ? 1 : gameType === 'no-touch-kraken' ? 3 : gameType === 'world-betting-cup' ? WBC_MIN_PLAYERS
-      : gameType === 'three-pigs' ? PIGS_MIN_PLAYERS : 2;
+      : gameType === 'multipitch' ? 4 : gameType === 'three-pigs' ? PIGS_MIN_PLAYERS : 2;
     if (!Number.isInteger(maxPlayers) || maxPlayers < minimumCapacity || maxPlayers > playerLimit) {
       throw new Error(`이 게임의 방 정원은 ${minimumCapacity}~${playerLimit}명입니다.`);
     }
@@ -215,7 +216,7 @@ export class GameRoomService implements OnModuleDestroy {
       throw new Error('대기 중인 방에서만 게임을 시작할 수 있습니다.');
     }
 
-    const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : 2;
+    const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : room.gameType === 'multipitch' ? 4 : 2;
     if (room.players.length < minPlayers) {
       throw new Error(`최소 ${minPlayers}명의 플레이어가 필요합니다.`);
     }
@@ -248,6 +249,11 @@ export class GameRoomService implements OnModuleDestroy {
       );
     } else if (room.gameType === 'three-pigs') {
       room.gameState = initializePigsGame(
+        room.players.map(player => player.id),
+        room.players.map(player => player.name),
+      );
+    } else if (room.gameType === 'multipitch') {
+      room.gameState = initializeMultipitchGame(
         room.players.map(player => player.id),
         room.players.map(player => player.name),
       );
@@ -342,6 +348,9 @@ export class GameRoomService implements OnModuleDestroy {
     } else if (room.gameType === 'three-pigs' && room.gameState) {
       const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
       result.gameState = getPigsPlayerView(room.gameState, viewerId);
+    } else if (room.gameType === 'multipitch' && room.gameState) {
+      const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
+      result.gameState = getMultipitchPlayerView(room.gameState, viewerId);
     }
     return result;
   }

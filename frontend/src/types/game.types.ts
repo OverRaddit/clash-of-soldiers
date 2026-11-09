@@ -2,10 +2,10 @@
 import type { BombMission } from './bomb-busters.types';
 import type { FellowshipChapterPreview } from './fellowship.types';
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'three-pigs';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch' | 'three-pigs';
 
 /** 비공개 정보가 있어 세션 토큰과 플레이어별 상태 복원을 쓰는 게임 */
-export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'three-pigs'];
+export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs'];
 
 export interface Player {
   id: string;

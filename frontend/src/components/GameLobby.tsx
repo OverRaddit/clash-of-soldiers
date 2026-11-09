@@ -17,6 +17,7 @@ const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; ma
   'bomb-busters': { label: '봄버스터즈', minPlayers: 2, maxPlayers: 5, hold: 'orange', meta: '2–5인 · 협력 추리', description: ' — 내 전선과 동료의 단서를 연결해 폭탄을 해체하는 협력 추리 게임.' },
   fellowship: { label: '반지 원정대', minPlayers: 1, maxPlayers: 4, hold: 'purple', meta: '1–4인 · 협력 트릭테이킹', description: ' — 각자 캐릭터의 목표를 함께 달성하며 18개 챕터를 여행하는 협력 트릭테이킹.' },
   'world-betting-cup': { label: '월드 배팅 컵', minPlayers: 2, maxPlayers: 6, hold: 'yellow', meta: '2–6인 · 블러핑 배팅', description: ' — 축구 토너먼트의 숨겨진 스코어를 엿보고 조작하며 패배팀에 판돈을 거는 배팅 게임.' },
+  multipitch: { label: '확보!', minPlayers: 4, maxPlayers: 4, hold: 'green', meta: '4인 · 협력 트릭테이킹', description: ' — 로프로 묶인 4인 1조가 추락을 서로 잡아주며 인수봉을 오르는 멀티피치 트릭테이킹.' },
   'three-pigs': { label: '아기 돼지 삼형제', minPlayers: 2, maxPlayers: 5, hold: 'pink', meta: '2–5인 · 카드 건설', description: ' — 터·철근·콘크리트로 아파트 세 채를 올리고 다이너마이트로 이웃을 방해하는 카드 게임.' },
 };
 
