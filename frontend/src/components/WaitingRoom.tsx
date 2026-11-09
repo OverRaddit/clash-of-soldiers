@@ -17,7 +17,7 @@ interface WaitingRoomProps {
   onFellowshipChapterChange?: (chapter: number) => void;
 }
 
-const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple' };
+const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple', multipitch: 'green' };
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
   room,
@@ -36,7 +36,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   const isHost = currentPlayer?.isHost || false;
   const isReady = currentPlayer?.isReady || false;
   const selectedMission = missions.find((mission) => mission.id === missionId);
-  const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : selectedMission?.minPlayers ?? 2;
+  const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : room.gameType === 'multipitch' ? 4 : selectedMission?.minPlayers ?? 2;
   const maxPlayers = room.gameType === 'bomb-busters' ? selectedMission?.maxPlayers ?? room.maxPlayers : room.maxPlayers;
   const everyoneReady = room.players.every((player) => player.isReady || player.isHost);
   const cannotStart = room.players.length < minPlayers || room.players.length > maxPlayers
@@ -44,7 +44,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
     || (room.gameType === 'bomb-busters' && (!selectedMission || selectedMission.supported === false))
     || (room.gameType === 'fellowship' && !room.fellowshipChapters?.some((chapter) => chapter.number === room.selectedFellowshipChapter));
 
-  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : '토이배틀';
+  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : room.gameType === 'multipitch' ? '확보!' : '토이배틀';
   const holdColor = GAME_HOLD[room.gameType] || 'orange';
   const fellowshipChapter = room.fellowshipChapters?.find((chapter) => chapter.number === room.selectedFellowshipChapter);
   const hostName = room.players.find((p) => p.isHost)?.name;
@@ -110,10 +110,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           <div className="crux-row" style={{ justifyContent: 'space-between' }}>
             <div className="crux-page-head__text">
               <h2 id="crux-options-title" className="crux-h2">
-                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : '루트 정보'}
+                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : room.gameType === 'multipitch' ? '등반 준비' : '루트 정보'}
               </h2>
               <p className="crux-help">
-                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
+                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : room.gameType === 'multipitch' ? '인수봉 연습길 2피치. 입장 순서대로 1번(선등)부터 4번(후미)까지 로프를 묶어요. 4명이 모두 준비되면 시작해요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
               </p>
             </div>
             <Hold color={holdColor} seed={room.gameType} size={48} />

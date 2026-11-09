@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { BombBustersAction } from '../types/bomb-busters.types';
 import { FellowshipAction } from '../types/fellowship.types';
+import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -89,6 +90,20 @@ class SocketService {
 
   onFellowshipError(callback: (data: { message: string }) => void): void {
     this.socket?.on('fellowship_error', callback);
+  }
+
+  // --- 확보! (멀티피치) 이벤트 ---
+
+  multipitchAction(roomId: string, playerId: string, action: MultipitchAction): void {
+    this.socket?.emit('multipitch_action', { roomId, playerId, action });
+  }
+
+  onMultipitchStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('multipitch_state_updated', callback);
+  }
+
+  onMultipitchError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('multipitch_error', callback);
   }
 
   // --- 토이배틀 이벤트 ---

@@ -6,7 +6,8 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'multipitch';
+export const PRIVATE_HAND_GAMES: GameType[] = ['bomb-busters', 'fellowship', 'multipitch'];
 
 export class GameRoom {
   id: string;
@@ -63,7 +64,7 @@ export class GameRoom {
       status: this.status,
       createdAt: this.createdAt,
       // Cooperative card games contain private hands and must use the player-view serializer.
-      gameState: this.gameType === 'bomb-busters' || this.gameType === 'fellowship' ? null : this.gameState,
+      gameState: PRIVATE_HAND_GAMES.includes(this.gameType) ? null : this.gameState,
       gameType: this.gameType,
       ...(this.gameType === 'bomb-busters' ? { selectedMissionId: this.selectedMissionId } : {}),
       ...(this.gameType === 'fellowship' ? { selectedFellowshipChapter: this.selectedFellowshipChapter } : {}),

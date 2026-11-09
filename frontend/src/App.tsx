@@ -18,6 +18,7 @@ const ENTRY_GAMES: { id: string; label: string; color: HoldColor }[] = [
   { id: 'no-touch-kraken', label: '노터치크라켄', color: 'green' },
   { id: 'bomb-busters', label: '봄버스터즈', color: 'orange' },
   { id: 'fellowship', label: '반지 원정대', color: 'purple' },
+  { id: 'multipitch', label: '확보!', color: 'green' },
 ];
 
 const WALL_SPOTS: [number, number][] = [[6, 6], [34, 4], [66, 8], [86, 22], [4, 34], [88, 48], [8, 60], [70, 40], [90, 72], [14, 82], [82, 88]];
@@ -89,7 +90,7 @@ function App() {
 
   // 방 입장
   const handleJoinRoom = (room: GameRoomType) => {
-    if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship') sessionStorage.setItem(SESSION_ROOM, room.id);
+    if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship' || room.gameType === 'multipitch') sessionStorage.setItem(SESSION_ROOM, room.id);
     else sessionStorage.removeItem(SESSION_ROOM);
     sessionStorage.removeItem(LEGACY_BOMB_ROOM);
     setRestoreMessage('');

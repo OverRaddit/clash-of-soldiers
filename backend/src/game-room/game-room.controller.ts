@@ -115,7 +115,7 @@ export class GameRoomController {
       this.gameRoomService.assertBombSession(roomId, body.hostId, sessionToken);
       const room = this.gameRoomService.startGame(roomId, body.hostId, body.missionId);
 
-      if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship') {
+      if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship' || room.gameType === 'multipitch') {
         return {
           success: true,
           data: this.gameRoomService.serializeRoom(room),

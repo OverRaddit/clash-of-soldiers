@@ -1,13 +1,14 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
-import { GameRoom, GameType } from './entities/game-room-memory.entity';
+import { GameRoom, GameType, PRIVATE_HAND_GAMES } from './entities/game-room-memory.entity';
 import { BOMB_BUSTERS_MISSIONS, BombBustersLogicService } from './bomb-busters-logic.service';
 import { resolveBombMission } from './bomb-busters/missions';
 import { getBombCampaignDefinition } from './bomb-busters/campaign-definitions';
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { CHARACTERS, FELLOWSHIP_CHAPTERS } from './fellowship/catalog';
 import { getFellowshipPlayerView, initializeFellowshipGame } from './fellowship/engine';
+import { getMultipitchPlayerView, initializeMultipitchGame } from './multipitch/engine';
 
 @Injectable()
 export class GameRoomService implements OnModuleDestroy {
@@ -31,13 +32,13 @@ export class GameRoomService implements OnModuleDestroy {
   createRoom(createRoomDto: CreateRoomDto): GameRoom {
     const roomId = this.generateRoomId();
     const gameType = (createRoomDto.gameType || 'toy-battle') as GameType;
-    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship'].includes(gameType)) {
+    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'multipitch'].includes(gameType)) {
       throw new Error('지원하지 않는 게임입니다.');
     }
-    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
+    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'multipitch' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
     const maxPlayers = createRoomDto.maxPlayers ?? defaultMaxPlayers;
-    const playerLimit = gameType === 'fellowship' ? 4 : gameType === 'bomb-busters' ? 5 : gameType === 'toy-battle' ? 2 : 8;
-    const minimumCapacity = gameType === 'fellowship' ? 1 : gameType === 'no-touch-kraken' ? 3 : 2;
+    const playerLimit = gameType === 'fellowship' || gameType === 'multipitch' ? 4 : gameType === 'bomb-busters' ? 5 : gameType === 'toy-battle' ? 2 : 8;
+    const minimumCapacity = gameType === 'fellowship' ? 1 : gameType === 'no-touch-kraken' ? 3 : gameType === 'multipitch' ? 4 : 2;
     if (!Number.isInteger(maxPlayers) || maxPlayers < minimumCapacity || maxPlayers > playerLimit) {
       throw new Error(`이 게임의 방 정원은 ${minimumCapacity}~${playerLimit}명입니다.`);
     }
@@ -211,7 +212,7 @@ export class GameRoomService implements OnModuleDestroy {
       throw new Error('대기 중인 방에서만 게임을 시작할 수 있습니다.');
     }
 
-    const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : 2;
+    const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : room.gameType === 'multipitch' ? 4 : 2;
     if (room.players.length < minPlayers) {
       throw new Error(`최소 ${minPlayers}명의 플레이어가 필요합니다.`);
     }
@@ -236,6 +237,11 @@ export class GameRoomService implements OnModuleDestroy {
         room.players.map(player => player.id),
         room.players.map(player => player.name),
         room.selectedFellowshipChapter,
+      );
+    } else if (room.gameType === 'multipitch') {
+      room.gameState = initializeMultipitchGame(
+        room.players.map(player => player.id),
+        room.players.map(player => player.name),
       );
     }
 
@@ -322,6 +328,9 @@ export class GameRoomService implements OnModuleDestroy {
     } else if (room.gameType === 'fellowship' && room.gameState) {
       const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
       result.gameState = getFellowshipPlayerView(room.gameState, viewerId);
+    } else if (room.gameType === 'multipitch' && room.gameState) {
+      const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
+      result.gameState = getMultipitchPlayerView(room.gameState, viewerId);
     }
     return result;
   }
@@ -348,6 +357,6 @@ export class GameRoomService implements OnModuleDestroy {
   }
 
   private hasPrivateHands(room?: GameRoom): boolean {
-    return room?.gameType === 'bomb-busters' || room?.gameType === 'fellowship';
+    return !!room && PRIVATE_HAND_GAMES.includes(room.gameType);
   }
 }

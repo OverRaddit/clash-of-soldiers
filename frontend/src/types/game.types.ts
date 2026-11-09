@@ -2,7 +2,7 @@
 import type { BombMission } from './bomb-busters.types';
 import type { FellowshipChapterPreview } from './fellowship.types';
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'multipitch';
 
 export interface Player {
   id: string;
