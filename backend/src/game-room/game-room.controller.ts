@@ -15,6 +15,7 @@ import { GameLogicService } from './game-logic.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { GameState } from './entities/game-state.entity';
+import { hasPrivateState } from './entities/game-room-memory.entity';
 
 @Controller('game-rooms')
 export class GameRoomController {
@@ -115,7 +116,7 @@ export class GameRoomController {
       this.gameRoomService.assertBombSession(roomId, body.hostId, sessionToken);
       const room = this.gameRoomService.startGame(roomId, body.hostId, body.missionId);
 
-      if (room.gameType === 'bomb-busters' || room.gameType === 'fellowship' || room.gameType === 'world-betting-cup' || room.gameType === 'multipitch') {
+      if (hasPrivateState(room.gameType)) {
         return {
           success: true,
           data: this.gameRoomService.serializeRoom(room),

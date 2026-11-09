@@ -20,6 +20,7 @@ const ENTRY_GAMES: { id: string; label: string; color: HoldColor }[] = [
   { id: 'fellowship', label: '반지 원정대', color: 'purple' },
   { id: 'world-betting-cup', label: '월드 배팅 컵', color: 'yellow' },
   { id: 'multipitch', label: '확보!', color: 'green' },
+  { id: 'three-pigs', label: '아기 돼지 삼형제', color: 'pink' },
 ];
 
 const WALL_SPOTS: [number, number][] = [[6, 6], [34, 4], [66, 8], [86, 22], [4, 34], [88, 48], [8, 60], [70, 40], [90, 72], [14, 82], [82, 88]];

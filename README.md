@@ -25,6 +25,15 @@
 
 규칙 전문은 [룰북 v0](docs/multipitch-rulebook-v0.md), 엔진은 [engine.ts](backend/src/game-room/multipitch/engine.ts)에 있습니다.
 
+## 아기 돼지 삼형제의 아파트 짓기
+
+1. 로비에서 **아기 돼지 삼형제** 방을 만들고 2~5명이 참가합니다.
+2. 각자 돼지 카드 3장(아파트 3채)과 손패 5장을 받고, 턴마다 1장을 뽑아 1장을 사용하거나 버립니다.
+3. **터 → 철근 → 콘크리트** 순서로 층을 올리고 정원으로 완공합니다. 다이너마이트는 상대 아파트의 맨 위층을 날리고, 방범 마감재는 그 아래층을 지킵니다.
+4. 한 사람이 세 채를 모두 완공하면 종료. 아파트마다 터 × 완성 층(3층 이상 +1, 5층 이상 +2)을 더해 가장 높은 점수가 이깁니다.
+
+카드 장수와 해석은 [구현 규칙서](docs/three-pigs-rulebook.md)에, 엔진은 [engine.ts](backend/src/game-room/three-pigs/engine.ts)에 있습니다.
+
 ## 검증
 
 - 백엔드: `cd backend && npm test`

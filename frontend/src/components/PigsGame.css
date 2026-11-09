@@ -1,0 +1,126 @@
+/* 아기 돼지 삼형제의 아파트 짓기: 간소한 테이블 레이아웃 */
+.pigs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 140px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pigs__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.pigs__title { display: flex; align-items: center; gap: 8px; }
+.pigs__title h1 { margin: 0; font-size: 20px; }
+.pigs__status { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.pigs-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: #f1efe9; color: #2b2a26; border: 1px solid #d8d4c8;
+}
+.pigs-chip--score { background: #ffe3ec; border-color: #f0a2bf; }
+
+.pigs__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) { .pigs__layout { grid-template-columns: 1fr; } }
+
+.pigs__boards { display: flex; flex-direction: column; gap: 12px; }
+.pigs__side { display: flex; flex-direction: column; gap: 12px; }
+
+.pigs-card {
+  background: #fff; border: 1px solid #ddd8cc; border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.pigs-card h2, .pigs-hand h2 { margin: 0; font-size: 15px; }
+.pigs-rules { margin: 0; padding-left: 18px; font-size: 12px; color: #4a473f; display: flex; flex-direction: column; gap: 4px; }
+.pigs-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; max-height: 360px; overflow: auto; }
+.pigs-log li { padding: 4px 6px; border-radius: 6px; background: #faf9f5; }
+.pigs-log li:first-child { background: #ffe3ec; font-weight: 600; }
+.pigs-note { font-size: 13px; color: #6a665c; margin: 0; }
+
+/* 플레이어 보드 */
+.pigs-board {
+  background: #fff; border: 1px solid #ddd8cc; border-radius: 12px; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pigs-board--me { border-color: #f0a2bf; }
+.pigs-board--turn { box-shadow: 0 0 0 3px #ffe3ec; }
+.pigs-board__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pigs-board__head strong { font-size: 15px; margin-right: auto; }
+.pigs-board__apts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .pigs-board__apts { grid-template-columns: 1fr; } }
+
+.pigs-apt {
+  display: flex; flex-direction: column; gap: 6px;
+  border: 1px solid #e3dfd3; border-radius: 10px; padding: 8px; background: #fcfbf8;
+  font: inherit; color: inherit; text-align: left; width: 100%; box-sizing: border-box;
+  min-height: 170px; justify-content: flex-end;
+}
+.pigs-apt--done { background: #f0faf2; border-color: #7fc290; }
+.pigs-apt--recent { outline: 2px dashed #e3c75a; }
+.pigs-apt--selectable { cursor: pointer; border-color: #cc2b68; box-shadow: 0 0 0 3px #ffe3ec; }
+.pigs-apt--selectable:hover { background: #ffe3ec; }
+
+.pigs-apt__roof { min-height: 24px; display: flex; justify-content: center; align-items: center; }
+.pigs-apt__roof-empty { font-size: 11px; color: #8a8578; }
+.pigs-apt__floors { display: flex; flex-direction: column; gap: 3px; }
+.pigs-floor {
+  display: flex; gap: 3px; align-items: center; justify-content: center;
+  border: 1px solid #c9c6ba; border-radius: 6px; padding: 3px; background: #fff; font-size: 11px; position: relative;
+}
+.pigs-floor--open { border-style: dashed; }
+.pigs-floor--guarded { background: #fff7e0; }
+.pigs-floor--none { border-style: dashed; color: #a39f93; font-style: italic; padding: 10px 4px; }
+.pigs-floor__cell { flex: 1; text-align: center; padding: 6px 2px; border-radius: 4px; font-weight: 700; }
+.pigs-floor__cell--rebar { background: #dcebff; }
+.pigs-floor__cell--concrete { background: #e2e2dd; }
+.pigs-floor__cell--pending { background: #fafaf7; color: #a39f93; border: 1px dashed #c9c6ba; }
+.pigs-floor__guard {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  background: #1d5fb0; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; border: 2px solid #fff;
+}
+.pigs-apt__lots { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; min-height: 22px; }
+.pigs-apt__lots-empty { font-size: 11px; color: #a39f93; }
+.pigs-apt__pig { font-size: 12px; text-align: center; color: #4a473f; border-top: 1px solid #ebe7dc; padding-top: 6px; }
+
+/* 카드 */
+.pigs-cardface {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 64px; height: 88px; padding: 0 8px; border-radius: 8px; border: 2px solid #b7b1a0;
+  background: #fff; font: inherit; font-size: 13px; font-weight: 800; color: #2b2a26; cursor: default;
+}
+.pigs-cardface--flat { height: 22px; min-width: 36px; font-size: 11px; border-width: 1px; padding: 0 6px; border-radius: 5px; }
+.pigs-cardface--lot { background: #e9dcc5; border-color: #b89a6a; }
+.pigs-cardface--rebar { background: #dcebff; border-color: #93b8ee; }
+.pigs-cardface--concrete { background: #e2e2dd; border-color: #9f9f98; }
+.pigs-cardface--dynamite { background: #ffd9d9; border-color: #e58f8f; }
+.pigs-cardface--guard { background: #d9e6ff; border-color: #1d5fb0; }
+.pigs-cardface--garden { background: #d6f0dd; border-color: #7fc290; }
+button.pigs-cardface { cursor: pointer; }
+button.pigs-cardface:hover { transform: translateY(-2px); }
+.pigs-cardface--selected { outline: 3px solid #cc2b68; transform: translateY(-6px); }
+
+/* 손패 (하단 고정) */
+.pigs-hand {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: #fffdf8; border-top: 1px solid #ddd8cc; box-shadow: 0 -4px 16px rgba(0, 0, 0, .06);
+  padding: 10px 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.pigs-hand__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.pigs-hand__cards { display: flex; flex-wrap: wrap; gap: 10px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.pigs-hand__slot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pigs-hand__slot--dead .pigs-cardface { opacity: .55; }
+.pigs-hand__hint { font-size: 10px; color: #6a665c; }
+.pigs-hand__actions { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+.pigs-finished { position: static; box-shadow: none; border: 1px solid #ddd8cc; border-radius: 12px; }
+.pigs-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.pigs-table th, .pigs-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ebe7dc; }
+.pigs-table tr.is-me td { font-weight: 800; }
+.pigs-table td.rank { font-size: 16px; font-weight: 800; }
