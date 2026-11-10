@@ -17,7 +17,7 @@ interface WaitingRoomProps {
   onFellowshipChapterChange?: (chapter: number) => void;
 }
 
-const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple', 'world-betting-cup': 'yellow', multipitch: 'green', 'three-pigs': 'pink' };
+const GAME_HOLD: Record<string, HoldColor> = { 'toy-battle': 'blue', 'no-touch-kraken': 'green', 'bomb-busters': 'orange', fellowship: 'purple', 'world-betting-cup': 'yellow', multipitch: 'green', 'three-pigs': 'pink', gacha: 'lime' };
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
   room,
@@ -36,7 +36,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   const isHost = currentPlayer?.isHost || false;
   const isReady = currentPlayer?.isReady || false;
   const selectedMission = missions.find((mission) => mission.id === missionId);
-  const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : room.gameType === 'multipitch' ? 4 : selectedMission?.minPlayers ?? 2;
+  const minPlayers = room.gameType === 'fellowship' ? 1 : room.gameType === 'no-touch-kraken' ? 3 : room.gameType === 'multipitch' ? 4 : room.gameType === 'gacha' ? 3 : selectedMission?.minPlayers ?? 2;
   const maxPlayers = room.gameType === 'bomb-busters' ? selectedMission?.maxPlayers ?? room.maxPlayers : room.maxPlayers;
   const everyoneReady = room.players.every((player) => player.isReady || player.isHost);
   const cannotStart = room.players.length < minPlayers || room.players.length > maxPlayers
@@ -44,7 +44,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
     || (room.gameType === 'bomb-busters' && (!selectedMission || selectedMission.supported === false))
     || (room.gameType === 'fellowship' && !room.fellowshipChapters?.some((chapter) => chapter.number === room.selectedFellowshipChapter));
 
-  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : room.gameType === 'world-betting-cup' ? '월드 배팅 컵' : room.gameType === 'multipitch' ? '확보!' : room.gameType === 'three-pigs' ? '아기 돼지 삼형제' : '토이배틀';
+  const gameTypeLabel = room.gameType === 'fellowship' ? '반지 원정대' : room.gameType === 'bomb-busters' ? '봄버스터즈' : room.gameType === 'no-touch-kraken' ? '노터치크라켄' : room.gameType === 'world-betting-cup' ? '월드 배팅 컵' : room.gameType === 'multipitch' ? '확보!' : room.gameType === 'three-pigs' ? '아기 돼지 삼형제' : room.gameType === 'gacha' ? '가챠' : '토이배틀';
   const holdColor = GAME_HOLD[room.gameType] || 'orange';
   const fellowshipChapter = room.fellowshipChapters?.find((chapter) => chapter.number === room.selectedFellowshipChapter);
   const hostName = room.players.find((p) => p.isHost)?.name;
@@ -110,10 +110,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           <div className="crux-row" style={{ justifyContent: 'space-between' }}>
             <div className="crux-page-head__text">
               <h2 id="crux-options-title" className="crux-h2">
-                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : room.gameType === 'world-betting-cup' ? '승부조작단 브리핑' : room.gameType === 'multipitch' ? '등반 준비' : room.gameType === 'three-pigs' ? '공사 안내판' : '루트 정보'}
+                {room.gameType === 'bomb-busters' ? '작전 선택' : room.gameType === 'fellowship' ? '원정대의 여정' : room.gameType === 'world-betting-cup' ? '승부조작단 브리핑' : room.gameType === 'multipitch' ? '등반 준비' : room.gameType === 'three-pigs' ? '공사 안내판' : room.gameType === 'gacha' ? '가게 안내' : '루트 정보'}
               </h2>
               <p className="crux-help">
-                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : room.gameType === 'world-betting-cup' ? '8강 대진은 시작할 때 무작위로 짜여요. 설정할 옵션은 없어요.' : room.gameType === 'multipitch' ? '인수봉 연습길 2피치. 입장 순서대로 1번(선등)부터 4번(후미)까지 로프를 묶어요. 4명이 모두 준비되면 시작해요.' : room.gameType === 'three-pigs' ? '선플레이어는 시작할 때 무작위로 정해요. 설정할 옵션은 없어요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
+                {room.gameType === 'bomb-busters' ? '봄버스터즈 캠페인 미션. 벨레이만 바꿀 수 있어요.' : room.gameType === 'fellowship' ? '18개 챕터 중 하나를 골라요. 벨레이만 바꿀 수 있어요.' : room.gameType === 'world-betting-cup' ? '8강 대진은 시작할 때 무작위로 짜여요. 설정할 옵션은 없어요.' : room.gameType === 'multipitch' ? '인수봉 연습길 2피치. 입장 순서대로 1번(선등)부터 4번(후미)까지 로프를 묶어요. 4명이 모두 준비되면 시작해요.' : room.gameType === 'three-pigs' ? '선플레이어는 시작할 때 무작위로 정해요. 설정할 옵션은 없어요.' : room.gameType === 'gacha' ? '1라운드 사장님은 시작할 때 무작위로 정해요. 라운드 수는 인원 × 3이에요.' : '설정할 옵션이 없는 게임이에요. 모두 준비되면 바로 시작해요.'}
               </p>
             </div>
             <Hold color={holdColor} seed={room.gameType} size={48} />
@@ -161,6 +161,14 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
               <strong>아기 돼지 삼형제의 아파트 짓기</strong>
               <p>내 돼지 카드 3장 위에 <b>터 → 철근 → 콘크리트</b> 순서로 아파트를 올리고 정원으로 마무리합니다. 다이너마이트로 이웃의 맨 위층을 날릴 수 있고, 방범 마감재는 그 아래층을 지켜 줍니다.</p>
               <p>한 사람이 세 채를 모두 완성하면 끝. 아파트마다 <b>터 × 층</b>에 3층 이상 +1, 5층 이상 +2를 더해 가장 높은 점수가 이깁니다.</p>
+            </div>
+          )}
+
+          {room.gameType === 'gacha' && (
+            <div className="crux-mission-info" aria-label="가챠 안내">
+              <strong>가챠</strong>
+              <p>캐릭터 카드 A·B·C·D 중 <b>최애(3점)</b>와 <b>차애(2점)</b>를 몰래 정합니다. 라운드마다 사장님이 덱에서 4장을 가져와 가챠기계에 진열하면, 손님은 코인 1개를 내고 뒷면 카드를 뽑습니다.</p>
+              <p>뽑기가 끝나면 손님끼리 카드·코인을 1:1로 교환해요. 인원 × 3라운드 뒤 최애·차애·코인 점수에 네 캐릭터를 2장씩 모은 보너스 5점을 더해 가장 높은 사람이 이깁니다.</p>
             </div>
           )}
 

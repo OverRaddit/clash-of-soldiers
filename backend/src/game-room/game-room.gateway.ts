@@ -19,6 +19,7 @@ import { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { applyFellowshipAction } from './fellowship/engine';
 import { applyWbcAction } from './world-betting-cup/engine';
 import { applyPigsAction } from './three-pigs/engine';
+import { applyGachaAction } from './gacha/engine';
 import { applyMultipitchAction } from './multipitch/engine';
 
 interface ClientInfo {
@@ -273,6 +274,8 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.emitPrivateStateToAll(room, '아파트 짓기가 시작되었습니다! 선플레이어부터 카드 1장을 사용하세요.', 'game_started');
       } else if (room.gameType === 'multipitch') {
         this.emitPrivateStateToAll(room, '등반이 시작되었습니다!', 'game_started');
+      } else if (room.gameType === 'gacha') {
+        this.emitPrivateStateToAll(room, '가챠 가게가 문을 열었습니다! 최애와 차애를 고르세요.', 'game_started');
       } else if (room.gameType === 'no-touch-kraken') {
         // 크라켄 게임 초기화
         const krakenState = this.krakenLogicService.initializeGame(playerIds, playerNames);
@@ -659,7 +662,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
       const type = this.gameRoomService.getRoom(data?.roomId)?.gameType;
       client.emit(type === 'bomb-busters' ? 'bomb_busters_error'
         : type === 'fellowship' ? 'fellowship_error' : type === 'world-betting-cup' ? 'wbc_error'
-        : type === 'three-pigs' ? 'pigs_error' : type === 'multipitch' ? 'multipitch_error' : 'kraken_error', { message: error.message });
+        : type === 'three-pigs' ? 'pigs_error' : type === 'multipitch' ? 'multipitch_error' : type === 'gacha' ? 'gacha_error' : 'kraken_error', { message: error.message });
     }
   }
 
@@ -853,6 +856,30 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         finished ? 'game_ended' : 'pigs_state_updated');
     } catch (error) {
       client.emit('pigs_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('gacha_action')
+  handleGachaAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; action: Record<string, unknown> },
+  ) {
+    try {
+      const room = this.requireMember(client, data?.roomId, data?.playerId, 'gacha');
+      if (room.status !== 'playing' || !room.gameState) {
+        throw new Error('진행 중인 가챠가 없습니다.');
+      }
+      if (!data.action || typeof data.action !== 'object' || Array.isArray(data.action)) {
+        throw new Error('올바른 행동을 선택해주세요.');
+      }
+      const nextState = applyGachaAction(room.gameState, data.playerId, data.action as any);
+      room.gameState = nextState;
+      const finished = nextState.phase === 'finished';
+      if (finished) room.finishGame();
+      this.emitPrivateStateToAll(room, nextState.result?.message ?? '게임 상태가 변경되었습니다.',
+        finished ? 'game_ended' : 'gacha_state_updated');
+    } catch (error) {
+      client.emit('gacha_error', { message: error.message });
     }
   }
 

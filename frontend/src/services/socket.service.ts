@@ -3,6 +3,7 @@ import { BombBustersAction } from '../types/bomb-busters.types';
 import { FellowshipAction } from '../types/fellowship.types';
 import { WbcAction } from '../types/wbc.types';
 import { PigsAction } from '../types/pigs.types';
+import { GachaAction } from '../types/gacha.types';
 import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
@@ -120,6 +121,20 @@ class SocketService {
 
   onPigsError(callback: (data: { message: string }) => void): void {
     this.socket?.on('pigs_error', callback);
+  }
+
+  // --- 가챠 이벤트 ---
+
+  gachaAction(roomId: string, playerId: string, action: GachaAction): void {
+    this.socket?.emit('gacha_action', { roomId, playerId, action });
+  }
+
+  onGachaStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('gacha_state_updated', callback);
+  }
+
+  onGachaError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('gacha_error', callback);
   }
 
   // --- 확보! (멀티피치) 이벤트 ---
