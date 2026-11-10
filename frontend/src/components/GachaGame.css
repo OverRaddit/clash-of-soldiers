@@ -1,0 +1,118 @@
+/* 가챠: 가게 카운터 레이아웃 */
+.gacha {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gacha__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.gacha__title { display: flex; align-items: center; gap: 8px; }
+.gacha__title h1 { margin: 0; font-size: 20px; }
+.gacha__status { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.gacha-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: #f1efe9; color: #2b2a26; border: 1px solid #d8d4c8;
+}
+.gacha-chip--phase { background: #e8f5c8; border-color: #9fc23f; }
+.gacha-chip--owner { background: #fff1c2; border-color: #e3b63a; }
+.gacha-chip--status { background: #e6f0ff; border-color: #9bb8ee; }
+
+.gacha__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) { .gacha__layout { grid-template-columns: 1fr; } }
+
+.gacha__main, .gacha__side { display: flex; flex-direction: column; gap: 12px; }
+.gacha__players { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+
+.gacha-panel {
+  background: #fff; border: 1px solid #ddd8cc; border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.gacha-panel h2 { margin: 0; font-size: 15px; }
+.gacha-note { font-size: 13px; color: #6a665c; margin: 0; }
+.gacha-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.gacha-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.gacha-rules { margin: 0; padding-left: 18px; font-size: 12px; color: #4a473f; display: flex; flex-direction: column; gap: 4px; }
+.gacha-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; max-height: 320px; overflow: auto; }
+.gacha-log li { padding: 4px 6px; border-radius: 6px; background: #faf9f5; }
+.gacha-log li:first-child { background: #e8f5c8; font-weight: 600; }
+
+/* 카드 */
+.gacha-cardface {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative;
+  width: 84px; height: 112px; border-radius: 10px; border: 2px solid #b7b1a0;
+  background: #fff; font: inherit; font-size: 12px; font-weight: 800; color: #2b2a26; cursor: default;
+}
+.gacha-cardface__emoji { font-size: 30px; line-height: 1; }
+.gacha-cardface--small { width: 46px; height: 60px; font-size: 10px; border-width: 1px; }
+.gacha-cardface--small .gacha-cardface__emoji { font-size: 20px; }
+.gacha-cardface--A { background: #ffe9f0; border-color: #e58fb0; }
+.gacha-cardface--B { background: #fff3d6; border-color: #e3b63a; }
+.gacha-cardface--C { background: #e9dcc5; border-color: #b89a6a; }
+.gacha-cardface--D { background: #dcebff; border-color: #6f9fe0; }
+.gacha-cardface__badge {
+  position: absolute; top: -8px; right: -6px; background: #cc2b68; color: #fff;
+  font-size: 10px; padding: 1px 6px; border-radius: 999px; border: 2px solid #fff;
+}
+button.gacha-cardface { cursor: pointer; }
+button.gacha-cardface:hover:not(:disabled) { transform: translateY(-2px); }
+button.gacha-cardface:disabled { opacity: .5; cursor: default; }
+.gacha-cardface--selected { outline: 3px solid #cc2b68; transform: translateY(-4px); }
+
+/* 가챠기계 */
+.gacha-machine { background: linear-gradient(180deg, #fff 0%, #f3f9e6 100%); }
+.gacha-capsule {
+  width: 72px; height: 72px; border-radius: 50%; border: 3px solid #9fc23f;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #e8f5c8 60%, #c9e08f 100%);
+  font: inherit; font-size: 24px; font-weight: 900; color: #4f6b12; cursor: pointer;
+}
+.gacha-capsule:hover:not(:disabled) { transform: scale(1.06); }
+.gacha-capsule:disabled { opacity: .45; cursor: default; }
+
+/* 교환 */
+.gacha-offer-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.gacha-offer-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: #4a473f; }
+.gacha-offers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.gacha-offer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 8px; background: #faf9f5; border: 1px solid #e3dfd3; font-size: 13px;
+}
+.gacha-offer--in { background: #e8f5c8; border-color: #9fc23f; }
+.gacha-offer--out { background: #fff1c2; border-color: #e3b63a; }
+.gacha-offer__actions { display: flex; gap: 6px; }
+
+/* 플레이어 */
+.gacha-player {
+  background: #fff; border: 1px solid #ddd8cc; border-radius: 12px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.gacha-player--me { border-color: #9fc23f; }
+.gacha-player--owner { background: #fffaf0; }
+.gacha-player--turn { box-shadow: 0 0 0 3px #e8f5c8; }
+.gacha-player__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gacha-player__head strong { font-size: 15px; margin-right: auto; }
+.gacha-player__pulled, .gacha-player__hand { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gacha-player__label { font-size: 11px; color: #8a8578; min-width: 86px; }
+.gacha-count { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #f1efe9; border: 1px solid #d8d4c8; }
+.gacha-count--first { background: #ffe3ec; border-color: #cc2b68; font-weight: 800; }
+.gacha-count--second { background: #ffe3ec; border-color: #f0a2bf; font-weight: 700; }
+
+/* 결과 */
+.gacha-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.gacha-table th, .gacha-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ebe7dc; }
+.gacha-table--compact { font-size: 12px; }
+.gacha-table--compact th, .gacha-table--compact td { padding: 2px 4px; text-align: center; }
+.gacha-table--compact td:first-child, .gacha-table--compact th:first-child { text-align: left; }
+.gacha-table tr.is-me td { font-weight: 800; }
+.gacha-table td.rank { font-size: 16px; font-weight: 800; }
