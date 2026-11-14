@@ -112,6 +112,9 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
       this.disconnectedClients.delete(key);
       const existingRoom = this.gameRoomService.getRoom(info.roomId);
       if (!existingRoom || !this.isBoundMember(info, existingRoom)) return;
+      // 게임이 끝난 방에서는 자리를 비우지 않는다. 결과 화면을 보다가 연결이 끊겨도
+      // 돌아오면 그대로 이어지고, 나가는 것은 본인이 '나가기'를 눌렀을 때뿐이다.
+      if (existingRoom.status === 'finished') return;
       const room = this.gameRoomService.leaveRoom(info.roomId, info.playerId);
       if (room) {
         this.emitRoomUpdate(room, 'player_left', hasPrivateState(room.gameType)
@@ -121,7 +124,9 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }, this.reconnectTimeout);
 
     const room = this.gameRoomService.getRoom(info.roomId);
-    if (room) this.emitRoomUpdate(room, 'player_disconnected', '플레이어의 재연결을 기다리고 있습니다. (30초)');
+    if (room) this.emitRoomUpdate(room, 'player_disconnected', room.status === 'finished'
+      ? '플레이어의 연결이 끊겼습니다. 게임이 끝난 방이라 자리는 유지됩니다.'
+      : '플레이어의 재연결을 기다리고 있습니다. (30초)');
   }
 
   @SubscribeMessage('join_room')

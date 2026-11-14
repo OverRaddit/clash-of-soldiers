@@ -329,3 +329,15 @@ test('destroying gateway clears the clock before its next interval', async t => 
   assert.equal(room.status, 'playing');
   assert.ok(!messages.some(m => m.event === 'game_ended'));
 });
+
+test('a finished room keeps a disconnected player\'s seat instead of removing them after the timeout', async t => {
+  const { room, gateway, guest, host, start } = fixture(t);
+  gateway.reconnectTimeout = 10;
+  start();
+  gateway.handleBombBustersAction(host, { roomId: room.id, playerId: 'host', action: { type: 'finish' } });
+  assert.equal(room.status, 'finished');
+  gateway.handleDisconnect(guest);
+  await delay(30);
+  assert.equal(room.status, 'finished');
+  assert.deepEqual(room.players.map(p => p.id), ['host', 'guest']);
+});
