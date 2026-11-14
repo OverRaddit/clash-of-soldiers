@@ -4,6 +4,7 @@ import { FellowshipAction } from '../types/fellowship.types';
 import { WbcAction } from '../types/wbc.types';
 import { PigsAction } from '../types/pigs.types';
 import { GachaAction } from '../types/gacha.types';
+import { PaprikaAction } from '../types/paprika.types';
 import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
@@ -135,6 +136,20 @@ class SocketService {
 
   onGachaError(callback: (data: { message: string }) => void): void {
     this.socket?.on('gacha_error', callback);
+  }
+
+  // --- 파프리카 대축제 이벤트 ---
+
+  paprikaAction(roomId: string, playerId: string, action: PaprikaAction): void {
+    this.socket?.emit('paprika_action', { roomId, playerId, action });
+  }
+
+  onPaprikaStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('paprika_state_updated', callback);
+  }
+
+  onPaprikaError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('paprika_error', callback);
   }
 
   // --- 확보! (멀티피치) 이벤트 ---

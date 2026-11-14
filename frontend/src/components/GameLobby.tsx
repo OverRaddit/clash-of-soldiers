@@ -20,6 +20,7 @@ const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; ma
   multipitch: { label: '확보!', minPlayers: 4, maxPlayers: 4, hold: 'green', meta: '4인 · 협력 트릭테이킹', description: ' — 로프로 묶인 4인 1조가 추락을 서로 잡아주며 인수봉을 오르는 멀티피치 트릭테이킹.' },
   'three-pigs': { label: '아기 돼지 삼형제', minPlayers: 2, maxPlayers: 5, hold: 'pink', meta: '2–5인 · 카드 건설', description: ' — 터·철근·콘크리트로 아파트 세 채를 올리고 다이너마이트로 이웃을 방해하는 카드 게임.' },
   gacha: { label: '가챠', minPlayers: 3, maxPlayers: 6, hold: 'lime', meta: '3–6인 · 수집·교환', description: ' — 사장님이 진열한 캐릭터 카드를 코인으로 뽑고 손님끼리 바꾸며 숨긴 최애·차애를 모으는 수집 게임.' },
+  paprika: { label: '파프리카 대축제', minPlayers: 3, maxPlayers: 6, hold: 'red', meta: '3–6인 · 블러핑 준협력', description: ' — 육각 농장에 씨앗과 도둑을 뒷면으로 심고, 파프리카 25개를 함께 모을지 친구의 등을 칠지 고르는 눈치 게임.' },
 };
 
 const GameLobby: React.FC<GameLobbyProps> = ({

@@ -6,6 +6,7 @@ import { FellowshipClientState } from '../types/fellowship.types';
 import { WbcClientState } from '../types/wbc.types';
 import { PigsClientState } from '../types/pigs.types';
 import { GachaClientState } from '../types/gacha.types';
+import { PaprikaClientState } from '../types/paprika.types';
 import { MultipitchClientState } from '../types/multipitch.types';
 import socketService from '../services/socket.service';
 import './GameRoom.css';
@@ -17,6 +18,7 @@ import FellowshipGame from './FellowshipGame';
 import WbcGame from './WbcGame';
 import PigsGame from './PigsGame';
 import GachaGame from './GachaGame';
+import PaprikaGame from './PaprikaGame';
 import MultipitchGame from './MultipitchGame';
 
 interface GameRoomProps {
@@ -50,6 +52,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
   );
   const [gachaState, setGachaState] = useState<GachaClientState | null>(
     initialRoom.gameType === 'gacha' ? initialRoom.gameState || null : null
+  );
+  const [paprikaState, setPaprikaState] = useState<PaprikaClientState | null>(
+    initialRoom.gameType === 'paprika' ? initialRoom.gameState || null : null
   );
   const missionId = room.selectedMissionId ?? 1;
   const [message, setMessage] = useState<string>('');
@@ -113,6 +118,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setPigsState(null);
         setMultipitchState(null);
         setGachaState(null);
+        setPaprikaState(null);
         setKrakenState(null);
         setGameEnded(false);
         setKrakenWinner(null);
@@ -143,6 +149,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setMultipitchState(data.gameState);
       } else if (data.room.gameType === 'gacha') {
         setGachaState(data.gameState);
+      } else if (data.room.gameType === 'paprika') {
+        setPaprikaState(data.gameState);
       } else {
         setGameState(data.gameState);
       }
@@ -179,6 +187,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
       } else if (data.room?.gameType === 'gacha' || initialRoom.gameType === 'gacha') {
         if (data.room) setRoom(data.room);
         setGachaState(data.gameState);
+      } else if (data.room?.gameType === 'paprika' || initialRoom.gameType === 'paprika') {
+        if (data.room) setRoom(data.room);
+        setPaprikaState(data.gameState);
       } else if (data.room?.gameType === 'no-touch-kraken' || initialRoom.gameType === 'no-touch-kraken') {
         setKrakenState(data.gameState);
         setGameEnded(true);
@@ -304,6 +315,16 @@ const GameRoom: React.FC<GameRoomProps> = ({
       }
     };
 
+    const handlePaprikaStateUpdated = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      setPaprikaState(data.gameState);
+      if (data.message) {
+        setMessage(data.message);
+        setMessageType(data.type === 'error' ? 'error' : 'info');
+      }
+    };
+
     const handleSnapshot = (data: any) => {
       if (data.room?.id !== initialRoom.id) return;
       setRoom(data.room);
@@ -324,6 +345,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'gacha') {
         setGachaState(state || null);
+        if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
+      } else if (data.room.gameType === 'paprika') {
+        setPaprikaState(state || null);
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'no-touch-kraken') {
         if (state) setKrakenState(state);
@@ -358,6 +382,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
     socketService.onMultipitchError(handleKrakenError);
     socketService.onGachaStateUpdated(handleGachaStateUpdated);
     socketService.onGachaError(handleKrakenError);
+    socketService.onPaprikaStateUpdated(handlePaprikaStateUpdated);
+    socketService.onPaprikaError(handleKrakenError);
     const activeSocket = socketService.getSocket();
     activeSocket?.on('room_state', handleSnapshot);
     activeSocket?.on('join_room_success', handleSnapshot);
@@ -393,6 +419,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('multipitch_error', handleKrakenError);
         socket.off('gacha_state_updated', handleGachaStateUpdated);
         socket.off('gacha_error', handleKrakenError);
+        socket.off('paprika_state_updated', handlePaprikaStateUpdated);
+        socket.off('paprika_error', handleKrakenError);
         socket.off('room_state', handleSnapshot);
         socket.off('join_room_success', handleSnapshot);
         socket.off('join_room_error', handleKrakenError);
@@ -501,6 +529,21 @@ const GameRoom: React.FC<GameRoomProps> = ({
     return <GachaGame room={room} playerId={playerId} state={gachaState}
       message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
       onReturnToRoom={handleReturnToRoom} />;
+  }
+
+  if (room.gameType === 'paprika' && paprikaState) {
+    return <PaprikaGame room={room} playerId={playerId} state={paprikaState}
+      message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
+      onReturnToRoom={handleReturnToRoom} />;
+  }
+
+  if (room.gameType === 'paprika') {
+    return <main className="bomb-loading" role="status">
+      <h2>파프리카 농장을 불러오는 중</h2>
+      <p>{message || '잠시만 기다려주세요.'}</p>
+      <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
+      <button onClick={handleLeaveRoom}>로비로 이동</button>
+    </main>;
   }
 
   if (room.gameType === 'gacha') {
