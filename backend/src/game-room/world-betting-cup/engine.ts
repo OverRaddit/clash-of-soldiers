@@ -289,9 +289,10 @@ function advanceAction(state: WbcGameState) {
 // --- 배팅 ---
 
 export interface BetConstraints {
-  required: number;        // 맞춰야 하는 토큰 수 (0이면 자유)
-  cap: number;
+  required: number;        // 최소 배팅 개수 = 앞사람 중 최고 배팅 (0이면 자유). 이 수 이상이면 레이즈가 된다.
+  cap: number;             // 최대 배팅 개수 (8강·4강 3, 결승 4)
   allInAllowed: boolean;   // 일반 토큰이 required보다 적어 올인이 허용되는가
+  canRaise: boolean;       // required보다 더 낼 여지가 있는가 (required < cap)
 }
 
 export function betConstraints(state: WbcGameState, player: WbcPlayer): BetConstraints {
@@ -300,6 +301,7 @@ export function betConstraints(state: WbcGameState, player: WbcPlayer): BetConst
     required: match.maxUnits,
     cap: match.betCap,
     allInAllowed: match.maxUnits > 0 && player.tokens < match.maxUnits,
+    canRaise: match.maxUnits < match.betCap,
   };
 }
 
@@ -316,10 +318,11 @@ function validateBet(state: WbcGameState, player: WbcPlayer, action: Extract<Wbc
   if (normal > player.tokens) throw new Error('가진 일반 토큰보다 많이 배팅할 수 없습니다.');
   if (fix > player.fixTokens) throw new Error('승부 조작 토큰이 부족합니다.');
   if (win > player.winTokens) throw new Error('승리 배팅 토큰이 부족합니다.');
+  // 콜 또는 레이즈: 앞사람 중 최고 배팅 이상을 내야 한다. 일반 토큰이 모자라면 전부 걸어 올인(최고 배팅 이하)할 수 있다.
   const c = betConstraints(state, player);
-  if (c.required > 0 && units !== c.required) {
-    const allIn = c.allInAllowed && normal === player.tokens && units <= c.required;
-    if (!allIn) throw new Error(`현재 최고 배팅 ${c.required}개와 같은 수를 배팅해야 합니다. (일반 토큰이 부족하면 전부 걸어 올인할 수 있습니다.)`);
+  if (c.required > 0 && units < c.required) {
+    const allIn = c.allInAllowed && normal === player.tokens;
+    if (!allIn) throw new Error(`현재 최고 배팅 ${c.required}개 이상을 배팅해야 합니다. (더 내면 레이즈, 일반 토큰이 부족하면 전부 걸어 올인할 수 있습니다.)`);
   }
 }
 
@@ -571,9 +574,12 @@ export function applyWbcAction(input: WbcGameState, playerId: string, action: Wb
         player.fixTokens -= action.fix;
         player.winTokens -= action.win;
         match.bets.push({ playerId, die: false, countryId: action.countryId, normal: action.normal, fix: action.fix, win: action.win });
+        const raised = match.maxUnits > 0 && units > match.maxUnits;
+        const allIn = match.maxUnits > 0 && units < match.maxUnits;
         match.maxUnits = Math.max(match.maxUnits, units);
-        pushLog(state, `${player.name}이(가) ${countryOf(state, action.countryId).name}에 토큰 ${units}개를 뒷면으로 배팅했습니다.`);
-        state.result = { message: `${countryOf(state, action.countryId).name}에 ${units}개 배팅.` };
+        const how = raised ? ` (레이즈 → 최고 배팅 ${units}개)` : allIn ? ' (올인)' : '';
+        pushLog(state, `${player.name}이(가) ${countryOf(state, action.countryId).name}에 토큰 ${units}개를 뒷면으로 배팅했습니다.${how}`);
+        state.result = { message: `${countryOf(state, action.countryId).name}에 ${units}개 배팅${raised ? ' — 레이즈!' : allIn ? ' — 올인' : ''}.` };
       }
       match.betIndex += 1;
       if (match.betIndex >= match.betOrder.length) {
