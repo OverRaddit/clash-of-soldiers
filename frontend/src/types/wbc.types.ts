@@ -131,7 +131,7 @@ export interface WbcClientState {
     winTokens: number;
     prebet: string | null;
     notes: WbcPeekNote[];
-    betConstraints: { required: number; cap: number; allInAllowed: boolean } | null;
+    betConstraints: { required: number; cap: number; allInAllowed: boolean; canRaise?: boolean } | null;
   } | null;
   players: WbcPlayerSummary[];
   match: WbcMatchView | null;
