@@ -1,0 +1,153 @@
+/* 파프리카 대축제 — Crux 테마 (디자인 캔버스 10 / 10b / 10m).
+   육각 농장(SVG) 가운데, 오른쪽에 수확 요약·축제 게이지·농부들·일지, 파종 중엔 하단 도크에서 토큰 종류를 고른다. */
+.pf { width: 100%; max-width: 1232px; margin: 0 auto; padding: 12px 24px 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; color: var(--ink); font-family: var(--font-sans); }
+.pf *, .pf *::before, .pf *::after { box-sizing: border-box; }
+.pf button { font: inherit; }
+.pf button:focus-visible, .pf [role="button"]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pf h1, .pf h2 { margin: 0; }
+.pf-note { margin: 0; font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.pf-note b { color: var(--ink); }
+
+/* 머리말 */
+.pf__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border: 2px solid var(--hairline); border-radius: var(--radius-lg); background: var(--wall-100); box-shadow: var(--shadow-card); }
+.pf__title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.pf__title h1 { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 28px; }
+.pf__status { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* 레이아웃 */
+.pf__layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.pf__main { flex: 2 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.pf__side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.pf-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 2px solid var(--hairline); border-radius: var(--radius-lg); background: var(--wall-100); box-shadow: var(--shadow-card); }
+.pf-card h2 { font-family: var(--font-display); font-weight: 400; font-size: 18px; line-height: 24px; display: flex; align-items: baseline; gap: 6px; }
+.pf-card small { font-size: 12px; font-weight: 400; color: var(--ink-muted); }
+.pf-card--act { position: relative; padding-left: 24px; }
+.pf-card--act::before { content: ''; position: absolute; left: 8px; top: 12px; bottom: 12px; width: 5px; border-radius: 999px; background: var(--hold-red); }
+.pf-card__title { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pf-card__title h2 { font-size: 20px; line-height: 26px; }
+.pf-card__buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* 플레이어 색 */
+.pf-c--blue { background: var(--hold-blue); } .pf-c--purple { background: var(--hold-purple); } .pf-c--pink { background: var(--hold-pink); }
+.pf-c--lime { background: var(--hold-lime); } .pf-c--yellow { background: var(--hold-yellow); } .pf-c--green { background: var(--hold-green); }
+.pf-fill--blue { fill: var(--hold-blue); } .pf-fill--purple { fill: var(--hold-purple); } .pf-fill--pink { fill: var(--hold-pink); }
+.pf-fill--lime { fill: var(--hold-lime); } .pf-fill--yellow { fill: var(--hold-yellow); } .pf-fill--green { fill: var(--hold-green); }
+
+/* 농장 */
+.pf-farm { align-items: center; }
+.pf-farm__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
+.pf-farm__head .pf-note { margin-left: auto; }
+.pf-svg { width: 100%; max-width: 560px; height: auto; display: block; overflow: visible; }
+.pf-hex { fill: var(--wall-200); stroke: var(--wall-100); stroke-width: 3; }
+.pf-hex--legal { fill: var(--wall-100); stroke: var(--hoodie); stroke-dasharray: 6 4; cursor: pointer; }
+.pf-hex--legal:hover { fill: #fde7d6; }
+.pf-hex--blocked { fill: var(--wall-000); }
+.pf-hex--picked { fill: #fde7d6; stroke: var(--hoodie); stroke-width: 4; stroke-dasharray: none; }
+.pf-hex--recent { stroke: var(--hold-yellow); stroke-width: 4; }
+.pf-tok { stroke: var(--wall-100); stroke-width: 3; }
+.pf-token--removed .pf-tok { opacity: .35; }
+.pf-token--removed .pf-tok-txt { opacity: .5; }
+.pf-tok-x { stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+.pf-tok-txt { font-family: var(--font-display); font-size: 15px; fill: var(--wall-100); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pf-tok-mini { font-family: var(--font-sans); font-size: 11px; font-weight: 700; fill: var(--ink); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pf-paprika { fill: var(--hold-red); stroke: var(--hold-green); stroke-width: 2.5; }
+.pf-paprika--gone { fill: var(--hairline); stroke: var(--hardware); }
+.pf-steal { stroke: var(--hold-red); stroke-width: 3; stroke-dasharray: 5 4; fill: none; marker-end: url(#pf-arrow); opacity: .85; }
+.pf-legend { display: flex; gap: 10px 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-muted); align-items: center; justify-content: center; }
+.pf-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 999px; vertical-align: -2px; margin-right: 4px; border: 2px solid var(--wall-100); box-shadow: 0 0 0 1px var(--hairline); }
+
+/* 축제 게이지 */
+.pf-goal__head { display: flex; align-items: baseline; gap: 8px; }
+.pf-goal__head .pf-note { margin-left: auto; }
+.pf-goal__bar { position: relative; height: 14px; border-radius: 999px; background: var(--hairline); overflow: visible; }
+.pf-goal__fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, var(--hold-orange), var(--hold-red)); transition: width .3s; }
+.pf-goal__mark { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--ink); border-radius: 2px; }
+.pf-goal__labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-muted); }
+.pf-goal--compact { padding: 10px 12px; gap: 6px; }
+.pf-goal--compact h2 { font-size: 14px; }
+.pf-goal--compact .pf-goal__bar { height: 10px; }
+
+/* 농부들 */
+.pf-farmers { display: grid; gap: 6px; }
+.pf-farmer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--wall-000); font-size: 13px; }
+.pf-farmer--turn { background: #fdf1e3; border-color: var(--hold-orange); }
+.pf-farmer--me { border-color: var(--hoodie); }
+.pf-farmer .crux-badge { padding: 1px 6px; }
+.pf-farmer__dot { display: inline-block; width: 14px; height: 14px; border-radius: 999px; border: 2px solid var(--wall-100); box-shadow: 0 0 0 1px var(--hairline); flex: none; vertical-align: -2px; }
+.pf-farmer__placed { display: inline-flex; gap: 3px; margin-left: auto; }
+.pf-farmer__placed i { width: 10px; height: 10px; border-radius: 999px; background: var(--hairline); }
+.pf-farmer__placed i.on { background: var(--hardware-deep); }
+.pf-farmer__score { font-family: var(--font-display); font-size: 16px; min-width: 28px; text-align: right; }
+
+/* 수확 요약 */
+.pf-harvest { display: grid; gap: 6px; }
+.pf-harvest__row { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 8px; align-items: center; font-size: 13px; padding: 6px 8px; border-radius: 8px; background: var(--wall-000); }
+.pf-harvest__row b { font-family: var(--font-display); font-weight: 400; font-size: 16px; }
+.pf-harvest__chips { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.pf-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--wall-200); }
+.pf-chip--steal { background: var(--hold-red); color: var(--on-hold); }
+.pf-chip--safe { background: var(--hold-green); color: var(--on-hold); }
+.pf-chip--lost { background: var(--hairline); color: var(--ink-muted); text-decoration: line-through; }
+
+/* 최종 결과 */
+.pf-final--festival { border-color: var(--hold-green); }
+.pf-final--festival::before { background: var(--hold-green); }
+.pf-final--famine { border-color: var(--ink); }
+.pf-final--famine::before { background: var(--ink); }
+.pf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pf-table th, .pf-table td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--hairline); }
+.pf-table thead th { font-size: 12px; color: var(--ink-muted); }
+.pf-table tr.is-me td { font-weight: 700; background: var(--code-tint); }
+.pf-table td.rank { font-family: var(--font-display); font-size: 18px; }
+
+/* 규칙 · 일지 */
+.pf-rules { margin: 0; padding-left: 18px; font-size: 12px; line-height: 17px; color: var(--ink-muted); display: grid; gap: 2px; }
+.pf-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12px; line-height: 16px; color: var(--ink-muted); max-height: 360px; overflow: auto; }
+.pf-log li { padding: 4px 8px; border-radius: 8px; background: var(--wall-000); }
+.pf-log li:first-child { color: var(--ink); font-weight: 700; background: var(--code-tint); }
+.pf-fold > summary { font-weight: 700; font-size: 13px; cursor: pointer; list-style: none; }
+.pf-fold > summary::-webkit-details-marker { display: none; }
+.pf-fold > summary::after { content: '▾'; float: right; color: var(--ink-muted); }
+.pf-fold[open] > summary::after { content: '▴'; }
+.pf-fold > summary ~ * { margin-top: 8px; }
+.pf-turn-banner { font-size: 12px; line-height: 16px; }
+
+/* 하단 도크: 토큰 고르기 */
+.pf-dock { position: sticky; bottom: 0; z-index: 5; margin: 4px -24px 0; background: var(--wall-100); border-top: 2px solid var(--hairline); box-shadow: 0 -6px 20px rgba(58, 36, 24, .12); }
+.pf-dock__inner { max-width: 1232px; margin: 0 auto; padding: 10px 24px 12px; display: grid; gap: 8px; }
+.pf-dock__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.pf-dock__mine { margin-left: auto; }
+.pf-pick { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+.pf-pick__btn { flex: 1 1 200px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--hairline); background: var(--wall-100); color: var(--ink); cursor: pointer; text-align: left; box-shadow: 0 3px 0 var(--hardware-shine); }
+.pf-pick__btn[aria-pressed="true"] { border-color: var(--hoodie); box-shadow: 0 0 0 3px rgba(183, 87, 42, .2), 0 3px 0 var(--hoodie-deep); }
+.pf-pick__btn:disabled { opacity: .55; cursor: default; }
+.pf-pick__icon { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; flex: none; font-size: 20px; }
+.pf-pick__icon--seed { background: #e4f0d6; }
+.pf-pick__icon--thief { background: var(--fur); }
+.pf-pick__text { display: grid; gap: 2px; }
+.pf-pick__text b { font-size: 14px; }
+.pf-pick__text small { font-size: 11px; line-height: 14px; color: var(--ink-muted); }
+.pf-pick__go { flex: 1 1 240px; align-self: center; }
+
+/* 모바일 */
+@media (max-width: 760px) {
+  .pf { padding: 8px 12px 0; gap: 10px; }
+  .pf__head { padding: 8px 12px; gap: 6px 8px; }
+  .pf__title h1 { font-size: 18px; line-height: 24px; }
+  .pf__status { margin-left: 0; }
+  .pf__layout { gap: 10px; }
+  .pf__main, .pf__side { gap: 10px; }
+  .pf-card { padding: 10px 12px; }
+  .pf-farm { padding: 10px 8px; }
+  .pf-farm__head .pf-note { margin-left: 0; flex-basis: 100%; }
+  .pf-legend { font-size: 11px; }
+  .pf-farmer { font-size: 12px; }
+  .pf-dock { margin: 4px -12px 0; }
+  .pf-dock__inner { padding: 8px 12px 10px; gap: 6px; }
+  .pf-dock__head { font-size: 13px; }
+  .pf-dock__hint { display: none; }
+  .pf-pick__btn { flex: 1 1 120px; padding: 8px 10px; }
+  .pf-pick__btn small { display: none; }
+  .pf-pick__icon { width: 34px; height: 34px; font-size: 17px; }
+  .pf-pick__go { flex-basis: 100%; }
+}
