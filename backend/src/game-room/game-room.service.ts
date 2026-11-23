@@ -12,6 +12,7 @@ import { getWbcPlayerView, initializeWbcGame, MAX_PLAYERS as WBC_MAX_PLAYERS, MI
 import { getPigsPlayerView, initializePigsGame, MAX_PLAYERS as PIGS_MAX_PLAYERS, MIN_PLAYERS as PIGS_MIN_PLAYERS } from './three-pigs/engine';
 import { getGachaPlayerView, initializeGachaGame, MAX_PLAYERS as GACHA_MAX_PLAYERS, MIN_PLAYERS as GACHA_MIN_PLAYERS } from './gacha/engine';
 import { getPaprikaPlayerView, initializePaprikaGame, MAX_PLAYERS as PAPRIKA_MAX_PLAYERS, MIN_PLAYERS as PAPRIKA_MIN_PLAYERS } from './paprika/engine';
+import { getHidePlayerView, initializeHideGame, MAX_PLAYERS as HIDE_MAX_PLAYERS, MIN_PLAYERS as HIDE_MIN_PLAYERS } from './hide-and-seek/engine';
 import { getMultipitchPlayerView, initializeMultipitchGame } from './multipitch/engine';
 
 @Injectable()
@@ -36,15 +37,17 @@ export class GameRoomService implements OnModuleDestroy {
   createRoom(createRoomDto: CreateRoomDto): GameRoom {
     const roomId = this.generateRoomId();
     const gameType = (createRoomDto.gameType || 'toy-battle') as GameType;
-    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika'].includes(gameType)) {
+    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek'].includes(gameType)) {
       throw new Error('지원하지 않는 게임입니다.');
     }
-    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'world-betting-cup' || gameType === 'multipitch' || gameType === 'three-pigs' || gameType === 'gacha' || gameType === 'paprika' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
+    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'world-betting-cup' || gameType === 'multipitch' || gameType === 'three-pigs' || gameType === 'gacha' || gameType === 'paprika' || gameType === 'hide-and-seek' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
     const maxPlayers = createRoomDto.maxPlayers ?? defaultMaxPlayers;
     const playerLimit = gameType === 'fellowship' || gameType === 'multipitch' ? 4 : gameType === 'bomb-busters' ? 5 : gameType === 'toy-battle' ? 2
-      : gameType === 'world-betting-cup' ? WBC_MAX_PLAYERS : gameType === 'three-pigs' ? PIGS_MAX_PLAYERS : gameType === 'gacha' ? GACHA_MAX_PLAYERS : gameType === 'paprika' ? PAPRIKA_MAX_PLAYERS : 8;
+      : gameType === 'world-betting-cup' ? WBC_MAX_PLAYERS : gameType === 'three-pigs' ? PIGS_MAX_PLAYERS : gameType === 'gacha' ? GACHA_MAX_PLAYERS : gameType === 'paprika' ? PAPRIKA_MAX_PLAYERS
+      : gameType === 'hide-and-seek' ? HIDE_MAX_PLAYERS : 8;
     const minimumCapacity = gameType === 'fellowship' ? 1 : gameType === 'no-touch-kraken' ? 3 : gameType === 'world-betting-cup' ? WBC_MIN_PLAYERS
-      : gameType === 'multipitch' ? 4 : gameType === 'three-pigs' ? PIGS_MIN_PLAYERS : gameType === 'gacha' ? GACHA_MIN_PLAYERS : gameType === 'paprika' ? PAPRIKA_MIN_PLAYERS : 2;
+      : gameType === 'multipitch' ? 4 : gameType === 'three-pigs' ? PIGS_MIN_PLAYERS : gameType === 'gacha' ? GACHA_MIN_PLAYERS : gameType === 'paprika' ? PAPRIKA_MIN_PLAYERS
+      : gameType === 'hide-and-seek' ? HIDE_MIN_PLAYERS : 2;
     if (!Number.isInteger(maxPlayers) || maxPlayers < minimumCapacity || maxPlayers > playerLimit) {
       throw new Error(`이 게임의 방 정원은 ${minimumCapacity}~${playerLimit}명입니다.`);
     }
@@ -264,6 +267,11 @@ export class GameRoomService implements OnModuleDestroy {
         room.players.map(player => player.id),
         room.players.map(player => player.name),
       );
+    } else if (room.gameType === 'hide-and-seek') {
+      room.gameState = initializeHideGame(
+        room.players.map(player => player.id),
+        room.players.map(player => player.name),
+      );
     } else if (room.gameType === 'multipitch') {
       room.gameState = initializeMultipitchGame(
         room.players.map(player => player.id),
@@ -369,6 +377,9 @@ export class GameRoomService implements OnModuleDestroy {
     } else if (room.gameType === 'paprika' && room.gameState) {
       const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
       result.gameState = getPaprikaPlayerView(room.gameState, viewerId);
+    } else if (room.gameType === 'hide-and-seek' && room.gameState) {
+      const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
+      result.gameState = getHidePlayerView(room.gameState, viewerId);
     }
     return result;
   }

@@ -5,6 +5,7 @@ import { WbcAction } from '../types/wbc.types';
 import { PigsAction } from '../types/pigs.types';
 import { GachaAction } from '../types/gacha.types';
 import { PaprikaAction } from '../types/paprika.types';
+import { HideAction } from '../types/hide.types';
 import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
@@ -150,6 +151,20 @@ class SocketService {
 
   onPaprikaError(callback: (data: { message: string }) => void): void {
     this.socket?.on('paprika_error', callback);
+  }
+
+  // --- 동물들의 숨바꼭질 이벤트 ---
+
+  hideAction(roomId: string, playerId: string, action: HideAction): void {
+    this.socket?.emit('hide_action', { roomId, playerId, action });
+  }
+
+  onHideStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('hide_state_updated', callback);
+  }
+
+  onHideError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('hide_error', callback);
   }
 
   // --- 확보! (멀티피치) 이벤트 ---

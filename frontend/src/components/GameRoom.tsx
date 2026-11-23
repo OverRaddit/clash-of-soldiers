@@ -7,6 +7,7 @@ import { WbcClientState } from '../types/wbc.types';
 import { PigsClientState } from '../types/pigs.types';
 import { GachaClientState } from '../types/gacha.types';
 import { PaprikaClientState } from '../types/paprika.types';
+import { HideClientState } from '../types/hide.types';
 import { MultipitchClientState } from '../types/multipitch.types';
 import socketService from '../services/socket.service';
 import './GameRoom.css';
@@ -19,6 +20,7 @@ import WbcGame from './WbcGame';
 import PigsGame from './PigsGame';
 import GachaGame from './GachaGame';
 import PaprikaGame from './PaprikaGame';
+import HideGame from './HideGame';
 import MultipitchGame from './MultipitchGame';
 
 interface GameRoomProps {
@@ -55,6 +57,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
   );
   const [paprikaState, setPaprikaState] = useState<PaprikaClientState | null>(
     initialRoom.gameType === 'paprika' ? initialRoom.gameState || null : null
+  );
+  const [hideState, setHideState] = useState<HideClientState | null>(
+    initialRoom.gameType === 'hide-and-seek' ? initialRoom.gameState || null : null
   );
   const missionId = room.selectedMissionId ?? 1;
   const [message, setMessage] = useState<string>('');
@@ -119,6 +124,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setMultipitchState(null);
         setGachaState(null);
         setPaprikaState(null);
+        setHideState(null);
         setKrakenState(null);
         setGameEnded(false);
         setKrakenWinner(null);
@@ -151,6 +157,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setGachaState(data.gameState);
       } else if (data.room.gameType === 'paprika') {
         setPaprikaState(data.gameState);
+      } else if (data.room.gameType === 'hide-and-seek') {
+        setHideState(data.gameState);
       } else {
         setGameState(data.gameState);
       }
@@ -190,6 +198,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
       } else if (data.room?.gameType === 'paprika' || initialRoom.gameType === 'paprika') {
         if (data.room) setRoom(data.room);
         setPaprikaState(data.gameState);
+      } else if (data.room?.gameType === 'hide-and-seek' || initialRoom.gameType === 'hide-and-seek') {
+        if (data.room) setRoom(data.room);
+        setHideState(data.gameState);
       } else if (data.room?.gameType === 'no-touch-kraken' || initialRoom.gameType === 'no-touch-kraken') {
         setKrakenState(data.gameState);
         setGameEnded(true);
@@ -325,6 +336,17 @@ const GameRoom: React.FC<GameRoomProps> = ({
       }
     };
 
+    const handleHideStateUpdated = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      setHideState(data.gameState);
+      // 추리판 메모는 메시지 없이 본인에게만 오므로, 이전 안내 문구를 그대로 둔다.
+      if (data.message) {
+        setMessage(data.message);
+        setMessageType(data.type === 'error' ? 'error' : 'info');
+      }
+    };
+
     const handleSnapshot = (data: any) => {
       if (data.room?.id !== initialRoom.id) return;
       setRoom(data.room);
@@ -348,6 +370,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'paprika') {
         setPaprikaState(state || null);
+        if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
+      } else if (data.room.gameType === 'hide-and-seek') {
+        setHideState(state || null);
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'no-touch-kraken') {
         if (state) setKrakenState(state);
@@ -384,6 +409,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
     socketService.onGachaError(handleKrakenError);
     socketService.onPaprikaStateUpdated(handlePaprikaStateUpdated);
     socketService.onPaprikaError(handleKrakenError);
+    socketService.onHideStateUpdated(handleHideStateUpdated);
+    socketService.onHideError(handleKrakenError);
     const activeSocket = socketService.getSocket();
     activeSocket?.on('room_state', handleSnapshot);
     activeSocket?.on('join_room_success', handleSnapshot);
@@ -421,6 +448,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('gacha_error', handleKrakenError);
         socket.off('paprika_state_updated', handlePaprikaStateUpdated);
         socket.off('paprika_error', handleKrakenError);
+        socket.off('hide_state_updated', handleHideStateUpdated);
+        socket.off('hide_error', handleKrakenError);
         socket.off('room_state', handleSnapshot);
         socket.off('join_room_success', handleSnapshot);
         socket.off('join_room_error', handleKrakenError);
@@ -535,6 +564,21 @@ const GameRoom: React.FC<GameRoomProps> = ({
     return <PaprikaGame room={room} playerId={playerId} state={paprikaState}
       message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
       onReturnToRoom={handleReturnToRoom} />;
+  }
+
+  if (room.gameType === 'hide-and-seek' && hideState) {
+    return <HideGame room={room} playerId={playerId} state={hideState}
+      message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
+      onReturnToRoom={handleReturnToRoom} />;
+  }
+
+  if (room.gameType === 'hide-and-seek') {
+    return <main className="bomb-loading" role="status">
+      <h2>숲속 은신처를 불러오는 중</h2>
+      <p>{message || '잠시만 기다려주세요.'}</p>
+      <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
+      <button onClick={handleLeaveRoom}>로비로 이동</button>
+    </main>;
   }
 
   if (room.gameType === 'paprika') {
