@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { BombBustersAction } from '../types/bomb-busters.types';
 import { FellowshipAction } from '../types/fellowship.types';
 import { WbcAction } from '../types/wbc.types';
+import { ColosseumAction } from '../types/colosseum.types';
 import { PigsAction } from '../types/pigs.types';
 import { GachaAction } from '../types/gacha.types';
 import { PaprikaAction } from '../types/paprika.types';
@@ -109,6 +110,20 @@ class SocketService {
 
   onWbcError(callback: (data: { message: string }) => void): void {
     this.socket?.on('wbc_error', callback);
+  }
+
+  // --- 모래 위의 밀약 이벤트 ---
+
+  colosseumAction(roomId: string, playerId: string, action: ColosseumAction): void {
+    this.socket?.emit('colosseum_action', { roomId, playerId, action });
+  }
+
+  onColosseumStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('colosseum_state_updated', callback);
+  }
+
+  onColosseumError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('colosseum_error', callback);
   }
 
   // --- 아기 돼지 삼형제 이벤트 ---

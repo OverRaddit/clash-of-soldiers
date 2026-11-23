@@ -19,6 +19,7 @@ const ENTRY_GAMES: { id: string; label: string; color: HoldColor }[] = [
   { id: 'bomb-busters', label: '봄버스터즈', color: 'orange' },
   { id: 'fellowship', label: '반지 원정대', color: 'purple' },
   { id: 'world-betting-cup', label: '월드 배팅 컵', color: 'yellow' },
+  { id: 'colosseum', label: '모래 위의 밀약', color: 'red' },
   { id: 'multipitch', label: '확보!', color: 'green' },
   { id: 'three-pigs', label: '아기 돼지 삼형제', color: 'pink' },
   { id: 'gacha', label: '가챠', color: 'lime' },
