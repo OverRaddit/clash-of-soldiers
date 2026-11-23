@@ -4,6 +4,7 @@ import { KrakenClientState } from '../types/kraken.types';
 import { BombBustersClientState } from '../types/bomb-busters.types';
 import { FellowshipClientState } from '../types/fellowship.types';
 import { WbcClientState } from '../types/wbc.types';
+import { ColosseumClientState } from '../types/colosseum.types';
 import { PigsClientState } from '../types/pigs.types';
 import { GachaClientState } from '../types/gacha.types';
 import { PaprikaClientState } from '../types/paprika.types';
@@ -17,6 +18,7 @@ import KrakenGame from './KrakenGame';
 import BombBustersGame from './BombBustersGame';
 import FellowshipGame from './FellowshipGame';
 import WbcGame from './WbcGame';
+import ColosseumGame from './ColosseumGame';
 import PigsGame from './PigsGame';
 import GachaGame from './GachaGame';
 import PaprikaGame from './PaprikaGame';
@@ -45,6 +47,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
   );
   const [wbcState, setWbcState] = useState<WbcClientState | null>(
     initialRoom.gameType === 'world-betting-cup' ? initialRoom.gameState || null : null
+  );
+  const [colosseumState, setColosseumState] = useState<ColosseumClientState | null>(
+    initialRoom.gameType === 'colosseum' ? initialRoom.gameState || null : null
   );
   const [pigsState, setPigsState] = useState<PigsClientState | null>(
     initialRoom.gameType === 'three-pigs' ? initialRoom.gameState || null : null
@@ -120,6 +125,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setBombState(null);
         setFellowshipState(null);
         setWbcState(null);
+        setColosseumState(null);
         setPigsState(null);
         setMultipitchState(null);
         setGachaState(null);
@@ -149,6 +155,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setFellowshipState(data.gameState);
       } else if (data.room.gameType === 'world-betting-cup') {
         setWbcState(data.gameState);
+      } else if (data.room.gameType === 'colosseum') {
+        setColosseumState(data.gameState);
       } else if (data.room.gameType === 'three-pigs') {
         setPigsState(data.gameState);
       } else if (data.room.gameType === 'multipitch') {
@@ -186,6 +194,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
       } else if (data.room?.gameType === 'world-betting-cup' || initialRoom.gameType === 'world-betting-cup') {
         if (data.room) setRoom(data.room);
         setWbcState(data.gameState);
+      } else if (data.room?.gameType === 'colosseum' || initialRoom.gameType === 'colosseum') {
+        if (data.room) setRoom(data.room);
+        setColosseumState(data.gameState);
       } else if (data.room?.gameType === 'three-pigs' || initialRoom.gameType === 'three-pigs') {
         if (data.room) setRoom(data.room);
         setPigsState(data.gameState);
@@ -296,6 +307,15 @@ const GameRoom: React.FC<GameRoomProps> = ({
         setMessageType(data.type === 'error' ? 'error' : 'info');
       }
     };
+    const handleColosseumStateUpdated = (data: any) => {
+      if (data.room?.id !== initialRoom.id) return;
+      setRoom(data.room);
+      setColosseumState(data.gameState);
+      if (data.message) {
+        setMessage(data.message);
+        setMessageType(data.type === 'error' ? 'error' : 'info');
+      }
+    };
     const handleMultipitchStateUpdated = (data: any) => {
       if (data.room?.id !== initialRoom.id) return;
       setRoom(data.room);
@@ -359,6 +379,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'world-betting-cup') {
         setWbcState(state || null);
+      } else if (data.room.gameType === 'colosseum') {
+        setColosseumState(state || null);
+        if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
       } else if (data.room.gameType === 'multipitch') {
         setMultipitchState(state || null);
         if (!state && data.room.status !== 'waiting') socketService.getRoomState(initialRoom.id);
@@ -401,6 +424,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
     socketService.onFellowshipError(handleKrakenError);
     socketService.onWbcStateUpdated(handleWbcStateUpdated);
     socketService.onWbcError(handleKrakenError);
+    socketService.onColosseumStateUpdated(handleColosseumStateUpdated);
+    socketService.onColosseumError(handleKrakenError);
     socketService.onPigsStateUpdated(handlePigsStateUpdated);
     socketService.onPigsError(handleKrakenError);
     socketService.onMultipitchStateUpdated(handleMultipitchStateUpdated);
@@ -440,6 +465,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
         socket.off('fellowship_error', handleKrakenError);
         socket.off('wbc_state_updated', handleWbcStateUpdated);
         socket.off('wbc_error', handleKrakenError);
+        socket.off('colosseum_state_updated', handleColosseumStateUpdated);
+        socket.off('colosseum_error', handleKrakenError);
         socket.off('pigs_state_updated', handlePigsStateUpdated);
         socket.off('pigs_error', handleKrakenError);
         socket.off('multipitch_state_updated', handleMultipitchStateUpdated);
@@ -515,6 +542,19 @@ const GameRoom: React.FC<GameRoomProps> = ({
     return <WbcGame room={room} playerId={playerId} state={wbcState}
       message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
       onReturnToRoom={handleReturnToRoom} />;
+  }
+  if (room.gameType === 'colosseum' && colosseumState) {
+    return <ColosseumGame room={room} playerId={playerId} state={colosseumState}
+      message={message} messageType={messageType} onLeaveRoom={handleLeaveRoom}
+      onReturnToRoom={handleReturnToRoom} />;
+  }
+  if (room.gameType === 'colosseum') {
+    return <main className="bomb-loading" role="status">
+      <h2>콜로세움 귀빈석으로 안내하는 중</h2>
+      <p>{message || '잠시만 기다려주세요.'}</p>
+      <button onClick={() => socketService.getRoomState(room.id)}>다시 불러오기</button>
+      <button onClick={handleLeaveRoom}>로비로 이동</button>
+    </main>;
   }
   if (room.gameType === 'multipitch' && multipitchState) {
     return <MultipitchGame room={room} playerId={playerId} state={multipitchState}
