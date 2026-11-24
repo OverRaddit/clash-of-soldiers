@@ -13,7 +13,7 @@ import { getWbcPlayerView, initializeWbcGame, MAX_PLAYERS as WBC_MAX_PLAYERS, MI
 import { getPigsPlayerView, initializePigsGame, MAX_PLAYERS as PIGS_MAX_PLAYERS, MIN_PLAYERS as PIGS_MIN_PLAYERS } from './three-pigs/engine';
 import { getGachaPlayerView, initializeGachaGame, MAX_PLAYERS as GACHA_MAX_PLAYERS, MIN_PLAYERS as GACHA_MIN_PLAYERS } from './gacha/engine';
 import { getPaprikaPlayerView, initializePaprikaGame, MAX_PLAYERS as PAPRIKA_MAX_PLAYERS, MIN_PLAYERS as PAPRIKA_MIN_PLAYERS } from './paprika/engine';
-import { getHidePlayerView, initializeHideGame, MAX_PLAYERS as HIDE_MAX_PLAYERS, MIN_PLAYERS as HIDE_MIN_PLAYERS } from './hide-and-seek/engine';
+import { getHidePlayerView, HideOptions, initializeHideGame, MAX_PLAYERS as HIDE_MAX_PLAYERS, MIN_PLAYERS as HIDE_MIN_PLAYERS, normalizeHideOptions } from './hide-and-seek/engine';
 import { getMultipitchPlayerView, initializeMultipitchGame } from './multipitch/engine';
 
 @Injectable()
@@ -207,6 +207,21 @@ export class GameRoomService implements OnModuleDestroy {
     return room;
   }
 
+  setHideOptions(roomId: string, playerId: string, options: Partial<HideOptions>): GameRoom {
+    const room = this.rooms.get(roomId);
+    if (!room || room.gameType !== 'hide-and-seek') throw new Error('동물들의 숨바꼭질 방을 찾을 수 없습니다.');
+    if (room.hostId !== playerId) throw new Error('방장만 카드 구성을 바꿀 수 있습니다.');
+    if (room.status !== 'waiting') throw new Error('대기 중에만 카드 구성을 바꿀 수 있습니다.');
+    const next = normalizeHideOptions({ cat: options?.cat, animalCount: options?.animalCount, emptyCount: options?.emptyCount });
+    const prev = room.hideOptions;
+    if (prev.cat !== next.cat || prev.animalCount !== next.animalCount || prev.emptyCount !== next.emptyCount) {
+      room.hideOptions = next;
+      // 구성이 바뀌면 다시 확인하고 준비하도록 준비 상태를 푼다
+      room.players.forEach(player => { if (!player.isHost) player.isReady = false; });
+    }
+    return room;
+  }
+
   startGame(roomId: string, hostId: string, missionId?: number): GameRoom {
     const room = this.rooms.get(roomId);
     
@@ -277,6 +292,8 @@ export class GameRoomService implements OnModuleDestroy {
       room.gameState = initializeHideGame(
         room.players.map(player => player.id),
         room.players.map(player => player.name),
+        undefined,
+        room.hideOptions,
       );
     } else if (room.gameType === 'multipitch') {
       room.gameState = initializeMultipitchGame(

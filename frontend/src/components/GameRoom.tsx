@@ -504,6 +504,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         onMissionChange={id => socketService.selectBombMission(room.id, playerId, id)}
         missions={room.bombMissions}
         onFellowshipChapterChange={chapter => socketService.selectFellowshipChapter(room.id, playerId, chapter)}
+        onHideOptionsChange={options => socketService.setHideOptions(room.id, playerId, options)}
       />
     );
   }

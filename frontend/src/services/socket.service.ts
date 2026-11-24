@@ -6,7 +6,7 @@ import { ColosseumAction } from '../types/colosseum.types';
 import { PigsAction } from '../types/pigs.types';
 import { GachaAction } from '../types/gacha.types';
 import { PaprikaAction } from '../types/paprika.types';
-import { HideAction } from '../types/hide.types';
+import { HideAction, HideOptions } from '../types/hide.types';
 import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
@@ -172,6 +172,10 @@ class SocketService {
 
   hideAction(roomId: string, playerId: string, action: HideAction): void {
     this.socket?.emit('hide_action', { roomId, playerId, action });
+  }
+
+  setHideOptions(roomId: string, playerId: string, options: HideOptions): void {
+    this.socket?.emit('set_hide_options', { roomId, playerId, options });
   }
 
   onHideStateUpdated(callback: (data: any) => void): void {

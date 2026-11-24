@@ -1,6 +1,7 @@
 // Common types shared across all games
 import type { BombMission } from './bomb-busters.types';
 import type { FellowshipChapterPreview } from './fellowship.types';
+import type { HideOptions } from './hide.types';
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
 export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch' | 'three-pigs' | 'gacha' | 'paprika' | 'hide-and-seek' | 'colosseum';
 
@@ -28,6 +29,7 @@ export interface GameRoom {
   bombMissions?: BombMission[];
   selectedFellowshipChapter?: number;
   fellowshipChapters?: FellowshipChapterPreview[];
+  hideOptions?: HideOptions;
 }
 
 // Re-export toy-battle types for backward compatibility

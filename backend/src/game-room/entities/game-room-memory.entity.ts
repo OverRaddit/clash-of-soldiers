@@ -1,3 +1,5 @@
+import { DEFAULT_HIDE_OPTIONS, HideOptions } from '../hide-and-seek/engine';
+
 export interface Player {
   id: string;
   name: string;
@@ -26,6 +28,8 @@ export class GameRoom {
   gameType: GameType;
   selectedMissionId: number = 1;
   selectedFellowshipChapter: number = 1;
+  /** 동물들의 숨바꼭질 카드 구성. 방장이 대기실에서 바꾼다. */
+  hideOptions: HideOptions = { ...DEFAULT_HIDE_OPTIONS };
   nextBombCaptainId?: string;
 
   constructor(id: string, name: string, hostId: string, maxPlayers: number = 2, gameType: GameType = 'toy-battle') {
@@ -73,6 +77,7 @@ export class GameRoom {
       gameType: this.gameType,
       ...(this.gameType === 'bomb-busters' ? { selectedMissionId: this.selectedMissionId } : {}),
       ...(this.gameType === 'fellowship' ? { selectedFellowshipChapter: this.selectedFellowshipChapter } : {}),
+      ...(this.gameType === 'hide-and-seek' ? { hideOptions: this.hideOptions } : {}),
     };
   }
 }

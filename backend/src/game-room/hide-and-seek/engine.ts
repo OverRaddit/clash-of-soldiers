@@ -1,22 +1,64 @@
 // 동물들의 숨바꼭질 엔진. 규칙과 해석은 docs/hide-and-seek-rulebook.md 를 따른다.
 // 모든 함수는 순수 함수다. 잘못된 행동은 예외를 던지고 입력 상태를 바꾸지 않는다.
 
-export const ANIMALS = ['lion', 'rabbit', 'fox', 'bear', 'owl', 'squirrel', 'penguin', 'elephant', 'crocodile'] as const;
+// 고양이(특수 동물)가 맨 앞, 고양이의 자리 바꾸기를 막는 곰·부엉이가 그다음이다.
+// 판에 쓰는 동물 수를 줄이면 뒤에서부터 빠진다.
+export const ANIMALS = ['cat', 'bear', 'owl', 'rabbit', 'fox', 'squirrel', 'penguin', 'elephant', 'crocodile', 'lion'] as const;
 export type Animal = typeof ANIMALS[number];
 export type Card = Animal | 'empty';
 /** peek = 은신처 2곳 엿보기, clue = 단서 토큰 놓기, guess = 최종 추리, reveal = 라운드 정답 공개 */
 export type HidePhase = 'peek' | 'clue' | 'guess' | 'reveal' | 'finished';
 
 export const MIN_PLAYERS = 3;
-export const MAX_PLAYERS = 5;
+export const MAX_PLAYERS = 6;
 export const HIDEOUT_COUNT = 7;
 export const MAX_TOKENS_PER_HIDEOUT = 2;
 export const TURNS_PER_PLAYER = 2;
 export const HIDEOUT_NAMES = ['큰 나무', '바위', '우물', '덤불', '통나무', '꽃밭', '동굴'];
 export const ANIMAL_NAMES: Record<Animal, string> = {
-  lion: '사자', rabbit: '토끼', fox: '여우', bear: '곰', owl: '부엉이',
-  squirrel: '다람쥐', penguin: '펭귄', elephant: '코끼리', crocodile: '악어',
+  cat: '고양이', bear: '곰', owl: '부엉이', rabbit: '토끼', fox: '여우',
+  squirrel: '다람쥐', penguin: '펭귄', elephant: '코끼리', crocodile: '악어', lion: '사자',
 };
+/** 고양이와 함께 엿보면 고양이가 자리를 바꾸지 못하는 동물 */
+export const CAT_BLOCKERS: Animal[] = ['bear', 'owl'];
+
+/** 방장이 고르는 카드 구성. 은신처는 항상 7곳이고, 남는 카드는 아무도 보지 못한 채 치운다. */
+export interface HideOptions {
+  cat: boolean;         // 고양이(엿본 두 카드의 자리를 바꾸는 특수 동물) 포함 여부
+  animalCount: number;  // 동물 카드 수 (고양이 포함)
+  emptyCount: number;   // 빈 은신처 카드 수
+}
+export const DEFAULT_HIDE_OPTIONS: HideOptions = { cat: true, animalCount: 9, emptyCount: 1 };
+export const HIDE_OPTION_LIMITS = { minAnimals: 4, maxAnimals: ANIMALS.length, maxEmpty: 3 };
+
+/** 고양이를 빼면 일반 동물은 9종뿐이다 */
+export function maxAnimalCount(cat: boolean): number {
+  return cat ? HIDE_OPTION_LIMITS.maxAnimals : HIDE_OPTION_LIMITS.maxAnimals - 1;
+}
+
+/** 구성 옵션을 검증한다. 빠진 값은 기본값으로 채우고, 규칙에 맞지 않으면 예외를 던진다. */
+export function normalizeHideOptions(raw?: Partial<HideOptions> | null): HideOptions {
+  const cat = raw?.cat ?? DEFAULT_HIDE_OPTIONS.cat;
+  const animalCount = raw?.animalCount ?? DEFAULT_HIDE_OPTIONS.animalCount;
+  const emptyCount = raw?.emptyCount ?? DEFAULT_HIDE_OPTIONS.emptyCount;
+  if (typeof cat !== 'boolean') throw new Error('고양이 포함 여부가 올바르지 않습니다.');
+  if (!Number.isInteger(animalCount) || animalCount < HIDE_OPTION_LIMITS.minAnimals || animalCount > maxAnimalCount(cat)) {
+    throw new Error(`동물 카드는 ${HIDE_OPTION_LIMITS.minAnimals}~${maxAnimalCount(cat)}장이어야 합니다.${cat ? '' : ' (고양이를 빼면 최대 9장)'}`);
+  }
+  if (!Number.isInteger(emptyCount) || emptyCount < 0 || emptyCount > HIDE_OPTION_LIMITS.maxEmpty) {
+    throw new Error(`빈 은신처 카드는 0~${HIDE_OPTION_LIMITS.maxEmpty}장이어야 합니다.`);
+  }
+  if (animalCount + emptyCount < HIDEOUT_COUNT) {
+    throw new Error(`카드가 은신처 수(${HIDEOUT_COUNT}곳)보다 적습니다. 동물이나 빈 은신처 카드를 늘리세요.`);
+  }
+  return { cat, animalCount, emptyCount };
+}
+
+/** 이 구성에서 실제로 쓰는 동물 (= 단서 토큰과 추리 토큰의 종류) */
+export function animalsInPlay(options: HideOptions): Animal[] {
+  const normal = ANIMALS.filter(animal => animal !== 'cat');
+  return options.cat ? ['cat', ...normal.slice(0, options.animalCount - 1)] : normal.slice(0, options.animalCount);
+}
 
 export interface HidePlayer {
   id: string;
@@ -35,13 +77,14 @@ export interface TurnRecord {
   animal: Animal;
   from: number | null;   // null = 대기석
   to: number;
+  swapped: boolean;      // 비공개: 고양이가 엿본 두 카드의 자리를 바꿨는가 (라운드 공개 뒤 모두에게 보임)
 }
 
 export interface RoundResult {
   round: number;
   hideouts: Card[];
   removed: Card[];
-  tokens: Record<Animal, number | null>;
+  tokens: Partial<Record<Animal, number | null>>;
   boards: Record<string, (Animal | null)[]>;
   correct: Record<string, boolean[]>;
   scores: Record<string, number>;
@@ -55,12 +98,16 @@ export interface HideGameState {
   totalRounds: number;
   players: HidePlayer[];
   hideouts: Card[];                       // 비공개: 은신처별 카드
-  removed: Card[];                        // 비공개: 치워 둔 3장
-  tokens: Record<Animal, number | null>;  // 단서 토큰 위치. null = 대기석
+  removed: Card[];                        // 비공개: 치워 둔 카드
+  options: HideOptions;                   // 카드 구성
+  animals: Animal[];                      // 이 판에 쓰는 동물
+  tokens: Partial<Record<Animal, number | null>>;  // 단서 토큰 위치. null = 대기석
   turnOrder: number[];                    // 스네이크 순서 (players 인덱스)
   turnPos: number;
   roundStartIndex: number;
   peeked: number[] | null;                // 현재 턴에 엿본 은신처
+  peekSeen: Card[] | null;                // 비공개: 엿본 순간의 카드 (peeked 와 같은 순서, 고양이가 바꾸기 전)
+  peekSwapped: boolean;                   // 비공개: 이번 턴에 고양이가 자리를 바꿨는가
   history: TurnRecord[];                  // 이번 라운드의 턴 기록
   results: RoundResult[];
   log: string[];
@@ -102,8 +149,9 @@ function playerOf(state: HideGameState, playerId: string): HidePlayer {
   return player;
 }
 
-function isAnimal(value: unknown): value is Animal {
-  return typeof value === 'string' && (ANIMALS as readonly string[]).includes(value);
+/** 이 판에 쓰는 동물인가 */
+function isAnimal(state: HideGameState, value: unknown): value is Animal {
+  return typeof value === 'string' && (state.animals as string[]).includes(value);
 }
 
 function isSlot(value: unknown): value is number {
@@ -121,7 +169,7 @@ export function currentPlayer(state: HideGameState): HidePlayer | null {
 
 /** 은신처 위에 놓인 단서 토큰 */
 export function tokensOn(state: HideGameState, slot: number): Animal[] {
-  return ANIMALS.filter(animal => state.tokens[animal] === slot);
+  return state.animals.filter(animal => state.tokens[animal] === slot);
 }
 
 /** 봉쇄 규칙: 단서 토큰이 2개 놓인 은신처는 엿볼 수 없다 */
@@ -129,17 +177,17 @@ export function peekableSlots(state: HideGameState): number[] {
   return Array.from({ length: HIDEOUT_COUNT }, (_, i) => i).filter(i => tokensOn(state, i).length < MAX_TOKENS_PER_HIDEOUT);
 }
 
-/** 이번 턴에 고를 수 있는 단서 토큰: 방금 본 동물. 빈 은신처를 봤다면 9종 모두 */
+/** 이번 턴에 고를 수 있는 단서 토큰: 방금 본 동물. 빈 은신처를 봤다면 이 판의 모든 토큰 */
 export function clueAnimals(state: HideGameState): Animal[] {
-  if (state.phase !== 'clue' || !state.peeked) return [];
-  const seen = state.peeked.map(slot => state.hideouts[slot]);
-  if (seen.includes('empty')) return [...ANIMALS];
-  return ANIMALS.filter(animal => seen.includes(animal));
+  if (state.phase !== 'clue' || !state.peekSeen) return [];
+  const seen = state.peekSeen;
+  if (seen.includes('empty')) return [...state.animals];
+  return state.animals.filter(animal => seen.includes(animal));
 }
 
-/** 단서 토큰을 놓을 수 있는 은신처: 토큰이 2개 미만이고, 그 토큰이 지금 놓인 곳이 아닌 곳 */
+/** 단서 토큰을 놓을 수 있는 은신처: 방금 엿본 2곳 중, 그 토큰이 지금 놓인 곳이 아닌 곳 */
 export function clueTargets(state: HideGameState, animal: Animal): number[] {
-  return peekableSlots(state).filter(slot => state.tokens[animal] !== slot);
+  return (state.peeked ?? []).filter(slot => tokensOn(state, slot).length < MAX_TOKENS_PER_HIDEOUT && state.tokens[animal] !== slot);
 }
 
 /** 스네이크 드래프트 순서: 시작 플레이어부터 한 바퀴, 이어서 역순으로 한 바퀴 */
@@ -152,7 +200,7 @@ export function snakeOrder(playerCount: number, startIndex: number): number[] {
 
 function setupRound(state: HideGameState, round: number) {
   const random = mulberry32(state.seed + round * 7919);
-  const deck: Card[] = [...ANIMALS, 'empty'];
+  const deck: Card[] = [...state.animals, ...Array<Card>(state.options.emptyCount).fill('empty')];
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -160,10 +208,12 @@ function setupRound(state: HideGameState, round: number) {
   state.round = round;
   state.hideouts = deck.slice(0, HIDEOUT_COUNT);
   state.removed = deck.slice(HIDEOUT_COUNT);
-  state.tokens = Object.fromEntries(ANIMALS.map(animal => [animal, null])) as Record<Animal, number | null>;
+  state.tokens = Object.fromEntries(state.animals.map(animal => [animal, null]));
   state.turnOrder = snakeOrder(state.players.length, state.roundStartIndex);
   state.turnPos = 0;
   state.peeked = null;
+  state.peekSeen = null;
+  state.peekSwapped = false;
   state.history = [];
   for (const p of state.players) {
     p.board = Array(HIDEOUT_COUNT).fill(null);
@@ -172,14 +222,15 @@ function setupRound(state: HideGameState, round: number) {
   }
   state.phase = 'peek';
   const first = state.players[state.roundStartIndex];
-  pushLog(state, `${round}라운드 시작 — 카드 10장을 섞어 은신처 7곳에 숨기고 3장을 치웠습니다. ${first.name}부터 시작합니다.`);
+  pushLog(state, `${round}라운드 시작 — 카드 ${deck.length}장(동물 ${state.animals.length} + 빈 은신처 ${state.options.emptyCount})을 섞어 은신처 ${HIDEOUT_COUNT}곳에 숨겼습니다. ${state.removed.length ? `남은 ${state.removed.length}장은 치웠습니다.` : '남는 카드는 없습니다.'} ${first.name}부터 시작합니다.`);
   state.result = { message: `${round}라운드입니다. ${first.name}의 차례 — 은신처 2곳을 엿보세요.` };
 }
 
-export function initializeHideGame(playerIds: string[], playerNames: string[], seed?: number): HideGameState {
+export function initializeHideGame(playerIds: string[], playerNames: string[], seed?: number, rawOptions?: Partial<HideOptions> | null): HideGameState {
   if (playerIds.length < MIN_PLAYERS || playerIds.length > MAX_PLAYERS) {
     throw new Error(`동물들의 숨바꼭질은 ${MIN_PLAYERS}~${MAX_PLAYERS}명이 필요합니다.`);
   }
+  const options = normalizeHideOptions(rawOptions);
   const actualSeed = seed ?? Math.floor(Math.random() * 2 ** 31);
   const first = Math.floor(mulberry32(actualSeed)() * playerIds.length);
   const state: HideGameState = {
@@ -192,11 +243,15 @@ export function initializeHideGame(playerIds: string[], playerNames: string[], s
     })),
     hideouts: [],
     removed: [],
-    tokens: {} as Record<Animal, number | null>,
+    options,
+    animals: animalsInPlay(options),
+    tokens: {},
     turnOrder: [],
     turnPos: 0,
     roundStartIndex: first,
     peeked: null,
+    peekSeen: null,
+    peekSwapped: false,
     history: [],
     results: [],
     log: [],
@@ -204,6 +259,7 @@ export function initializeHideGame(playerIds: string[], playerNames: string[], s
     seed: actualSeed,
   };
   pushLog(state, `술래 ${playerIds.length}명이 모였습니다. ${playerIds.length}라운드를 진행하고 누적 점수로 승부를 가립니다.`);
+  if (options.cat) pushLog(state, '이 판에는 고양이가 있습니다. 고양이를 엿보면 함께 엿본 카드와 자리가 바뀝니다 (곰·부엉이와 함께면 그대로).');
   setupRound(state, 1);
   return state;
 }
@@ -237,8 +293,11 @@ function scoreRound(state: HideGameState) {
     round: state.round, hideouts: [...state.hideouts], removed: [...state.removed],
     tokens: { ...state.tokens }, boards, correct, scores,
   });
-  const emptySlot = state.hideouts.indexOf('empty');
-  pushLog(state, `${state.round}라운드 정답 공개 — ${emptySlot >= 0 ? `${hideoutLabel(emptySlot)}이(가) 빈 은신처였습니다.` : '빈 은신처는 없었습니다 (동물 7마리).'}`);
+  const emptySlots = state.hideouts.map((card, i) => (card === 'empty' ? i : -1)).filter(i => i >= 0);
+  pushLog(state, `${state.round}라운드 정답 공개 — ${emptySlots.length ? `빈 은신처: ${emptySlots.map(hideoutLabel).join(', ')}.` : `빈 은신처는 없었습니다 (동물 ${HIDEOUT_COUNT}마리).`}`);
+  for (const turn of state.history.filter(t => t.swapped)) {
+    pushLog(state, `고양이의 장난 — ${playerOf(state, turn.playerId).name}의 턴에 ${turn.peeked.map(slot => `${slot + 1}번`).join('·')} 카드의 자리가 서로 바뀌었습니다.`);
+  }
   for (const p of state.players) pushLog(state, `${p.name}: ${scores[p.id]}곳 적중 (누적 ${p.total}점)`);
   if (state.round >= state.totalRounds) {
     finishGame(state);
@@ -288,12 +347,20 @@ export function applyHideAction(input: HideGameState, playerId: string, action: 
     const open = peekableSlots(state);
     if (!slots.every(slot => open.includes(slot))) throw new Error('단서 토큰이 2개 놓인 은신처는 잠겨 있어 엿볼 수 없습니다.');
     const peeked = slots.slice().sort((a, b) => a - b);
+    const seen = peeked.map(slot => state.hideouts[slot]);
+    // 고양이를 엿보면 함께 엿본 카드와 자리를 바꾼다. 곰·부엉이와 함께면 바꾸지 않는다.
+    const other = seen[0] === 'cat' ? seen[1] : seen[1] === 'cat' ? seen[0] : null;
+    const swapped = other !== null && !(CAT_BLOCKERS as Card[]).includes(other);
+    if (swapped) [state.hideouts[peeked[0]], state.hideouts[peeked[1]]] = [seen[1], seen[0]];
+    // 엿본 사람의 메모는 바뀐 뒤의 자리로 남긴다. 예전에 이 자리를 본 다른 사람의 메모는 그대로다.
     for (const slot of peeked) {
       const card = state.hideouts[slot];
       player.known[slot] = card;
       setBoard(player, slot, card === 'empty' ? null : card); // 본 내용을 추리판에 자동 메모
     }
     state.peeked = peeked;
+    state.peekSeen = seen;
+    state.peekSwapped = swapped;
     state.phase = 'clue';
     pushLog(state, `${player.name}이(가) ${peeked.map(hideoutLabel).join(', ')}을(를) 몰래 엿봤습니다.`);
     state.result = { message: `${player.name}이(가) ${peeked.map(slot => `${slot + 1}번`).join('·')} 은신처를 엿봤습니다. 이제 단서 토큰을 놓습니다.` };
@@ -303,19 +370,22 @@ export function applyHideAction(input: HideGameState, playerId: string, action: 
   if (action.type === 'clue') {
     if (state.phase !== 'clue') throw new Error('지금은 단서 토큰을 놓을 수 없습니다.');
     if (actor?.id !== playerId) throw new Error('내 차례가 아닙니다.');
-    if (!isAnimal(action.animal)) throw new Error('단서 토큰을 고르세요.');
+    if (!isAnimal(state, action.animal)) throw new Error('단서 토큰을 고르세요.');
     if (!isSlot(action.to)) throw new Error('단서 토큰을 놓을 은신처를 고르세요.');
     if (!clueAnimals(state).includes(action.animal)) throw new Error('방금 엿본 동물의 단서 토큰만 놓을 수 있습니다. (빈 은신처를 봤다면 아무 토큰이나 가능)');
-    const from = state.tokens[action.animal];
+    if (!state.peeked?.includes(action.to)) throw new Error('단서 토큰은 방금 엿본 두 은신처 중 한 곳에만 놓을 수 있습니다.');
+    const from = state.tokens[action.animal] ?? null;
     if (from === action.to) throw new Error('이미 그 은신처에 놓여 있는 토큰입니다. 다른 곳으로 옮기세요.');
     if (tokensOn(state, action.to).length >= MAX_TOKENS_PER_HIDEOUT) throw new Error('단서 토큰은 한 은신처에 2개까지만 놓을 수 있습니다.');
     state.tokens[action.animal] = action.to;
-    state.history.push({ playerId, peeked: state.peeked ?? [], animal: action.animal, from, to: action.to });
+    state.history.push({ playerId, peeked: state.peeked ?? [], animal: action.animal, from, to: action.to, swapped: state.peekSwapped });
     const locked = tokensOn(state, action.to).length >= MAX_TOKENS_PER_HIDEOUT;
     const reopened = from !== null && tokensOn(state, from).length === MAX_TOKENS_PER_HIDEOUT - 1;
     pushLog(state, `${player.name}이(가) ${ANIMAL_NAMES[action.animal]} 단서를 ${from === null ? '대기석에서 가져와' : `${hideoutLabel(from)}에서 옮겨`} ${hideoutLabel(action.to)}에 놓았습니다.`
       + (locked ? ` ${action.to + 1}번 은신처가 잠겼습니다.` : '') + (reopened ? ` ${(from as number) + 1}번 은신처가 다시 열렸습니다.` : ''));
     state.peeked = null;
+    state.peekSeen = null;
+    state.peekSwapped = false;
     state.turnPos += 1;
     if (state.turnPos >= state.turnOrder.length) {
       state.phase = 'guess';
@@ -333,7 +403,7 @@ export function applyHideAction(input: HideGameState, playerId: string, action: 
     if (state.phase !== 'peek' && state.phase !== 'clue' && state.phase !== 'guess') throw new Error('지금은 추리판을 바꿀 수 없습니다.');
     if (player.submitted) throw new Error('이미 추리를 확정했습니다. 수정하려면 확정을 취소하세요.');
     if (!isSlot(action.slot)) throw new Error('추리판에 없는 칸입니다.');
-    if (action.animal !== null && !isAnimal(action.animal)) throw new Error('올바른 동물 토큰이 아닙니다.');
+    if (action.animal !== null && !isAnimal(state, action.animal)) throw new Error('올바른 동물 토큰이 아닙니다.');
     setBoard(player, action.slot, action.animal);
     return state;
   }
@@ -387,7 +457,9 @@ export function getHidePlayerView(state: HideGameState, playerId?: string): Reco
     currentPlayerId: actor?.id ?? null,
     turnOrder: state.turnOrder.map(i => state.players[i].id),
     turnPos: state.turnPos,
-    animals: ANIMALS,
+    animals: state.animals,
+    options: state.options,
+    deck: { animals: state.animals.length, empty: state.options.emptyCount, removed: state.removed.length },
     hideouts: state.hideouts.map((card, i) => {
       const tokens = tokensOn(state, i);
       return {
@@ -400,13 +472,18 @@ export function getHidePlayerView(state: HideGameState, playerId?: string): Reco
         known: revealed ? null : me?.known[i] ?? null, // 내가 직접 본 카드는 나에게만
       };
     }),
-    reserve: ANIMALS.filter(animal => state.tokens[animal] === null),
+    reserve: state.animals.filter(animal => state.tokens[animal] === null),
     removed: revealed ? state.removed : null,
     peekable: myTurn && state.phase === 'peek' ? peekableSlots(state) : [],
     clueAnimals: myTurn && state.phase === 'clue' ? clueAnimals(state) : [],
+    // 내 단서 차례에만: 엿본 순간의 카드와, 고양이가 자리를 바꿨는지
+    mySeen: myTurn && state.phase === 'clue' && state.peeked && state.peekSeen
+      ? state.peeked.map((slot, i) => ({ slot, card: state.peekSeen![i] })) : null,
+    mySwapped: myTurn && state.phase === 'clue' ? state.peekSwapped : false,
     board: me ? me.board : null,
     submitted: me?.submitted ?? false,
-    history: state.history,
+    // 고양이의 자리 바꾸기는 본인에게만, 라운드 공개 뒤에는 모두에게 보인다
+    history: state.history.map(turn => ({ ...turn, swapped: revealed || turn.playerId === me?.id ? turn.swapped : null })),
     lastResult,
     standings: state.standings ?? null,
     log: state.log,
