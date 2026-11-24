@@ -34,7 +34,7 @@
 /* 플레이어 색 */
 .hs-dot { display: inline-block; width: 14px; height: 14px; border-radius: 999px; border: 2px solid var(--wall-100); box-shadow: 0 0 0 1px var(--hairline); flex: none; vertical-align: -2px; }
 .hs-c--blue { background: var(--hold-blue); } .hs-c--purple { background: var(--hold-purple); } .hs-c--pink { background: var(--hold-pink); }
-.hs-c--lime { background: var(--hold-lime); } .hs-c--yellow { background: var(--hold-yellow); }
+.hs-c--lime { background: var(--hold-lime); } .hs-c--yellow { background: var(--hold-yellow); } .hs-c--red { background: var(--hold-red); }
 
 /* 숲 */
 .hs-forest__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -183,3 +183,20 @@
   .hs-dock__inner { padding: 8px 12px 10px; gap: 6px; }
   .hs-dock__row > .crux-btn, .hs-dock__go { flex: 1 1 100%; margin-left: 0; }
 }
+
+/* 고양이 자리 바꿈 표시 */
+.hs-swap { color: var(--hold-purple); font-weight: 700; white-space: nowrap; }
+
+/* 대기실: 카드 구성 설정 */
+.hs-opt { display: flex; flex-direction: column; gap: 12px; }
+.hs-opt button { font-family: inherit; }
+.hs-opt__presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.hs-opt__preset { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--wall-000); color: inherit; cursor: pointer; text-align: left; font-size: 14px; }
+.hs-opt__preset small { font-size: 12px; opacity: .7; }
+.hs-opt__preset[aria-pressed="true"] { border-color: var(--hold-orange); box-shadow: inset 0 0 0 1px var(--hold-orange); background: #fdf1e3; }
+.hs-opt__preset:focus-visible { outline: 2px solid var(--hold-orange); outline-offset: 2px; }
+.hs-opt__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+.hs-opt__check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-weight: 600; cursor: pointer; }
+.hs-opt__check input { width: 18px; height: 18px; accent-color: var(--hold-orange); }
+.hs-opt__animals { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.hs-opt__animals span { white-space: nowrap; }

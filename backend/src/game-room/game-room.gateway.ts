@@ -246,6 +246,20 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('set_hide_options')
+  handleSetHideOptions(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; options: { cat?: boolean; animalCount?: number; emptyCount?: number } },
+  ) {
+    try {
+      this.requireMember(client, data?.roomId, data?.playerId, 'hide-and-seek');
+      const room = this.gameRoomService.setHideOptions(data.roomId, data.playerId, data.options);
+      this.emitRoomUpdate(room, 'hide_options_changed', '카드 구성이 바뀌었습니다. 확인하고 준비해 주세요.');
+    } catch (error) {
+      client.emit('hide_error', { message: error.message });
+    }
+  }
+
   @SubscribeMessage('select_fellowship_chapter')
   handleSelectFellowshipChapter(
     @ConnectedSocket() client: Socket,

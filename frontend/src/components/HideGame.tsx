@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GameRoom } from '../types/game.types';
-import { HideAction, HideAnimal, HideCard, HideClientState, HideHideoutView } from '../types/hide.types';
+import { HIDE_ANIMAL_EMOJI as ANIMAL_EMOJI, HIDE_ANIMAL_LABEL as ANIMAL_LABEL, HideAction, HideAnimal, HideCard, HideClientState, HideHideoutView } from '../types/hide.types';
 import socketService from '../services/socket.service';
 import './HideGame.css';
 
@@ -14,18 +14,10 @@ interface HideGameProps {
   onReturnToRoom: () => void;
 }
 
-const ANIMAL_LABEL: Record<HideAnimal, string> = {
-  lion: '사자', rabbit: '토끼', fox: '여우', bear: '곰', owl: '부엉이',
-  squirrel: '다람쥐', penguin: '펭귄', elephant: '코끼리', crocodile: '악어',
-};
-const ANIMAL_EMOJI: Record<HideAnimal, string> = {
-  lion: '🦁', rabbit: '🐰', fox: '🦊', bear: '🐻', owl: '🦉',
-  squirrel: '🐿️', penguin: '🐧', elephant: '🐘', crocodile: '🐊',
-};
 const HIDEOUT_EMOJI = ['🌳', '🪨', '⛲', '🌿', '🪵', '🌷', '🕳️'];
 const MAX_TOKENS = 2;
 // 술래 색: 순서 띠·점·결과표에서 같은 사람은 같은 색
-const COLORS = ['blue', 'purple', 'pink', 'lime', 'yellow'] as const;
+const COLORS = ['blue', 'purple', 'pink', 'lime', 'yellow', 'red'] as const;
 
 function cardLabel(card: HideCard): string { return card === 'empty' ? '빈 은신처' : ANIMAL_LABEL[card]; }
 function cardEmoji(card: HideCard): string { return card === 'empty' ? '🍃' : ANIMAL_EMOJI[card]; }
@@ -81,11 +73,15 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
   const board = state.board ?? [];
   const result = state.lastResult;
   const myCorrect = result && me ? result.correct[me.id] : null;
-  const peekedByMe = myClueTurn ? state.hideouts.filter((h) => h.peeking && h.known) : [];
-  const sawEmpty = peekedByMe.some((h) => h.known === 'empty');
+  const catInPlay = state.options.cat;
+  // 엿본 순간의 카드. 고양이가 자리를 바꿨다면 은신처 아래 👁 카드는 바뀐 뒤의 자리로 보인다.
+  const mySeen = myClueTurn ? state.mySeen ?? [] : [];
+  const sawEmpty = mySeen.some((seen) => seen.card === 'empty');
+  const sawCat = mySeen.some((seen) => seen.card === 'cat');
 
   const tokenSpot = (animal: HideAnimal): number | null => state.hideouts.find((h) => h.tokens.includes(animal))?.index ?? null;
-  const isTarget = (h: HideHideoutView) => myClueTurn && !!clueAnimal && h.tokens.length < MAX_TOKENS && !h.tokens.includes(clueAnimal);
+  // 단서는 방금 엿본 두 곳 중, 고른 토큰이 이미 놓여 있지 않은 곳에만 놓을 수 있다.
+  const isTarget = (h: HideHideoutView) => myClueTurn && !!clueAnimal && h.peeking && h.tokens.length < MAX_TOKENS && !h.tokens.includes(clueAnimal);
 
   const clickTile = (h: HideHideoutView) => {
     if (myPeekTurn) {
@@ -151,7 +147,7 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
         <div className={['hs-hide__card', shown ? 'is-open' : '', shown === 'empty' ? 'is-empty' : ''].filter(Boolean).join(' ')}
           aria-label={shown ? `${revealed ? '정답' : '내가 본 카드'}: ${cardLabel(shown)}` : '뒷면 카드'}>
           {shown ? <><span className="hs-hide__card-emoji" aria-hidden="true">{cardEmoji(shown)}</span><span>{cardLabel(shown)}</span></> : <span className="hs-hide__card-back" aria-hidden="true">?</span>}
-          {shown && !revealed && <span className="hs-hide__seen" title="내가 직접 본 카드">👁</span>}
+          {shown && !revealed && <span className="hs-hide__seen" title={catInPlay ? '내가 봤을 때의 카드 (그 뒤 고양이가 자리를 바꿨을 수 있어요)' : '내가 직접 본 카드'}>👁</span>}
         </div>
         {me && (
           <button type="button" className={['hs-hide__guess', guess ? 'has-token' : '', editSlot === h.index ? 'is-editing' : ''].filter(Boolean).join(' ')}
@@ -197,7 +193,7 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
   // --- 대기석 ---
   const renderReserve = () => (
     <div className="hs-reserve" aria-label="단서 토큰 대기석">
-      <span className="hs-reserve__label">대기석 <small>{state.reserve.length}/9</small></span>
+      <span className="hs-reserve__label">대기석 <small>{state.reserve.length}/{state.animals.length}</small></span>
       <span className="hs-reserve__list">
         {state.reserve.length ? state.reserve.map((a) => <Token key={a} animal={a} />) : <span className="hs-note">모든 단서 토큰이 은신처 위에 있어요.</span>}
       </span>
@@ -207,12 +203,13 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
   // --- 라운드 결과 ---
   const renderResult = () => {
     if (!revealed || !result) return null;
-    const emptySlot = result.hideouts.indexOf('empty');
+    const emptySlots = result.hideouts.map((card, i) => (card === 'empty' ? i + 1 : 0)).filter(Boolean);
+    const swaps = state.history.filter((t) => t.swapped);
     return (
       <section className="hs-card hs-card--act" aria-label={`${result.round}라운드 정답 공개`}>
         <div className="hs-card__title">
           <h2>{result.round}라운드 정답 공개</h2>
-          <span className="crux-badge">{emptySlot >= 0 ? `빈 은신처: ${emptySlot + 1}번` : '빈 은신처 없음 · 동물 7마리'}</span>
+          <span className="crux-badge">{emptySlots.length ? `빈 은신처: ${emptySlots.map((n) => `${n}번`).join('·')}` : '빈 은신처 없음 · 동물 7마리'}</span>
         </div>
         <div className="hs-scroll">
           <table className="hs-table hs-table--result">
@@ -235,7 +232,12 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
             </tbody>
           </table>
         </div>
-        <p className="hs-note">초록 칸 = 적중. 치워 둔 3장: {result.removed.map((card) => `${cardEmoji(card)} ${cardLabel(card)}`).join(' · ')}</p>
+        <p className="hs-note">초록 칸 = 적중. {result.removed.length ? `치워 둔 ${result.removed.length}장: ${result.removed.map((card) => `${cardEmoji(card)} ${cardLabel(card)}`).join(' · ')}` : '치워 둔 카드는 없었어요.'}</p>
+        {catInPlay && (
+          <p className="hs-note">🐱 {swaps.length
+            ? `고양이가 자리를 바꾼 턴: ${swaps.map((t) => `${nameOf(t.playerId)} (${t.peeked.map((s) => `${s + 1}번`).join('↔')})`).join(' · ')}`
+            : '이번 라운드에 고양이는 자리를 바꾸지 않았어요.'}</p>
+        )}
         {state.phase === 'reveal' && (
           <div className="hs-card__buttons"><button type="button" className="crux-btn crux-btn--primary" onClick={() => send({ type: 'next_round' })}>모두 회수하고 {state.round + 1}라운드로</button></div>
         )}
@@ -310,7 +312,7 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
           {state.history.map((t, i) => (
             <li key={i}>
               <span className={`hs-dot hs-c--${colorOf[t.playerId]}`} />
-              <span><b>{nameOf(t.playerId)}</b> · {t.peeked.map((s) => `${s + 1}번`).join('·')} 엿봄 → {ANIMAL_EMOJI[t.animal]} {ANIMAL_LABEL[t.animal]} 단서를 <b>{t.to + 1}번</b>에 <small>({t.from === null ? '대기석에서' : `${t.from + 1}번에서 옮김`})</small></span>
+              <span><b>{nameOf(t.playerId)}</b> · {t.peeked.map((s) => `${s + 1}번`).join('·')} 엿봄 → {ANIMAL_EMOJI[t.animal]} {ANIMAL_LABEL[t.animal]} 단서를 <b>{t.to + 1}번</b>에 <small>({t.from === null ? '대기석에서' : `${t.from + 1}번에서 옮김`})</small>{t.swapped && <span className="hs-swap" title="고양이가 엿본 두 카드의 자리를 바꿨어요"> 🐱 자리 바꿈</span>}</span>
             </li>
           ))}
         </ol>
@@ -320,9 +322,11 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
 
   const rules = (
     <ul className="hs-rules">
-      <li>내 턴: <b>토큰 0~1개</b>인 은신처 2곳을 몰래 엿본 뒤, 본 동물 중 하나의 단서 토큰을 아무 은신처에나 놓아요.</li>
+      <li>내 턴: <b>토큰 0~1개</b>인 은신처 2곳을 몰래 엿본 뒤, 본 동물 중 하나의 단서 토큰을 <b>방금 엿본 두 곳 중 한 곳</b>에 놓아요. 진짜여도 가짜여도 돼요.</li>
       <li>단서 토큰은 대기석에서 가져오거나 다른 은신처에서 옮길 수 있어요. 한 은신처에 2개까지, 2개면 <b>잠김</b>.</li>
-      <li><b>빈 은신처</b>를 봤다면 9종 중 아무 토큰이나 놓을 수 있어요.</li>
+      <li><b>빈 은신처</b>를 봤다면 이 판의 동물 토큰 중 아무거나 놓을 수 있어요.</li>
+      {catInPlay && <li><b>🐱 고양이</b>를 엿보면 함께 엿본 카드와 자리가 바뀌어요. 곰이나 부엉이와 함께면 그대로예요. 바뀌었는지는 엿본 사람만 알고, 라운드가 끝나면 공개돼요.</li>}
+      <li>이번 판 카드: 동물 {state.deck.animals}장 + 빈 은신처 {state.deck.empty}장. 7장을 숨기고 {state.deck.removed ? `${state.deck.removed}장은 치워 둬요.` : '남는 카드는 없어요.'}</li>
       <li>모두 2턴씩 마치면 추리판을 동시에 공개하고, 맞힌 은신처마다 1점. 빈 은신처는 비워 둬야 적중이에요.</li>
     </ul>
   );
@@ -343,8 +347,11 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
         <>
           <div className="hs-dock__row">
             <span className="hs-dock__text hs-dock__text--tight"><b>② 단서</b> · 방금 본 카드:</span>
-            {peekedByMe.map((h) => <span key={h.index} className="hs-saw"><b>{h.index + 1}번</b> {cardEmoji(h.known as HideCard)} {cardLabel(h.known as HideCard)}</span>)}
+            {mySeen.map((seen) => <span key={seen.slot} className="hs-saw"><b>{seen.slot + 1}번</b> {cardEmoji(seen.card)} {cardLabel(seen.card)}</span>)}
             {sawEmpty && <span className="crux-badge crux-badge--yellow">빈 은신처 발견 — 아무 토큰이나 가능</span>}
+            {sawCat && (state.mySwapped
+              ? <span className="crux-badge crux-badge--purple">🐱 고양이가 두 카드의 자리를 바꿨어요 → 지금은 {mySeen.map((seen, i) => `${seen.slot + 1}번 ${cardLabel(mySeen[1 - i].card)}`).join(' · ')}</span>
+              : <span className="crux-badge">🐱 곰·부엉이와 함께라 자리를 바꾸지 않았어요</span>)}
           </div>
           <div className="hs-dock__row">
             <div className="hs-clues" role="group" aria-label="놓을 단서 토큰">
@@ -360,7 +367,7 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
               })}
             </div>
             <button type="button" className="crux-btn crux-btn--primary hs-dock__go" disabled={!clueAnimal || clueTo === null} onClick={confirmClue}>
-              {!clueAnimal ? '놓을 토큰을 고르세요' : clueTo === null ? `${ANIMAL_LABEL[clueAnimal]} — 놓을 은신처를 누르세요` : `${ANIMAL_LABEL[clueAnimal]} 단서를 ${clueTo + 1}번에 놓기`}
+              {!clueAnimal ? '놓을 토큰을 고르세요' : clueTo === null ? `${ANIMAL_LABEL[clueAnimal]} — 엿본 두 곳 중 놓을 곳을 누르세요` : `${ANIMAL_LABEL[clueAnimal]} 단서를 ${clueTo + 1}번에 놓기`}
             </button>
           </div>
         </>
@@ -427,13 +434,13 @@ const HideGame: React.FC<HideGameProps> = ({ room, playerId, state, message, mes
           {renderResult()}
           <section className="hs-card hs-forest" aria-label="숲속 은신처">
             <div className="hs-forest__head">
-              <h2>숲속 은신처 <small>7곳 · 카드 10장 중 3장은 치워 둠</small></h2>
-              <span className="hs-note">{revealed ? '모든 카드가 공개됐어요.' : myPeekTurn ? '테두리가 밝은 은신처를 눌러 2곳을 고르세요.' : myClueTurn ? '토큰을 고른 뒤, 놓을 은신처를 누르세요.' : '위 = 공용 단서 토큰 · 가운데 = 은신처 · 아래 = 카드와 내 추리'}</span>
+              <h2>숲속 은신처 <small>7곳 · 카드 {state.deck.animals + state.deck.empty}장(동물 {state.deck.animals} + 빈 은신처 {state.deck.empty}){state.deck.removed ? ` 중 ${state.deck.removed}장은 치워 둠` : ' 전부 숨김'}{catInPlay ? ' · 🐱 고양이 있음' : ''}</small></h2>
+              <span className="hs-note">{revealed ? '모든 카드가 공개됐어요.' : myPeekTurn ? '테두리가 밝은 은신처를 눌러 2곳을 고르세요.' : myClueTurn ? '토큰을 고른 뒤, 방금 엿본 두 곳 중 놓을 곳을 누르세요.' : '위 = 공용 단서 토큰 · 가운데 = 은신처 · 아래 = 카드와 내 추리'}</span>
             </div>
             {renderOrder()}
             {renderReserve()}
             <ol className="hs-hides">{state.hideouts.map(renderHideout)}</ol>
-            {me && !revealed && <p className="hs-note hs-forest__foot">🙈 가림막 뒤 — 👁 표시 카드와 ‘내 추리’ 칸은 나만 볼 수 있어요. 엿본 카드는 추리판에 자동으로 메모됩니다.</p>}
+            {me && !revealed && <p className="hs-note hs-forest__foot">🙈 가림막 뒤 — 👁 표시 카드와 ‘내 추리’ 칸은 나만 볼 수 있어요. 엿본 카드는 추리판에 자동으로 메모됩니다.{catInPlay ? ' 👁 는 내가 봤을 때의 카드라, 그 뒤에 고양이가 자리를 바꿨다면 지금은 다를 수 있어요.' : ''}</p>}
             {renderPalette()}
           </section>
         </div>
