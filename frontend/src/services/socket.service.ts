@@ -7,6 +7,7 @@ import { PigsAction } from '../types/pigs.types';
 import { GachaAction } from '../types/gacha.types';
 import { PaprikaAction } from '../types/paprika.types';
 import { HideAction, HideOptions } from '../types/hide.types';
+import { HiddenAction, HiddenOptions } from '../types/hidden.types';
 import { MultipitchAction } from '../types/multipitch.types';
 
 class SocketService {
@@ -169,6 +170,22 @@ class SocketService {
   }
 
   // --- 동물들의 숨바꼭질 이벤트 ---
+
+  hiddenAction(roomId: string, playerId: string, action: HiddenAction): void {
+    this.socket?.emit('hidden_action', { roomId, playerId, action });
+  }
+
+  setHiddenOptions(roomId: string, playerId: string, options: HiddenOptions): void {
+    this.socket?.emit('set_hidden_options', { roomId, playerId, options });
+  }
+
+  onHiddenStateUpdated(callback: (data: any) => void): void {
+    this.socket?.on('hidden_state_updated', callback);
+  }
+
+  onHiddenError(callback: (data: { message: string }) => void): void {
+    this.socket?.on('hidden_error', callback);
+  }
 
   hideAction(roomId: string, playerId: string, action: HideAction): void {
     this.socket?.emit('hide_action', { roomId, playerId, action });

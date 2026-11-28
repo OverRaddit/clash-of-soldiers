@@ -1,0 +1,219 @@
+/* 동물들의 숨바꼭질 — Crux 테마.
+   가운데에 은신처 7곳(위 = 공용 단서 토큰, 가운데 = 은신처 타일, 아래 = 카드와 내 추리), 오른쪽에 술래·단서 기록·일지,
+   하단 도크에서 지금 할 일(엿보기 → 단서 놓기 → 추리 확정)을 처리한다. */
+.ha { width: 100%; max-width: 1232px; margin: 0 auto; padding: 12px 24px 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; color: var(--ink); font-family: var(--font-sans); }
+.ha *, .ha *::before, .ha *::after { box-sizing: border-box; }
+.ha button { font-family: inherit; }
+.ha button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ha h1, .ha h2 { margin: 0; }
+.ha ol, .ha ul { margin: 0; padding: 0; list-style: none; }
+.ha-note { margin: 0; font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.ha-note b { color: var(--ink); }
+
+/* 머리말 */
+.ha__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border: 2px solid var(--hairline); border-radius: var(--radius-lg); background: var(--wall-100); box-shadow: var(--shadow-card); }
+.ha__title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.ha__title h1 { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 28px; }
+.ha__status { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* 레이아웃 */
+.ha__layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.ha__main { flex: 3 1 620px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.ha__side { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.ha-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 2px solid var(--hairline); border-radius: var(--radius-lg); background: var(--wall-100); box-shadow: var(--shadow-card); }
+.ha-card h2 { font-family: var(--font-display); font-weight: 400; font-size: 18px; line-height: 24px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.ha-card small { font-size: 12px; font-weight: 400; color: var(--ink-muted); }
+.ha-card--act { position: relative; padding-left: 24px; }
+.ha-card--act::before { content: ''; position: absolute; left: 8px; top: 12px; bottom: 12px; width: 5px; border-radius: 999px; background: var(--hold-orange); }
+.ha-card__title { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ha-card__title h2 { font-size: 20px; line-height: 26px; }
+.ha-card__buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.ha-final { border-color: var(--hold-green); }
+.ha-final::before { background: var(--hold-green); }
+
+/* 플레이어 색 */
+.ha-dot { display: inline-block; width: 14px; height: 14px; border-radius: 999px; border: 2px solid var(--wall-100); box-shadow: 0 0 0 1px var(--hairline); flex: none; vertical-align: -2px; }
+.ha-c--blue { background: var(--hold-blue); } .ha-c--purple { background: var(--hold-purple); } .ha-c--pink { background: var(--hold-pink); }
+.ha-c--lime { background: var(--hold-lime); } .ha-c--yellow { background: var(--hold-yellow); } .ha-c--red { background: var(--hold-red); }
+
+/* 숲 */
+.ha-forest__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ha-forest__head .ha-note { margin-left: auto; }
+.ha-forest__foot { text-align: center; }
+
+/* 순서 띠 */
+.ha-order { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.ha-order__item { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--wall-000); font-size: 12px; line-height: 18px; }
+.ha-order__item.is-done { opacity: .5; text-decoration: line-through; }
+.ha-order__item.is-now { border-color: var(--hold-orange); background: #fdf1e3; font-weight: 700; color: var(--on-hold-warm); }
+.ha-order__item--end { border-style: dashed; }
+
+/* 단서 토큰 */
+.ha-tok { display: inline-grid; place-items: center; border-radius: 999px; background: var(--wall-100); border: 2px solid var(--hardware-deep); box-shadow: 0 2px 0 var(--hardware-deep); line-height: 1; flex: none; }
+.ha-tok--md { width: 34px; height: 34px; font-size: 19px; }
+.ha-tok--sm { width: 24px; height: 24px; font-size: 14px; }
+.ha-tok--slot { background: transparent; border: 2px dashed var(--hairline); box-shadow: none; }
+
+/* 대기석 */
+.ha-reserve { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: 12px; background: var(--wall-000); border: 1px dashed var(--hairline); min-height: 54px; }
+.ha-reserve__label { font-weight: 700; font-size: 13px; }
+.ha-reserve__list { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* 은신처 */
+.ha-hides { display: grid; grid-template-columns: repeat(var(--ha-cols, 7), minmax(0, 1fr)); gap: 8px; }
+.ha-hide { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0; padding: 6px; border-radius: 14px; border: 2px solid transparent; background: var(--wall-000); }
+.ha-hide__clues { display: flex; justify-content: center; gap: 4px; min-height: 36px; }
+.ha-hide__tile { position: relative; display: grid; justify-items: center; gap: 2px; padding: 10px 4px 8px; border-radius: 12px; border: 2px solid var(--hairline); background: var(--wall-100); color: var(--ink); box-shadow: 0 3px 0 var(--hardware-shine); cursor: default; }
+.ha-hide__no { position: absolute; top: 4px; left: 6px; font-family: var(--font-display); font-size: 15px; line-height: 1; color: var(--ink-muted); }
+.ha-hide__emoji { font-size: 30px; line-height: 36px; }
+.ha-hide__name { font-size: 12px; font-weight: 700; line-height: 16px; white-space: nowrap; }
+.ha-hide__flag { font-size: 10px; line-height: 14px; font-weight: 700; padding: 0 6px; border-radius: 999px; white-space: nowrap; }
+.ha-hide__flag--lock { background: var(--ink); color: var(--wall-100); }
+.ha-hide__flag--peek { background: var(--hold-yellow); color: var(--on-hold-warm); }
+.ha-hide--locked .ha-hide__tile { background: var(--wall-200); border-style: dashed; }
+.ha-hide--peeking { border-color: var(--hold-yellow); }
+.ha-hide--dim .ha-hide__tile { opacity: .55; }
+.ha-hide--clickable .ha-hide__tile { cursor: pointer; border-color: var(--hoodie); border-style: dashed; }
+.ha-hide--clickable .ha-hide__tile:hover { background: #fde7d6; }
+.ha-hide--picked .ha-hide__tile { background: #fde7d6; border-style: solid; border-width: 3px; box-shadow: 0 0 0 3px rgba(183, 87, 42, .2), 0 3px 0 var(--hoodie-deep); }
+.ha-hide--hit { border-color: var(--hold-green); }
+.ha-hide--miss { border-color: var(--hairline); }
+
+/* 은신처 아래 카드 */
+.ha-hide__card { position: relative; display: grid; justify-items: center; align-content: center; gap: 0; min-height: 52px; padding: 4px 2px; border-radius: 10px; border: 2px solid var(--hairline); background: repeating-linear-gradient(45deg, var(--wall-200), var(--wall-200) 6px, var(--wall-100) 6px, var(--wall-100) 12px); font-size: 11px; line-height: 14px; font-weight: 700; text-align: center; }
+.ha-hide__card.is-open { background: var(--wall-100); border-color: var(--hardware-deep); }
+.ha-hide__card.is-empty { color: var(--ink-muted); }
+.ha-hide__card-emoji { font-size: 22px; line-height: 26px; }
+.ha-hide__card-back { font-family: var(--font-display); font-size: 20px; color: var(--ink-muted); }
+.ha-hide__seen { position: absolute; top: -8px; right: -6px; font-size: 13px; background: var(--wall-100); border-radius: 999px; border: 1px solid var(--hairline); padding: 0 3px; line-height: 16px; }
+
+/* 내 추리 칸 */
+.ha-hide__guess { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 34px; padding: 2px 4px; font-size: 12px; border-radius: 10px; border: 2px dashed var(--hold-blue); background: var(--code-tint, var(--wall-100)); color: var(--ink); font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; }
+.ha-hide__guess.has-token { border-style: solid; }
+.ha-hide__guess.is-editing { box-shadow: 0 0 0 3px rgba(45, 114, 201, .25); border-style: solid; }
+.ha-hide__guess:disabled { cursor: default; opacity: .8; }
+.ha-hide__guess > span[aria-hidden] { font-size: 17px; line-height: 1; }
+.ha-hide__guess-none { color: var(--ink-muted); font-weight: 400; }
+.ha-mark { font-weight: 900; font-size: 13px; }
+.ha-mark--hit { color: var(--hold-green); }
+.ha-mark--miss { color: var(--hold-red); }
+
+/* 토큰 고르기 버튼 (추리 토큰 · 단서 토큰 공용) */
+.ha-pick { display: inline-grid; justify-items: center; gap: 0; min-width: 68px; padding: 6px 8px; border-radius: 12px; border: 2px solid var(--hairline); background: var(--wall-100); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 700; line-height: 16px; box-shadow: 0 3px 0 var(--hardware-shine); }
+.ha-pick small { font-size: 10px; line-height: 12px; font-weight: 400; color: var(--ink-muted); }
+.ha-pick__emoji { font-size: 22px; line-height: 26px; }
+.ha-pick[aria-pressed="true"] { border-color: var(--hoodie); box-shadow: 0 0 0 3px rgba(183, 87, 42, .2), 0 3px 0 var(--hoodie-deep); background: #fde7d6; color: var(--on-hold-warm); }
+.ha-pick[aria-pressed="true"] small { color: var(--on-hold-warm); }
+.ha-pick--clear { border-style: dashed; }
+.ha-palette { display: grid; gap: 8px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--hold-blue); background: var(--wall-000); }
+.ha-palette__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.ha-palette__head .crux-btn { margin-left: auto; }
+.ha-palette__list { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* 술래들 */
+.ha-players { display: grid; gap: 6px; }
+.ha-player { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--wall-000); font-size: 13px; }
+.ha-player--turn { background: #fdf1e3; border-color: var(--hold-orange); color: var(--on-hold-warm); }
+.ha-player--me { border-color: var(--hoodie); }
+.ha-player .crux-badge { padding: 1px 6px; }
+.ha-player__turns { display: inline-flex; gap: 3px; margin-left: auto; }
+.ha-player__turns i { width: 10px; height: 10px; border-radius: 999px; background: var(--hairline); }
+.ha-player__turns i.on { background: var(--hardware-deep); }
+.ha-player__score { font-family: var(--font-display); font-size: 16px; min-width: 28px; text-align: right; }
+
+/* 단서 기록 */
+.ha-history { display: grid; gap: 4px; font-size: 12px; line-height: 17px; max-height: 260px; overflow: auto; }
+.ha-history li { display: flex; gap: 6px; align-items: flex-start; padding: 4px 8px; border-radius: 8px; background: var(--wall-000); }
+.ha-history .ha-dot { margin-top: 2px; }
+
+/* 결과 표 */
+.ha-scroll { overflow-x: auto; }
+.ha-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ha-table th, .ha-table td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+.ha-table thead th { font-size: 12px; color: var(--ink-muted); }
+.ha-table tr.is-me td, .ha-table tr.is-me th { font-weight: 700; background: var(--code-tint); }
+.ha-table td.rank { font-family: var(--font-display); font-size: 18px; }
+.ha-table--result th:not(:first-child), .ha-table--result td { text-align: center; font-size: 18px; padding: 4px 6px; }
+.ha-table--result tbody th { font-size: 13px; font-weight: 400; }
+.ha-table--result tbody tr td.is-hit { background: rgba(39, 128, 74, .22); }
+.ha-table--result td.is-miss { opacity: .55; }
+.ha-table--result td b { font-family: var(--font-display); font-weight: 400; font-size: 16px; }
+.ha-table__answer th, .ha-table__answer td { border-bottom: 2px solid var(--ink); }
+
+/* 규칙 · 일지 */
+.ha-rules { padding-left: 18px !important; list-style: disc !important; font-size: 12px; line-height: 17px; color: var(--ink-muted); display: grid; gap: 2px; }
+.ha-log { display: grid; gap: 4px; font-size: 12px; line-height: 16px; color: var(--ink-muted); max-height: 320px; overflow: auto; }
+.ha-log li { padding: 4px 8px; border-radius: 8px; background: var(--wall-000); }
+.ha-log li:first-child { color: var(--ink); font-weight: 700; background: var(--code-tint); }
+.ha-fold > summary { font-weight: 700; font-size: 13px; cursor: pointer; list-style: none; }
+.ha-fold > summary::-webkit-details-marker { display: none; }
+.ha-fold > summary::after { content: '▾'; float: right; color: var(--ink-muted); }
+.ha-fold[open] > summary::after { content: '▴'; }
+.ha-fold > summary ~ * { margin-top: 8px; }
+
+/* 하단 도크 */
+.ha-dock { position: sticky; bottom: 0; z-index: 5; margin: 4px -24px 0; background: var(--wall-100); border-top: 2px solid var(--hairline); box-shadow: 0 -6px 20px rgba(58, 36, 24, .12); }
+.ha-dock__inner { max-width: 1232px; margin: 0 auto; padding: 10px 24px 12px; display: grid; gap: 8px; }
+.ha-dock__head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.ha-dock__row { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.ha-dock__text { font-size: 13px; line-height: 18px; flex: 1 1 260px; }
+.ha-dock__text--tight { flex: none; }
+.ha-dock__row > .crux-btn { margin-left: auto; }
+.ha-dock__go { flex: 1 1 220px; }
+.ha-clues { display: flex; gap: 6px; flex-wrap: wrap; flex: 2 1 320px; }
+.ha-saw { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: var(--wall-000); border: 1px solid var(--hardware-deep); font-size: 13px; }
+
+/* 모바일 */
+@media (max-width: 760px) {
+  .ha { padding: 8px 12px 0; gap: 10px; }
+  .ha__head { padding: 8px 12px; gap: 6px 8px; }
+  .ha__title h1 { font-size: 18px; line-height: 24px; }
+  .ha__status { margin-left: 0; }
+  .ha__layout { gap: 10px; }
+  .ha__main, .ha__side { gap: 10px; }
+  .ha-card { padding: 10px 12px; }
+  .ha-forest__head .ha-note { margin-left: 0; flex-basis: 100%; }
+  .ha-hides { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .ha-hide { padding: 4px; gap: 4px; }
+  .ha-hide__emoji { font-size: 24px; line-height: 28px; }
+  .ha-tok--md { width: 28px; height: 28px; font-size: 16px; }
+  .ha-hide__clues { min-height: 30px; }
+  .ha-pick { min-width: 58px; padding: 4px 6px; }
+  .ha-dock { margin: 4px -12px 0; }
+  .ha-dock__inner { padding: 8px 12px 10px; gap: 6px; }
+  .ha-dock__row > .crux-btn, .ha-dock__go { flex: 1 1 100%; margin-left: 0; }
+}
+
+
+/* 대기실: 카드 구성 설정 */
+.ha-opt { display: flex; flex-direction: column; gap: 12px; }
+.ha-opt button { font-family: inherit; }
+.ha-opt__presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.ha-opt__preset { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--wall-000); color: inherit; cursor: pointer; text-align: left; font-size: 14px; }
+.ha-opt__preset small { font-size: 12px; opacity: .7; }
+.ha-opt__preset[aria-pressed="true"] { border-color: var(--hold-orange); box-shadow: inset 0 0 0 1px var(--hold-orange); background: #fdf1e3; }
+.ha-opt__preset:focus-visible { outline: 2px solid var(--hold-orange); outline-offset: 2px; }
+.ha-opt__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+.ha-opt__check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-weight: 600; cursor: pointer; }
+.ha-opt__check input { width: 18px; height: 18px; accent-color: var(--hold-orange); }
+.ha-opt__animals { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.ha-opt__animals span { white-space: nowrap; }
+
+/* --- 숨은 동물 찾기 전용 --- */
+/* 단서 토큰 + 이름표 (13종이라 그림만으로는 헷갈린다) */
+.ha-tokbox { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
+.ha-tokbox small { font-size: 10px; line-height: 12px; white-space: nowrap; color: var(--ink); opacity: .8; }
+.ha-tokbox--latest .ha-tok { border-color: var(--hold-orange); box-shadow: 0 0 0 2px var(--hold-orange), 0 2px 0 var(--hardware-deep); }
+.ha-tokbox--latest small { font-weight: 700; opacity: 1; }
+.ha-reserve__list { gap: 6px 8px; }
+/* 눈 토큰: 지금 엿보는 중(진한 노랑) / 직전 턴에 엿본 곳(점선) */
+.ha-hide--eyed { border-color: var(--hold-yellow); border-style: dashed; }
+.ha-hide__flag--eyed { background: transparent; color: var(--ink); border: 1px dashed var(--hold-yellow); }
+/* 직전 턴 요약 */
+.ha-last { display: flex; align-items: center; gap: 6px; margin: 0; padding: 6px 10px; border-radius: 10px; background: var(--wall-000); border: 1px dashed var(--hairline); font-size: 13px; }
+/* 대기실: 난이도 설정 */
+.ha-opt__specials { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; grid-column: 1 / -1; }
+.ha-opt__effects { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 760px) {
+  .ha-tokbox small { font-size: 9px; }
+}

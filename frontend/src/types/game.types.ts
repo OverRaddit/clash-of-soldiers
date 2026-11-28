@@ -2,11 +2,12 @@
 import type { BombMission } from './bomb-busters.types';
 import type { FellowshipChapterPreview } from './fellowship.types';
 import type { HideOptions } from './hide.types';
+import type { HiddenOptions } from './hidden.types';
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch' | 'three-pigs' | 'gacha' | 'paprika' | 'hide-and-seek' | 'colosseum';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch' | 'three-pigs' | 'gacha' | 'paprika' | 'hide-and-seek' | 'colosseum' | 'hidden-animals';
 
 /** 비공개 정보가 있어 세션 토큰과 플레이어별 상태 복원을 쓰는 게임 */
-export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek', 'colosseum'];
+export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek', 'colosseum', 'hidden-animals'];
 
 export interface Player {
   id: string;
@@ -30,6 +31,7 @@ export interface GameRoom {
   selectedFellowshipChapter?: number;
   fellowshipChapters?: FellowshipChapterPreview[];
   hideOptions?: HideOptions;
+  hiddenOptions?: HiddenOptions;
 }
 
 // Re-export toy-battle types for backward compatibility
