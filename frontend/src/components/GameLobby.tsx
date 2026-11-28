@@ -23,6 +23,7 @@ const GAME_TYPE_CONFIG: Record<GameType, { label: string; minPlayers: number; ma
   gacha: { label: '가챠', minPlayers: 3, maxPlayers: 6, hold: 'lime', meta: '3–6인 · 수집·교환', description: ' — 사장님이 진열한 캐릭터 카드를 코인으로 뽑고 손님끼리 바꾸며 숨긴 최애·차애를 모으는 수집 게임.' },
   paprika: { label: '파프리카 대축제', minPlayers: 3, maxPlayers: 6, hold: 'red', meta: '3–6인 · 블러핑 준협력', description: ' — 육각 농장에 씨앗과 도둑을 뒷면으로 심고, 파프리카 25개를 함께 모을지 친구의 등을 칠지 고르는 눈치 게임.' },
   'hide-and-seek': { label: '동물들의 숨바꼭질', minPlayers: 3, maxPlayers: 6, hold: 'orange', meta: '3–6인 · 추리 블러핑', description: ' — 은신처 7곳을 몰래 엿보고 진짜 또는 가짜 동물 단서를 남겨, 누가 어디 숨었는지 가장 많이 맞히는 추리 게임.' },
+  'hidden-animals': { label: '숨은 동물 찾기', minPlayers: 3, maxPlayers: 6, hold: 'green', meta: '3–6인 · 연역 추리 블러핑', description: ' — 은신처를 몰래 엿보고 눈 토큰이 놓인 곳에 진짜 또는 가짜 단서를 남기는 추리 게임. 난이도(Lv.0~4)에 따라 앵무새·오소리·원숭이·뱀 같은 특수 동물이 섞입니다.' },
 };
 
 const GameLobby: React.FC<GameLobbyProps> = ({

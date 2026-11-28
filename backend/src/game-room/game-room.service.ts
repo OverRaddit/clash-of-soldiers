@@ -13,6 +13,7 @@ import { getWbcPlayerView, initializeWbcGame, MAX_PLAYERS as WBC_MAX_PLAYERS, MI
 import { getPigsPlayerView, initializePigsGame, MAX_PLAYERS as PIGS_MAX_PLAYERS, MIN_PLAYERS as PIGS_MIN_PLAYERS } from './three-pigs/engine';
 import { getGachaPlayerView, initializeGachaGame, MAX_PLAYERS as GACHA_MAX_PLAYERS, MIN_PLAYERS as GACHA_MIN_PLAYERS } from './gacha/engine';
 import { getPaprikaPlayerView, initializePaprikaGame, MAX_PLAYERS as PAPRIKA_MAX_PLAYERS, MIN_PLAYERS as PAPRIKA_MIN_PLAYERS } from './paprika/engine';
+import { getHiddenPlayerView, HiddenOptions, initializeHiddenGame, MAX_PLAYERS as HIDDEN_MAX_PLAYERS, MIN_PLAYERS as HIDDEN_MIN_PLAYERS, normalizeHiddenOptions } from './hidden-animals/engine';
 import { getHidePlayerView, HideOptions, initializeHideGame, MAX_PLAYERS as HIDE_MAX_PLAYERS, MIN_PLAYERS as HIDE_MIN_PLAYERS, normalizeHideOptions } from './hide-and-seek/engine';
 import { getMultipitchPlayerView, initializeMultipitchGame } from './multipitch/engine';
 
@@ -38,17 +39,17 @@ export class GameRoomService implements OnModuleDestroy {
   createRoom(createRoomDto: CreateRoomDto): GameRoom {
     const roomId = this.generateRoomId();
     const gameType = (createRoomDto.gameType || 'toy-battle') as GameType;
-    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek', 'colosseum'].includes(gameType)) {
+    if (!['toy-battle', 'no-touch-kraken', 'bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek', 'colosseum', 'hidden-animals'].includes(gameType)) {
       throw new Error('지원하지 않는 게임입니다.');
     }
-    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'world-betting-cup' || gameType === 'multipitch' || gameType === 'three-pigs' || gameType === 'gacha' || gameType === 'paprika' || gameType === 'hide-and-seek' || gameType === 'colosseum' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
+    const defaultMaxPlayers = gameType === 'no-touch-kraken' || gameType === 'fellowship' || gameType === 'world-betting-cup' || gameType === 'multipitch' || gameType === 'three-pigs' || gameType === 'gacha' || gameType === 'paprika' || gameType === 'hide-and-seek' || gameType === 'colosseum' || gameType === 'hidden-animals' ? 4 : gameType === 'bomb-busters' ? 5 : 2;
     const maxPlayers = createRoomDto.maxPlayers ?? defaultMaxPlayers;
     const playerLimit = gameType === 'fellowship' || gameType === 'multipitch' ? 4 : gameType === 'bomb-busters' ? 5 : gameType === 'toy-battle' ? 2
       : gameType === 'world-betting-cup' ? WBC_MAX_PLAYERS : gameType === 'colosseum' ? COLOSSEUM_MAX_PLAYERS : gameType === 'three-pigs' ? PIGS_MAX_PLAYERS : gameType === 'gacha' ? GACHA_MAX_PLAYERS : gameType === 'paprika' ? PAPRIKA_MAX_PLAYERS
-      : gameType === 'hide-and-seek' ? HIDE_MAX_PLAYERS : 8;
+      : gameType === 'hide-and-seek' ? HIDE_MAX_PLAYERS : gameType === 'hidden-animals' ? HIDDEN_MAX_PLAYERS : 8;
     const minimumCapacity = gameType === 'fellowship' ? 1 : gameType === 'no-touch-kraken' ? 3 : gameType === 'colosseum' ? COLOSSEUM_MIN_PLAYERS : gameType === 'world-betting-cup' ? WBC_MIN_PLAYERS
       : gameType === 'multipitch' ? 4 : gameType === 'three-pigs' ? PIGS_MIN_PLAYERS : gameType === 'gacha' ? GACHA_MIN_PLAYERS : gameType === 'paprika' ? PAPRIKA_MIN_PLAYERS
-      : gameType === 'hide-and-seek' ? HIDE_MIN_PLAYERS : 2;
+      : gameType === 'hide-and-seek' ? HIDE_MIN_PLAYERS : gameType === 'hidden-animals' ? HIDDEN_MIN_PLAYERS : 2;
     if (!Number.isInteger(maxPlayers) || maxPlayers < minimumCapacity || maxPlayers > playerLimit) {
       throw new Error(`이 게임의 방 정원은 ${minimumCapacity}~${playerLimit}명입니다.`);
     }
@@ -207,6 +208,20 @@ export class GameRoomService implements OnModuleDestroy {
     return room;
   }
 
+  setHiddenOptions(roomId: string, playerId: string, options: Partial<HiddenOptions>): GameRoom {
+    const room = this.rooms.get(roomId);
+    if (!room || room.gameType !== 'hidden-animals') throw new Error('숨은 동물 찾기 방을 찾을 수 없습니다.');
+    if (room.hostId !== playerId) throw new Error('방장만 난이도를 바꿀 수 있습니다.');
+    if (room.status !== 'waiting') throw new Error('대기 중에만 난이도를 바꿀 수 있습니다.');
+    const next = normalizeHiddenOptions({ level: options?.level, random: options?.random, specials: options?.specials });
+    if (JSON.stringify(next) !== JSON.stringify(room.hiddenOptions)) {
+      room.hiddenOptions = next;
+      // 난이도가 바뀌면 다시 확인하고 준비하도록 준비 상태를 푼다
+      room.players.forEach(player => { if (!player.isHost) player.isReady = false; });
+    }
+    return room;
+  }
+
   setHideOptions(roomId: string, playerId: string, options: Partial<HideOptions>): GameRoom {
     const room = this.rooms.get(roomId);
     if (!room || room.gameType !== 'hide-and-seek') throw new Error('동물들의 숨바꼭질 방을 찾을 수 없습니다.');
@@ -287,6 +302,13 @@ export class GameRoomService implements OnModuleDestroy {
       room.gameState = initializePaprikaGame(
         room.players.map(player => player.id),
         room.players.map(player => player.name),
+      );
+    } else if (room.gameType === 'hidden-animals') {
+      room.gameState = initializeHiddenGame(
+        room.players.map(player => player.id),
+        room.players.map(player => player.name),
+        undefined,
+        room.hiddenOptions,
       );
     } else if (room.gameType === 'hide-and-seek') {
       room.gameState = initializeHideGame(
@@ -406,6 +428,9 @@ export class GameRoomService implements OnModuleDestroy {
     } else if (room.gameType === 'hide-and-seek' && room.gameState) {
       const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
       result.gameState = getHidePlayerView(room.gameState, viewerId);
+    } else if (room.gameType === 'hidden-animals' && room.gameState) {
+      const viewerId = room.players.some(player => player.id === playerId) ? playerId : undefined;
+      result.gameState = getHiddenPlayerView(room.gameState, viewerId);
     }
     return result;
   }

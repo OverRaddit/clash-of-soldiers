@@ -25,6 +25,7 @@ const ENTRY_GAMES: { id: string; label: string; color: HoldColor }[] = [
   { id: 'gacha', label: '가챠', color: 'lime' },
   { id: 'paprika', label: '파프리카 대축제', color: 'red' },
   { id: 'hide-and-seek', label: '동물들의 숨바꼭질', color: 'orange' },
+  { id: 'hidden-animals', label: '숨은 동물 찾기', color: 'green' },
 ];
 
 const WALL_SPOTS: [number, number][] = [[6, 6], [34, 4], [66, 8], [86, 22], [4, 34], [88, 48], [8, 60], [70, 40], [90, 72], [14, 82], [82, 88]];

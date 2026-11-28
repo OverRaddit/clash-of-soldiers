@@ -1,4 +1,5 @@
 import { DEFAULT_HIDE_OPTIONS, HideOptions } from '../hide-and-seek/engine';
+import { DEFAULT_HIDDEN_OPTIONS, HiddenOptions } from '../hidden-animals/engine';
 
 export interface Player {
   id: string;
@@ -8,10 +9,10 @@ export interface Player {
 }
 
 export type GameRoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch' | 'three-pigs' | 'gacha' | 'paprika' | 'hide-and-seek' | 'colosseum';
+export type GameType = 'toy-battle' | 'no-touch-kraken' | 'bomb-busters' | 'fellowship' | 'world-betting-cup' | 'multipitch' | 'three-pigs' | 'gacha' | 'paprika' | 'hide-and-seek' | 'colosseum' | 'hidden-animals';
 
 /** 비공개 정보(손패, 몰래 본 카드)가 있어 플레이어별 뷰와 세션 토큰이 필요한 게임 */
-export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek', 'colosseum'];
+export const PRIVATE_GAME_TYPES: GameType[] = ['bomb-busters', 'fellowship', 'world-betting-cup', 'multipitch', 'three-pigs', 'gacha', 'paprika', 'hide-and-seek', 'colosseum', 'hidden-animals'];
 export function hasPrivateState(gameType?: GameType): boolean {
   return !!gameType && PRIVATE_GAME_TYPES.includes(gameType);
 }
@@ -30,6 +31,8 @@ export class GameRoom {
   selectedFellowshipChapter: number = 1;
   /** 동물들의 숨바꼭질 카드 구성. 방장이 대기실에서 바꾼다. */
   hideOptions: HideOptions = { ...DEFAULT_HIDE_OPTIONS };
+  /** 숨은 동물 찾기 난이도. 방장이 대기실에서 바꾼다. */
+  hiddenOptions: HiddenOptions = { ...DEFAULT_HIDDEN_OPTIONS };
   nextBombCaptainId?: string;
 
   constructor(id: string, name: string, hostId: string, maxPlayers: number = 2, gameType: GameType = 'toy-battle') {
@@ -78,6 +81,7 @@ export class GameRoom {
       ...(this.gameType === 'bomb-busters' ? { selectedMissionId: this.selectedMissionId } : {}),
       ...(this.gameType === 'fellowship' ? { selectedFellowshipChapter: this.selectedFellowshipChapter } : {}),
       ...(this.gameType === 'hide-and-seek' ? { hideOptions: this.hideOptions } : {}),
+      ...(this.gameType === 'hidden-animals' ? { hiddenOptions: this.hiddenOptions } : {}),
     };
   }
 }

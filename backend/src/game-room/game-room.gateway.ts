@@ -23,6 +23,7 @@ import { applyPigsAction } from './three-pigs/engine';
 import { applyGachaAction } from './gacha/engine';
 import { applyPaprikaAction } from './paprika/engine';
 import { applyHideAction } from './hide-and-seek/engine';
+import { applyHiddenAction } from './hidden-animals/engine';
 import { applyMultipitchAction } from './multipitch/engine';
 
 interface ClientInfo {
@@ -246,6 +247,20 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  @SubscribeMessage('set_hidden_options')
+  handleSetHiddenOptions(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; options: { level?: number; random?: boolean; specials?: any[] } },
+  ) {
+    try {
+      this.requireMember(client, data?.roomId, data?.playerId, 'hidden-animals');
+      const room = this.gameRoomService.setHiddenOptions(data.roomId, data.playerId, data.options);
+      this.emitRoomUpdate(room, 'hidden_options_changed', '난이도가 바뀌었습니다. 확인하고 준비해 주세요.');
+    } catch (error) {
+      client.emit('hidden_error', { message: error.message });
+    }
+  }
+
   @SubscribeMessage('set_hide_options')
   handleSetHideOptions(
     @ConnectedSocket() client: Socket,
@@ -302,6 +317,8 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.emitPrivateStateToAll(room, '가챠 가게가 문을 열었습니다! 최애와 차애를 고르세요.', 'game_started');
       } else if (room.gameType === 'paprika') {
         this.emitPrivateStateToAll(room, '파프리카 농장에 모였습니다! 선플레이어부터 토큰을 뒷면으로 놓으세요.', 'game_started');
+      } else if (room.gameType === 'hidden-animals') {
+        this.emitPrivateStateToAll(room, '숨은 동물 찾기가 시작되었습니다! 선플레이어부터 은신처 2곳을 엿보세요.', 'game_started');
       } else if (room.gameType === 'hide-and-seek') {
         this.emitPrivateStateToAll(room, '숨바꼭질이 시작되었습니다! 선플레이어부터 은신처 2곳을 엿보세요.', 'game_started');
       } else if (room.gameType === 'no-touch-kraken') {
@@ -691,7 +708,7 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
       client.emit(type === 'bomb-busters' ? 'bomb_busters_error'
         : type === 'fellowship' ? 'fellowship_error' : type === 'world-betting-cup' ? 'wbc_error' : type === 'colosseum' ? 'colosseum_error'
         : type === 'three-pigs' ? 'pigs_error' : type === 'multipitch' ? 'multipitch_error' : type === 'gacha' ? 'gacha_error' : type === 'paprika' ? 'paprika_error'
-        : type === 'hide-and-seek' ? 'hide_error' : 'kraken_error', { message: error.message });
+        : type === 'hide-and-seek' ? 'hide_error' : type === 'hidden-animals' ? 'hidden_error' : 'kraken_error', { message: error.message });
     }
   }
 
@@ -992,6 +1009,40 @@ export class GameRoomGateway implements OnGatewayConnection, OnGatewayDisconnect
         finished ? 'game_ended' : 'hide_state_updated');
     } catch (error) {
       client.emit('hide_error', { message: error.message });
+    }
+  }
+
+  @SubscribeMessage('hidden_action')
+  handleHiddenAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string; playerId: string; action: Record<string, unknown> },
+  ) {
+    try {
+      const room = this.requireMember(client, data?.roomId, data?.playerId, 'hidden-animals');
+      if (room.status !== 'playing' || !room.gameState) {
+        throw new Error('진행 중인 숨은 동물 찾기가 없습니다.');
+      }
+      if (!data.action || typeof data.action !== 'object' || Array.isArray(data.action)) {
+        throw new Error('올바른 행동을 선택해주세요.');
+      }
+      const nextState = applyHiddenAction(room.gameState, data.playerId, data.action as any);
+      room.gameState = nextState;
+      // 개인 추리판 메모는 가림막 뒤의 일이라 본인에게만 돌려준다 (남에게는 메모 시점조차 알리지 않는다).
+      if (data.action.type === 'set_board') {
+        const playerRoom = this.gameRoomService.serializeRoom(room, data.playerId);
+        for (const [socketId, info] of this.clients) {
+          if (info.playerId === data.playerId && this.isBoundMember(info, room)) {
+            this.server.to(socketId).emit('hidden_state_updated', { room: playerRoom, gameState: playerRoom.gameState });
+          }
+        }
+        return;
+      }
+      const finished = nextState.phase === 'finished';
+      if (finished) room.finishGame();
+      this.emitPrivateStateToAll(room, nextState.result?.message ?? '게임 상태가 변경되었습니다.',
+        finished ? 'game_ended' : 'hidden_state_updated');
+    } catch (error) {
+      client.emit('hidden_error', { message: error.message });
     }
   }
 
